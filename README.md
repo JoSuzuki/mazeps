@@ -90,17 +90,26 @@ This project uses PostgreSQL as its database, managed with Prisma ORM.
 ### Prerequisites
 - Docker and Docker Compose (or just Docker if you prefer to run PostgreSQL manually)
 
-### Running the Database (Docker Compose)
-1.  Ensure Docker is running.
-2.  Start the PostgreSQL container:
+### Running the Development Environment (Docker Compose)
+1.  Ensure Docker is running and you have a `.env` file in the project root with the `DATABASE_URL` (see "Environment Variables" section).
+2.  Start the application and PostgreSQL database:
     ```bash
     docker-compose up -d
     ```
-    This will start a PostgreSQL server on `localhost:5432`.
-    The database credentials are set in `docker-compose.yml` and mirrored in `.env` for Prisma:
-    - User: `prismauser`
-    - Password: `prismapassword`
-    - Database: `prismadb`
+3.  This command will:
+    - Build the application Docker image (if not already built).
+    - Start the application container, accessible at `http://localhost:3000`.
+    - Start the PostgreSQL container, accessible on `localhost:5432`.
+    - Mount your local code into the application container for live reloading on changes.
+4.  To stop the services:
+    ```bash
+    docker-compose down
+    ```
+
+The database credentials are set in `docker-compose.yml` and used by both services:
+- User: `prismauser`
+- Password: `prismapassword`
+- Database: `prismadb`
 
 ### Running the Database (Manual Docker)
 If you encounter issues with `docker-compose` (as was the case during initial setup in some environments) or prefer to run the container directly:

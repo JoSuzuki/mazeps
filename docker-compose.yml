@@ -1,5 +1,19 @@
 version: '3.8'
 services:
+  app:
+    build: .
+    ports:
+      - "3000:3000" # Assuming the app runs on port 3000
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules # Exclude node_modules from host mount to use container's
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=${DATABASE_URL} # Pass through DATABASE_URL from .env file
+    depends_on:
+      - db
+    # command: npm run dev # Optional: if your Dockerfile doesn't have a default CMD or you want to override
+
   db:
     image: postgres:15-alpine
     restart: always
@@ -11,5 +25,6 @@ services:
       - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
 volumes:
   postgres_data:
