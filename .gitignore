@@ -1,7 +1,18 @@
+# General
 .DS_Store
-/node_modules/
 *.tsbuildinfo
+
+# Node modules
+/node_modules/
 
 # React Router
 /.react-router/
 /build/
+
+# Prisma
+/app/generated/prisma
+/prisma/migrations/
+*.env
+
+# Environment variables - typically .env in root
+# .env # Already covered by *.env but can be explicit if only root .env is intended
