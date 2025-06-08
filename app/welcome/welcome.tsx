@@ -1,7 +1,8 @@
+import type { User } from "../generated/prisma";
 import logoDark from "./logo-dark.svg";
 import logoLight from "./logo-light.svg";
 
-export function Welcome({ message }: { message: string }) {
+export function Welcome({ message, users }: { message: string; users: User[] }) {
   return (
     <main className="flex h-screen items-center justify-center">
       <div className="flex flex-col items-center gap-16">
@@ -9,6 +10,10 @@ export function Welcome({ message }: { message: string }) {
           <h1 className="leading text-2xl font-bold text-gray-800 dark:text-gray-100">
             {message}
           </h1>
+          <div>Users</div>
+          <ul>
+            {users.map(user => <li key={user.id}>{user.name}</li>)}
+          </ul>
           <div className="w-[500px] max-w-[100vw] p-4">
             <img
               src={logoLight}
