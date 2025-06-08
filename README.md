@@ -30,7 +30,20 @@ Start the development server with HMR:
 npm run dev
 ```
 
-Your application will be available at `http://localhost:5173`.
+Start the database with:
+
+```bash
+docker compose up -d
+```
+
+Run the migrations:
+
+```bash
+npm run migrate
+```
+
+Your application will be available at `http://localhost:3000`.
+You can access Adminer at `http://localhost:8080`.
 
 ## Building for Production
 
@@ -47,10 +60,10 @@ npm run build
 To build and run using Docker:
 
 ```bash
-docker build -t my-app .
+docker build -t mazeps .
 
 # Run the container
-docker run -p 3000:3000 my-app
+docker run -p 3000:3000 mazeps
 ```
 
 The containerized application can be deployed to any platform that supports Docker, including:
@@ -61,21 +74,6 @@ The containerized application can be deployed to any platform that supports Dock
 - Digital Ocean App Platform
 - Fly.io
 - Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── server.js
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
 
 ## Styling
 
