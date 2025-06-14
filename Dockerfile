@@ -19,6 +19,6 @@ FROM node:20-alpine
 COPY ./package.json package-lock.json server.js /app/
 COPY --from=production-dependencies-env /app/node_modules /app/node_modules
 COPY --from=build-env /app/build /app/build
-COPY --from=build-env /app/app/generated/prisma /app/app/generated/prisma
+COPY --from=build-env /app/prisma /app/prisma
 WORKDIR /app
 CMD ["npm", "run", "start"]
