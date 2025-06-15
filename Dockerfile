@@ -20,5 +20,6 @@ COPY ./package.json package-lock.json server.js /app/
 COPY --from=production-dependencies-env /app/node_modules /app/node_modules
 COPY --from=build-env /app/build /app/build
 COPY --from=build-env /app/prisma /app/prisma
+COPY --from=build-env /app/app/generated/prisma/libquery_engine-linux-musl-openssl-3.0.x.so.node /app/build/server/assets/libquery_engine-linux-musl-openssl-3.0.x.so.node
 WORKDIR /app
 CMD ["npm", "run", "start"]
