@@ -19,6 +19,15 @@ export default function Component({ actionData }: Route.ComponentProps) {
       ) : null}
       <Form method="post">
         <div>
+          <label htmlFor="name">Name</label>
+          <input
+            type="text"
+            name="name"
+            id="name"
+            required
+          />
+        </div>
+        <div>
           <label htmlFor="email">Email</label>
           <input type="email" name="email" id="email" required />
         </div>
@@ -41,12 +50,14 @@ export default function Component({ actionData }: Route.ComponentProps) {
 export async function action({ request, context }: Route.ActionArgs) {
   try {
     const formData = await request.formData();
+    const name = formData.get("name") as string;
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await context.prisma.user.create({
       data: {
+        name,
         email,
         password: hashedPassword,
       },

@@ -10,7 +10,6 @@ export async function loader({ request }: Route.LoaderArgs) {
   user = await authenticator.authenticate("google", request);
   session.set("user", user);
   return redirect("/", {
-    status: 303,
     headers: {
       "Set-Cookie": await sessionStorage.commitSession(session),
     },
