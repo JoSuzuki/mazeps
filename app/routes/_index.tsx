@@ -20,7 +20,6 @@ export default function Route({ loaderData }: Route.ComponentProps) {
       ) : (
         <Link to="/login">Login</Link>
       )}
-      <Link to="/other-page">Other Page</Link>
     </main>
   );
 }
