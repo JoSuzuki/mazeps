@@ -1,19 +1,25 @@
+import { Link } from "react-router";
 import type { Route } from "./+types/_index";
-import { Welcome } from "../welcome/welcome";
-import prisma from "~/lib/prisma";
 
 export const meta = ({}: Route.MetaArgs) => {
   return [
-    { title: "New React Router App" },
-    { name: "description", content: "Welcome to React Router!" },
+    { title: "Mazeps" },
+    { name: "description", content: "Bem vindo ao Mazeps!" },
   ];
 }
 
 export const loader = async ({ context }: Route.LoaderArgs) => {
-  const users = await prisma.user.findMany();
-  return { message: context.VALUE_FROM_EXPRESS, users };
+  return { currentUser: context.currentUser };
 };
 
 export default function Route({ loaderData }: Route.ComponentProps) {
-  return <Welcome message={loaderData.message} users={loaderData.users} />;
+  return (
+    <main>
+      {loaderData.currentUser ? (
+        <div>Bem vindo <Link to="/profile">{loaderData.currentUser.name}</Link></div>
+      ) : (
+        <Link to="/login">Login</Link>
+      )}
+    </main>
+  );
 }
