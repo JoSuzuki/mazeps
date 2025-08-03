@@ -22,16 +22,23 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
+export const meta = ({ }: Route.MetaArgs) => {
+  return [
+    { title: "Mazeps" },
+    { name: "description", content: "Bem vindo ao Mazeps!" },
+  ];
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="pt-BR" data-theme="flamingo" className="font-default bg-background text-on-background h-full">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
-      <body>
+      <body className="h-full">
         {children}
         <ScrollRestoration />
         <Scripts />

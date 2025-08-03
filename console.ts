@@ -1,4 +1,5 @@
 // eslint-disable
+import 'dotenv/config';
 import repl from "node:repl";
 import prisma from "./app/lib/prisma";
 

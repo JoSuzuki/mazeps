@@ -1,6 +1,13 @@
-import { Form, Link, data, redirect } from "react-router";
+import { Form, data, redirect } from "react-router";
 import type { Route } from "./+types/route";
 import { authenticator, sessionStorage } from "~/services/session";
+import TextInput from "../../components/text-input/text-input.component";
+import Link from "../../components/link/link.component";
+import Spacer from "../../components/spacer/spacer.component";
+import Button from "../../components/primary-button/primary-button.component";
+import GoogleLoginButton from "../../components/google-login-button/google-login-button.component";
+import LinkButton from "../../components/link-button/link-button.component";
+import Center from "../../components/center/center.component";
 
 export async function loader({ context }: Route.LoaderArgs) {
   if (context.currentUser) return redirect("/");
@@ -8,46 +15,46 @@ export async function loader({ context }: Route.LoaderArgs) {
   return data(null);
 }
 
-export default function Component({ actionData }: Route.ComponentProps) {
-  return (
-    <div>
-      <h1>Login</h1>
+export const meta = ({ }: Route.MetaArgs) => {
+  return [
+    { title: "Mazeps - Login" },
+  ];
+}
 
-      {actionData?.error ? (
-        <div className="error">{actionData.error}</div>
-      ) : null}
+export default function Route({ actionData }: Route.ComponentProps) {
+  return (
+    <Center>
+      <Link to="/" className="absolute top-2 left-2">← Voltar</Link>
+      <h1 className="text-lg flex justify-center">Login</h1>
 
       <Form method="post">
-        <div>
-          <label htmlFor="email">Email</label>
-          <input type="email" name="email" id="email" required />
+        <TextInput id="email" name="email" label="Email" type="email" required={true} />
+        <Spacer size="sm" />
+        <TextInput id="password" name="password" label="Senha" type="password" required={true} autoComplete="current-password" />
+        <div className="flex justify-end">
+          <Link className="text-xs" to="/forgot-password">Esqueceu a senha?</Link>
         </div>
-        <div>
-          <Link to="/forgot-password">Forgot Password?</Link>
-        </div>
-        <div>
-          <label htmlFor="password">Password</label>
-          <input
-            type="password"
-            name="password"
-            id="password"
-            autoComplete="current-password"
-            required
-          />
-        </div>
-        <button type="submit">Sign In</button>
+
+        {actionData?.error ? (
+          <>
+            <Spacer size="sm" />
+            <div className="text-error">{actionData.error}</div>
+          </>
+        ) : null}
+        <Spacer size="md" />
+        <Button className="w-full" type="submit">Login</Button>
       </Form>
-      <Form method="post" action="/oauth/google">
-        <button type="submit">Login with Google</button>
-      </Form>
-      <Link to="/sign-up">Sign Up</Link>
-    </div>
+      <Spacer size="sm" />
+      <GoogleLoginButton />
+      <Spacer size="sm" />
+      <LinkButton to="/sign-up" type="secondary" className="w-full">Cadastre-se</LinkButton>
+    </Center>
   );
 }
 
 export async function action({ request }: Route.ActionArgs) {
   try {
-    let user = await authenticator.authenticate("user-password", request);
+    let user = await authenticator.authenticate("email-password", request);
 
     let session = await sessionStorage.getSession(
       request.headers.get("cookie")

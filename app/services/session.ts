@@ -22,5 +22,5 @@ export const sessionStorage = createCookieSessionStorage<{ user: User }>({
 export const authenticator = new Authenticator<User>();
 
 authenticator.use(googleStrategy, "google");
-authenticator.use(emailPasswordStrategy, "user-password");
+authenticator.use(emailPasswordStrategy, "email-password");
 
