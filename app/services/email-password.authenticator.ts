@@ -20,12 +20,11 @@ async function login(email: string, password: string): Promise<User> {
 }
 
 export const emailPasswordStrategy = new FormStrategy(async ({ form }) => {
-  const name = form.get("name") as string;
   const email = form.get("email") as string;
   const password = form.get("password") as string;
 
-  if (!name || !email || !password) {
-    throw new Error("Nome, email e senha são obrigatórios");
+  if (!email || !password) {
+    throw new Error("Email e senha são obrigatórios");
   }
 
   return await login(email, password);

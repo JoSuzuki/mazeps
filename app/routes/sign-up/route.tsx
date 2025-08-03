@@ -3,6 +3,12 @@ import type { Route } from "./+types/route";
 import bcrypt from "bcrypt";
 import { sessionStorage } from "~/services/session";
 import { PrismaClientKnownRequestError } from "../../generated/prisma/internal/prismaNamespace";
+import Center from "../../components/center/center.component";
+import TextInput from "../../components/text-input/text-input.component";
+import Spacer from "../../components/spacer/spacer.component";
+import Button from "../../components/primary-button/primary-button.component";
+import GoogleLoginButton from "../../components/google-login-button/google-login-button.component";
+import Link from "../../components/link/link.component";
 
 export async function loader({ context }: Route.LoaderArgs) {
   if (context.currentUser) return redirect("/");
@@ -10,40 +16,29 @@ export async function loader({ context }: Route.LoaderArgs) {
   return data(null);
 }
 
-export default function Component({ actionData }: Route.ComponentProps) {
+export default function Route({ actionData }: Route.ComponentProps) {
   return (
-    <div>
-      <h1>Sign Up</h1>
-      {actionData?.error ? (
-        <div className="error">{actionData.error}</div>
-      ) : null}
+    <Center>
+      <Link to="/login" className="absolute top-2 left-2">← Voltar</Link>
+      <h1 className="text-lg flex justify-center">Cadastrar</h1>
       <Form method="post">
-        <div>
-          <label htmlFor="name">Name</label>
-          <input
-            type="text"
-            name="name"
-            id="name"
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="email">Email</label>
-          <input type="email" name="email" id="email" required />
-        </div>
-        <div>
-          <label htmlFor="password">Password</label>
-          <input
-            type="password"
-            name="password"
-            id="password"
-            required
-          />
-        </div>
-        <button type="submit">Sign Up</button>
+        <TextInput id="name" name="name" type="text" required={true} label="Nome" />
+        <Spacer size="sm" />
+        <TextInput id="email" name="email" label="Email" type="email" required={true} />
+        <Spacer size="sm" />
+        <TextInput id="password" name="password" label="Senha" type="password" required={true} />
+        <Spacer size="md" />
+        {actionData?.error ? (
+          <>
+            <div className="text-error">{actionData.error}</div>
+            <Spacer size="sm" />
+          </>
+        ) : null}
+        <Button className="w-full" type="submit">Cadastrar</Button>
       </Form>
-      <a href="/oauth/google">Sign Up with Google</a>
-    </div>
+      <Spacer size="sm" />
+      <GoogleLoginButton />
+    </Center>
   );
 }
 
@@ -74,7 +69,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     });
   } catch (error) {
     if (error instanceof PrismaClientKnownRequestError && error.code === "P2002") {
-      return data({ error: "Email already in use" });
+      return data({ error: "Email já está em uso" });
     }
 
     if (error instanceof Error) {
