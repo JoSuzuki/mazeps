@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'Farmshow';
+  src: url('./assets/fonts/Farmshow/Farmshow.otf') format('opentype'),
+  url('./assets/fonts/Farmshow/Farmshow.ttf') format('truetype');
+}
+
 @theme inline {
   --color-*: initial;
   --color-background: var(--color-background);
@@ -19,6 +25,7 @@
   --color-error: var(--color-error);
   --color-on-error: var(--color-on-error);
 
+  --font-brand: "Farmshow";
   --font-default: "Inter", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
