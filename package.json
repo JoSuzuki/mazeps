@@ -5,7 +5,6 @@
   "scripts": {
     "build": "react-router build",
     "migrate:dev": "npx prisma migrate dev",
-    "migrate:prod": "npx prisma migrate deploy",
     "dev": "cross-env NODE_ENV=development node --inspect server.js",
     "start": "node server.js",
     "console": "tsx console.ts",
