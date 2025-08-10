@@ -1,6 +1,4 @@
-# Welcome to React Router!
-
-A modern, production-ready template for building full-stack React applications using React Router.
+# Welcome to Mazeps!
 
 ## Features
 
@@ -22,6 +20,8 @@ Install the dependencies:
 npm install
 ```
 
+Copy `.env.sample` to `.env`
+
 ### Development
 
 Start the development server with HMR:
@@ -39,7 +39,7 @@ docker compose up -d
 Run the migrations:
 
 ```bash
-npm run migrate
+npm run migrate:dev
 ```
 
 Your application will be available at `http://localhost:3000`.
@@ -65,20 +65,5 @@ docker build -t mazeps .
 # Run the container
 docker run -p 3000:3000 mazeps
 ```
-
-The containerized application can be deployed to any platform that supports Docker, including:
-
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
-
----
 
 Built with ❤️ using React Router.
