@@ -19,7 +19,7 @@ interface ButtonTileProps {
 }
 
 export const ButtonTile = ({ id, top, left, selectedId, onClick, children, "data-theme": dataTheme }: ButtonTileProps) => {
-  return <div style={{ top, left }} className="relative" {...(dataTheme && { "data-theme": dataTheme })}>
+  return <div style={{ top, left }} className="absolute" {...(dataTheme && { "data-theme": dataTheme })}>
     <div className="absolute z-[1] pointer-events-none">
       {children(selectedId === id)}
     </div>
