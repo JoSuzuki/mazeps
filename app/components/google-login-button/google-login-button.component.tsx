@@ -11,7 +11,7 @@ const GoogleIcon = () => <svg version="1.1" height="16" width="16" xmlns="http:/
 
 
 const GoogleLoginButton = () => <Form method="post" action="/oauth/google">
-  <button type="submit" className="flex items-center p-2 bg-[#fff] text-[#1f1f1f] rounded-sm w-full">
+  <button type="submit" className="flex items-center p-2 bg-[#fff] text-[#1f1f1f] rounded-sm active:pressed hover:cursor-pointer w-full">
     <Spacer size="md" type="horizontal" />
     <GoogleIcon />
     <Spacer size="md" type="horizontal" />

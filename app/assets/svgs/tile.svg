@@ -1,0 +1,6 @@
+<svg id="tile" data-name="tile" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 142.95 67.67">
+  <g>
+    <path fill="var(--color-tile-step)" d="M.01,27.64v13.34l34.9,26.7h72.78s35.26-27.65,35.26-27.65v-12.39H.01s0-.01,0,0Z"/>
+    <polygon fill="var(--color-tile-surface)" points="58.28 0 58.28 0 34.74 0 .01 27.64 35.27 55.27 107.69 55.27 142.95 27.64 107.67 0 88.59 0 88.6 0 58.28 0"/>
+  </g>
+</svg>

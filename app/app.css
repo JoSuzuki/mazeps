@@ -6,6 +6,10 @@
   url('./assets/fonts/Farmshow/Farmshow.ttf') format('truetype');
 }
 
+[data-theme="pegasus"] .show-if-pegasus {
+  display: block;
+}
+
 @theme inline {
   --color-*: initial;
   --color-background: var(--color-background);
@@ -56,6 +60,24 @@
     --color-on-error: var(--color-green);
     --color-warning: var(--color-yellow);
     --color-on-warning: var(--color-dark-gray);
+
+    --color-flamingo-beak-tip: var(--color-gray);
+    --color-flamingo-beak-tip-dark: var(--color-dark-gray);
+    --color-flamingo-beak: var(--color-yellow);
+    --color-flamingo-beak-dark: var(--color-orange);
+    --color-flamingo-body: var(--color-pink);
+    --color-flamingo-body-shadow: var(--color-dark-pink);
+    --color-flamingo-eye: var(--color-dark-gray);
+
+    --color-pegasus-body: var(--color-white);
+    --color-pegasus-eye: var(--color-black);
+    --color-pegasus-hair: var(--color-white);
+    --color-pegasus-ear: var(--color-black);
+    --color-pegasus-wing-shadow: var(--color-black);
+    --color-pegasus-feet: var(--color-black);
+
+    --color-tile-surface: var(--color-gray);
+    --color-tile-step: var(--color-dark-gray);
   }
 
   [data-theme="flamingo"] {
@@ -74,6 +96,11 @@
 
     --color-primary: var(--color-white);
     --color-on-primary: var(--color-black);
+    --color-secondary: var(--color-black);
+    --color-on-secondary: var(--color-white);
+
+    --color-tile-surface: var(--color-white);
+    --color-tile-step: var(--color-dark-gray);
   }
 
   [data-theme="dark"] {
@@ -84,4 +111,9 @@
     --color-accent: var(--color-yellow);
     --color-on-accent: var(--color-dark-gray);
   }
+}
+
+@utility pressed {
+  transform: scale(0.98);
+  transition: transform 150ms;
 }

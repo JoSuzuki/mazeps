@@ -2,6 +2,8 @@ import type { Route } from "./+types/route";
 import LinkButton from "../../components/link-button/link-button.component";
 import Title from "./title.component";
 import Link from "../../components/link/link.component";
+import Board from "../../components/board/board.component";
+import Pegasus from "../../components/board/pegasus.component";
 
 export const meta = ({ }: Route.MetaArgs) => {
   return [
@@ -17,19 +19,18 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
 export default function Route({ loaderData }: Route.ComponentProps) {
   return (
     <>
-      <nav className="flex items-center justify-center p-4">
-        <div className="ml-auto">
-          {loaderData.currentUser ? (
-            <div>Bem vindo, <Link to="/profile" className="bg-primary text-on-primary rounded-md p-0.5">{loaderData.currentUser.name}</Link></div>
-          ) : (
-            <LinkButton to="/login">Login</LinkButton>
-          )}
-        </div>
+      <nav className="flex items-center justify-end p-4">
+        {loaderData.currentUser ? (
+          <div>Bem vindo, <Link to="/profile" className="bg-primary text-on-primary rounded-md p-0.5">{loaderData.currentUser.name}</Link></div>
+        ) : (
+          <LinkButton to="/login">Login</LinkButton>
+        )}
       </nav>
       <main>
-        <div className="flex justify-center">
+        <div className="flex justify-center mb-2">
           <Title />
         </div>
+        <Board />
       </main>
     </>
   );

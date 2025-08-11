@@ -12,4 +12,7 @@ export default defineConfig(({ isSsrBuild }) => ({
       : undefined,
   },
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
+  server: {
+    allowedHosts: ["adapting-distinctly-raptor.ngrok-free.app"]
+  }
 }));
