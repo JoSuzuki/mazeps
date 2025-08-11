@@ -12,7 +12,7 @@ const MAP_CLASSES = {
 const LinkButton = (props: LinkProps): React.ReactElement => {
   const { type = "primary", ...linkProps } = props;
 
-  return <Link {...linkProps} className={`${MAP_CLASSES[type]} p-2 rounded-md text-center ${linkProps.className}`} />
+  return <Link {...linkProps} className={`${MAP_CLASSES[type]} p-2 rounded-md text-center active:pressed ${linkProps.className}`} />
 }
 
 export default LinkButton

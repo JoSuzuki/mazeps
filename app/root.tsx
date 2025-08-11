@@ -37,6 +37,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+            (function(){
+      const savedTheme = localStorage.getItem('theme')
+      if (savedTheme && savedTheme !== 'null') {
+        document.documentElement.setAttribute('data-theme', savedTheme)
+      }
+    })()`,
+          }}
+        ></script>
       </head>
       <body className="h-full">
         {children}
