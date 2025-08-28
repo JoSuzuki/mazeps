@@ -27,3 +27,47 @@ model User {
 
   @@index([email])
 }
+
+model Tournament {
+  id           Int      @id @default(autoincrement())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt 
+  rounds       Round[]
+  players      Player[]
+  status       String  @default("registration")
+}
+
+model Round {
+  id           Int        @id @default(autoincrement())
+  roundNumber  Int
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  tournamentId Int
+  matches      Match[]
+  status       String  @default("open")
+}
+
+model Match {
+  id            Int      @id @default(autoincrement())
+  round         Round    @relation(fields: [roundId], references: [id])
+  roundId       Int
+  players       Player[]
+  matchResults  MatchResults[]
+}
+
+model Player {
+  id                Int        @id @default(autoincrement())
+  name              String?
+  activeTournament  Tournament @relation(fields: [tournamentId], references: [id])
+  tournamentId      Int
+  matches           Match[]
+  matchResults      MatchResults[]
+}
+
+model MatchResults {
+  id        Int     @id @default(autoincrement())
+  player    Player  @relation(fields: [playerId], references: [id]) 
+  playerId  Int
+  match     Match   @relation(fields: [matchId], references: [id]) 
+  matchId   Int
+  points    Float
+}
