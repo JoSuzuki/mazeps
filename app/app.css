@@ -1,121 +1,121 @@
 @import 'tailwindcss';
 
 @font-face {
-	font-family: 'Farmshow';
-	src:
-		url('./assets/fonts/Farmshow/Farmshow.otf') format('opentype'),
-		url('./assets/fonts/Farmshow/Farmshow.ttf') format('truetype');
+  font-family: 'Farmshow';
+  src:
+    url('./assets/fonts/Farmshow/Farmshow.otf') format('opentype'),
+    url('./assets/fonts/Farmshow/Farmshow.ttf') format('truetype');
 }
 
 [data-theme='pegasus'] .show-if-pegasus {
-	display: block;
+  display: block;
 }
 
 @theme inline {
-	--color-*: initial;
-	--color-background: var(--color-background);
-	--color-on-background: var(--color-on-background);
+  --color-*: initial;
+  --color-background: var(--color-background);
+  --color-on-background: var(--color-on-background);
 
-	--color-primary: var(--color-primary);
-	--color-on-primary: var(--color-on-primary);
-	--color-secondary: var(--color-secondary);
-	--color-on-secondary: var(--color-on-secondary);
-	--color-accent: var(--color-accent);
-	--color-on-accent: var(--color-on-accent);
+  --color-primary: var(--color-primary);
+  --color-on-primary: var(--color-on-primary);
+  --color-secondary: var(--color-secondary);
+  --color-on-secondary: var(--color-on-secondary);
+  --color-accent: var(--color-accent);
+  --color-on-accent: var(--color-on-accent);
 
-	--color-success: var(--color-success);
-	--color-on-success: var(--color-on-success);
-	--color-warning: var(--color-warning);
-	--color-on-warning: var(--color-on-warning);
-	--color-error: var(--color-error);
-	--color-on-error: var(--color-on-error);
+  --color-success: var(--color-success);
+  --color-on-success: var(--color-on-success);
+  --color-warning: var(--color-warning);
+  --color-on-warning: var(--color-on-warning);
+  --color-error: var(--color-error);
+  --color-on-error: var(--color-on-error);
 
-	--font-brand: 'Farmshow';
-	--font-default:
-		'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
-		'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-brand: 'Farmshow';
+  --font-default:
+    'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
 @layer base {
-	:root {
-		--color-white: #ffffff;
-		--color-black: #000000;
-		--color-gray: #7e8c86;
-		--color-dark-gray: #5c6666;
-		--color-pink: #ffba9c;
-		--color-dark-pink: #ff9079;
-		--color-yellow: #ffbc58;
-		--color-orange: #fea454;
-		--color-green: #1d2c2a;
-		--color-red: #e9324b;
+  :root {
+    --color-white: #ffffff;
+    --color-black: #000000;
+    --color-gray: #7e8c86;
+    --color-dark-gray: #5c6666;
+    --color-pink: #ffba9c;
+    --color-dark-pink: #ff9079;
+    --color-yellow: #ffbc58;
+    --color-orange: #fea454;
+    --color-green: #1d2c2a;
+    --color-red: #e9324b;
 
-		--color-primary: var(--color-green);
-		--color-on-primary: var(--color-pink);
-		--color-secondary: var(--color-pink);
-		--color-on-secondary: var(--color-dark-gray);
-		--color-accent: var(--color-yellow);
-		--color-on-accent: var(--color-dark-gray);
+    --color-primary: var(--color-green);
+    --color-on-primary: var(--color-pink);
+    --color-secondary: var(--color-pink);
+    --color-on-secondary: var(--color-dark-gray);
+    --color-accent: var(--color-yellow);
+    --color-on-accent: var(--color-dark-gray);
 
-		--color-success: var(--color-green);
-		--color-on-success: var(--color-pink);
-		--color-error: var(--color-red);
-		--color-on-error: var(--color-green);
-		--color-warning: var(--color-yellow);
-		--color-on-warning: var(--color-dark-gray);
+    --color-success: var(--color-green);
+    --color-on-success: var(--color-pink);
+    --color-error: var(--color-red);
+    --color-on-error: var(--color-green);
+    --color-warning: var(--color-yellow);
+    --color-on-warning: var(--color-dark-gray);
 
-		--color-flamingo-beak-tip: var(--color-gray);
-		--color-flamingo-beak-tip-dark: var(--color-dark-gray);
-		--color-flamingo-beak: var(--color-yellow);
-		--color-flamingo-beak-dark: var(--color-orange);
-		--color-flamingo-body: var(--color-pink);
-		--color-flamingo-body-shadow: var(--color-dark-pink);
-		--color-flamingo-eye: var(--color-dark-gray);
+    --color-flamingo-beak-tip: var(--color-gray);
+    --color-flamingo-beak-tip-dark: var(--color-dark-gray);
+    --color-flamingo-beak: var(--color-yellow);
+    --color-flamingo-beak-dark: var(--color-orange);
+    --color-flamingo-body: var(--color-pink);
+    --color-flamingo-body-shadow: var(--color-dark-pink);
+    --color-flamingo-eye: var(--color-dark-gray);
 
-		--color-pegasus-body: var(--color-white);
-		--color-pegasus-eye: var(--color-black);
-		--color-pegasus-hair: var(--color-white);
-		--color-pegasus-ear: var(--color-black);
-		--color-pegasus-wing-shadow: var(--color-black);
-		--color-pegasus-feet: var(--color-black);
+    --color-pegasus-body: var(--color-white);
+    --color-pegasus-eye: var(--color-black);
+    --color-pegasus-hair: var(--color-white);
+    --color-pegasus-ear: var(--color-black);
+    --color-pegasus-wing-shadow: var(--color-black);
+    --color-pegasus-feet: var(--color-black);
 
-		--color-tile-surface: var(--color-gray);
-		--color-tile-step: var(--color-dark-gray);
-	}
+    --color-tile-surface: var(--color-gray);
+    --color-tile-step: var(--color-dark-gray);
+  }
 
-	[data-theme='flamingo'] {
-		--color-background: var(--color-green);
-		--color-on-background: var(--color-pink);
+  [data-theme='flamingo'] {
+    --color-background: var(--color-green);
+    --color-on-background: var(--color-pink);
 
-		--color-primary: var(--color-pink);
-		--color-on-primary: var(--color-green);
-		--color-secondary: var(--color-green);
-		--color-on-secondary: var(--color-pink);
-	}
+    --color-primary: var(--color-pink);
+    --color-on-primary: var(--color-green);
+    --color-secondary: var(--color-green);
+    --color-on-secondary: var(--color-pink);
+  }
 
-	[data-theme='pegasus'] {
-		--color-background: var(--color-black);
-		--color-on-background: var(--color-white);
+  [data-theme='pegasus'] {
+    --color-background: var(--color-black);
+    --color-on-background: var(--color-white);
 
-		--color-primary: var(--color-white);
-		--color-on-primary: var(--color-black);
-		--color-secondary: var(--color-black);
-		--color-on-secondary: var(--color-white);
+    --color-primary: var(--color-white);
+    --color-on-primary: var(--color-black);
+    --color-secondary: var(--color-black);
+    --color-on-secondary: var(--color-white);
 
-		--color-tile-surface: var(--color-white);
-		--color-tile-step: var(--color-dark-gray);
-	}
+    --color-tile-surface: var(--color-white);
+    --color-tile-step: var(--color-dark-gray);
+  }
 
-	[data-theme='dark'] {
-		--color-primary: var(--color-green);
-		--color-on-primary: var(--color-pink);
-		--color-secondary: var(--color-pink);
-		--color-on-secondary: var(--color-dark-gray);
-		--color-accent: var(--color-yellow);
-		--color-on-accent: var(--color-dark-gray);
-	}
+  [data-theme='dark'] {
+    --color-primary: var(--color-green);
+    --color-on-primary: var(--color-pink);
+    --color-secondary: var(--color-pink);
+    --color-on-secondary: var(--color-dark-gray);
+    --color-accent: var(--color-yellow);
+    --color-on-accent: var(--color-dark-gray);
+  }
 }
 
 @utility pressed {
-	transform: scale(0.98);
-	transition: transform 150ms;
+  transform: scale(0.98);
+  transition: transform 150ms;
 }

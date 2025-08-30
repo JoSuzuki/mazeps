@@ -8,7 +8,9 @@
     "dev": "cross-env NODE_ENV=development node --inspect server.js",
     "start": "node server.js",
     "console": "tsx console.ts",
-    "typecheck": "react-router typegen && tsc -b"
+    "typecheck": "react-router typegen && tsc -b",
+    "eslint": "eslint . --fix",
+    "prettier": "prettier . --write"
   },
   "dependencies": {
     "@prisma/client": "^6.15.0",
@@ -53,6 +55,5 @@
     "typescript": "^5.8.3",
     "vite": "^6.3.3",
     "vite-tsconfig-paths": "^5.1.4"
-  },
-  "prettier": "@epic-web/config/prettier"
+  }
 }
