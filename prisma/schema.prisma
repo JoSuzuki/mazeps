@@ -36,7 +36,8 @@ model Tournament {
   rounds       Round[]
   players      TournamentPlayer[]
   status       TournamentStatus  @default(REGISTRATION_OPEN)
-  name         String?
+  name         String
+  desiredTableSize Int
 }
 
 enum TournamentStatus{
