@@ -1,9 +1,11 @@
 interface CenterProps {
-  children: React.ReactNode;
+	children: React.ReactNode
 }
 
-const Center = ({ children }: CenterProps): React.ReactElement => <div className="grid align-center place-content-center h-full relative">
-  {children}
-</div>
+const Center = ({ children }: CenterProps): React.ReactElement => (
+	<div className="align-center relative grid h-full place-content-center">
+		{children}
+	</div>
+)
 
-export default Center;
+export default Center

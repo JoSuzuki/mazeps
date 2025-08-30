@@ -1,8 +1,8 @@
 // eslint-disable
-import 'dotenv/config';
-import repl from "node:repl";
-import prisma from "./app/lib/prisma";
+import 'dotenv/config'
+import repl from 'node:repl'
+import prisma from './app/lib/prisma'
 
-console.log("Prisma loaded:", Boolean(prisma))
+console.log('Prisma loaded:', Boolean(prisma))
 
-repl.start();
+repl.start()

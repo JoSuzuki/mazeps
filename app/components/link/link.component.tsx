@@ -1,7 +1,13 @@
-import { Link as ReactRouterLink, type LinkProps } from "react-router"
+import { Link as ReactRouterLink } from 'react-router'
+import type { LinkProps } from 'react-router'
 
 const Link = (props: LinkProps): React.ReactElement => {
-  return <ReactRouterLink {...props} className={`hover:underline active:pressed ${props.className}`} />
+	return (
+		<ReactRouterLink
+			{...props}
+			className={`active:pressed hover:underline ${props.className}`}
+		/>
+	)
 }
 
 export default Link
