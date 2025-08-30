@@ -1,7 +1,8 @@
-import { Link, type LinkProps as ReactLinkProps } from "react-router"
+import { Link } from "react-router"
+import type { LinkProps as ReactLinkProps } from "react-router";
 
 interface LinkProps extends ReactLinkProps {
-  type?: "primary" | "secondary"
+  styleType?: "primary" | "secondary"
 }
 
 const MAP_CLASSES = {
@@ -10,9 +11,9 @@ const MAP_CLASSES = {
 }
 
 const LinkButton = (props: LinkProps): React.ReactElement => {
-  const { type = "primary", ...linkProps } = props;
+  const { styleType = "primary", ...linkProps } = props;
 
-  return <Link {...linkProps} className={`${MAP_CLASSES[type]} p-2 rounded-md text-center active:pressed ${linkProps.className}`} />
+  return <Link {...linkProps} className={`${MAP_CLASSES[styleType]} p-2 rounded-md text-center active:pressed ${linkProps.className}`} />
 }
 
 export default LinkButton
