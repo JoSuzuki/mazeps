@@ -26,7 +26,7 @@ export default function Route({ loaderData }: Route.ComponentProps) {
   return (
     <Center>
       <Link
-        to={`/user/${loaderData.user.id}`}
+        to={`/users/${loaderData.user.id}`}
         className="absolute top-2 left-2"
       >
         ← Voltar
@@ -107,5 +107,5 @@ export async function action({ context, request, params }: Route.ActionArgs) {
     },
   })
 
-  return redirect(`/user/${user.id}`)
+  return redirect(`/users/${user.id}`)
 }

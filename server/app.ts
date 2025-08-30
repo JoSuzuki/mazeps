@@ -21,9 +21,9 @@ app.use(
     async getLoadContext(request, response) {
       let session = await sessionStorage.getSession(request.headers.cookie)
       let currentUser = session.get('user') as unknown as CurrentUser
-      currentUser.id = Number(currentUser.id)
 
       if (currentUser) {
+        currentUser.id = Number(currentUser.id)
         const user = await prisma.user.findUnique({
           where: { id: currentUser.id },
         })

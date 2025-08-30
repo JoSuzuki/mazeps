@@ -46,7 +46,7 @@ export default function Route({ loaderData }: Route.ComponentProps) {
       <Field label="Role" value={loaderData.user.role} />
       <Spacer size="md" />
       <LinkButton
-        to={`/user/${loaderData.user.id}/edit`}
+        to={`/users/${loaderData.user.id}/edit`}
         styleType="secondary"
         className="w-full"
       >

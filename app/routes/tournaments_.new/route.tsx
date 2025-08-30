@@ -4,9 +4,11 @@ import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
 import Spacer from '~/components/spacer/spacer.component'
 import TextInput from '~/components/text-input/text-input.component'
+import { Role } from '~/generated/prisma/enums'
 
 export async function loader({ context }: Route.LoaderArgs) {
-  if (context.currentUser) return redirect('/')
+  if (!context.currentUser) return redirect('/login')
+  if (context.currentUser.role !== Role.ADMIN) return redirect('/')
 
   return data(null)
 }
@@ -14,7 +16,7 @@ export async function loader({ context }: Route.LoaderArgs) {
 export default function Route({}: Route.ComponentProps) {
   return (
     <Center>
-      <h1>Criar Torneio</h1>
+      <h1>Criar torneio</h1>
       <Form method="post">
         <TextInput
           id="name"
@@ -27,7 +29,7 @@ export default function Route({}: Route.ComponentProps) {
         <TextInput
           id="desiredTableSize"
           name="desiredTableSize"
-          label="Tamanho das Mesa"
+          label="Tamanho da mesa"
           type="number"
           required={true}
         />
@@ -39,6 +41,9 @@ export default function Route({}: Route.ComponentProps) {
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
+  if (context.currentUser?.role !== Role.ADMIN) {
+    return data({ error: 'Apenas admins podem criar torneios' })
+  }
   const formData = await request.formData()
   const name = formData.get('name') as string
   const desiredTableSize = formData.get('desiredTableSize') as string
@@ -50,5 +55,5 @@ export async function action({ request, context }: Route.ActionArgs) {
     },
   })
 
-  return redirect(`/tournament/${tournament.id}`)
+  return redirect(`/tournaments/${tournament.id}`)
 }
