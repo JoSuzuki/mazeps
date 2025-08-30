@@ -40,7 +40,9 @@ export const googleStrategy = new OAuth2Strategy(
       where: {
         email: googleUser.email,
       },
-      update: {},
+      update: {
+        googleId: googleUser.sub,
+      },
       create: {
         email: googleUser.email,
         name: googleUser.name,

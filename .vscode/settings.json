@@ -1,9 +1,9 @@
 {
   "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "typescript.preferences.includePathsInAutoImports": "on",
   "typescript.suggest.autoImports": true,
   "typescript.suggest.paths": true,
   "typescript.preferences.importModuleSpecifier": "shortest",
