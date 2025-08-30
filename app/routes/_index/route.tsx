@@ -1,9 +1,8 @@
-import type { Route } from "./+types/route";
-import LinkButton from "../../components/link-button/link-button.component";
-import Title from "./title.component";
-import Link from "../../components/link/link.component";
 import Board from "../../components/board/board.component";
-import Pegasus from "../../components/board/pegasus.component";
+import Link from "../../components/link/link.component";
+import LinkButton from "../../components/link-button/link-button.component";
+import type { Route } from "./+types/route";
+import Title from "./title.component";
 
 export const meta = ({ }: Route.MetaArgs) => {
   return [
@@ -21,7 +20,7 @@ export default function Route({ loaderData }: Route.ComponentProps) {
     <>
       <nav className="flex items-center justify-end p-4">
         {loaderData.currentUser ? (
-          <div>Bem vindo, <Link to="/profile" className="bg-primary text-on-primary rounded-md p-0.5">{loaderData.currentUser.name}</Link></div>
+          <div>Bem vindo, <Link to="/profile" className="bg-primary text-on-primary rounded-md p-0.5">{loaderData.currentUser.nickname}</Link></div>
         ) : (
           <LinkButton to="/login">Login</LinkButton>
         )}

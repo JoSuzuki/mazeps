@@ -18,10 +18,11 @@ datasource db {
 model User {
   id      Int      @id @default(autoincrement())
   email   String   @unique
-  name    String?
-  nickname String?
+  name    String
+  nickname String @unique
   password String?
   googleId String?
+  role Role @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   tournamentPlayers TournamentPlayer[]
@@ -29,10 +30,16 @@ model User {
   @@index([email])
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
+
 model Tournament {
   id           Int      @id @default(autoincrement())
   createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt 
+  updatedAt    DateTime @updatedAt
   rounds       Round[]
   players      TournamentPlayer[]
   status       TournamentStatus  @default(REGISTRATION_OPEN)
@@ -82,9 +89,9 @@ model TournamentPlayer {
 
 model MatchResult {
   id        Int     @id @default(autoincrement())
-  player    TournamentPlayer  @relation(fields: [playerId], references: [id]) 
+  player    TournamentPlayer  @relation(fields: [playerId], references: [id])
   playerId  Int
-  match     Match   @relation(fields: [matchId], references: [id]) 
+  match     Match   @relation(fields: [matchId], references: [id])
   matchId   Int
   points    Float
 }

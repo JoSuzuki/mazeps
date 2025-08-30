@@ -1,13 +1,13 @@
 import { Form, data, redirect } from "react-router";
-import type { Route } from "./+types/route";
-import { authenticator, sessionStorage } from "~/services/session";
-import TextInput from "../../components/text-input/text-input.component";
-import Link from "../../components/link/link.component";
-import Spacer from "../../components/spacer/spacer.component";
-import Button from "../../components/primary-button/primary-button.component";
-import GoogleLoginButton from "../../components/google-login-button/google-login-button.component";
-import LinkButton from "../../components/link-button/link-button.component";
+import Button from "../../components/button/button.component";
 import Center from "../../components/center/center.component";
+import GoogleLoginButton from "../../components/google-login-button/google-login-button.component";
+import Link from "../../components/link/link.component";
+import LinkButton from "../../components/link-button/link-button.component";
+import Spacer from "../../components/spacer/spacer.component";
+import TextInput from "../../components/text-input/text-input.component";
+import type { Route } from "./+types/route";
+import { authenticator, sessionStorage, setSession } from "~/services/session";
 
 export async function loader({ context }: Route.LoaderArgs) {
   if (context.currentUser) return redirect("/");
@@ -47,7 +47,7 @@ export default function Route({ actionData }: Route.ComponentProps) {
       <Spacer size="sm" />
       <GoogleLoginButton />
       <Spacer size="sm" />
-      <LinkButton to="/sign-up" type="secondary" className="w-full">Cadastre-se</LinkButton>
+      <LinkButton to="/sign-up" styleType="secondary" className="w-full">Cadastre-se</LinkButton>
     </Center>
   );
 }
@@ -56,15 +56,9 @@ export async function action({ request }: Route.ActionArgs) {
   try {
     let user = await authenticator.authenticate("email-password", request);
 
-    let session = await sessionStorage.getSession(
-      request.headers.get("cookie")
-    );
-
-    session.set("user", user);
-
     return redirect("/", {
       headers: {
-        "Set-Cookie": await sessionStorage.commitSession(session),
+        "Set-Cookie": await setSession(request, user),
       },
     });
   } catch (error) {

@@ -6,6 +6,7 @@ export default [
   {
     rules: {
       'import/consistent-type-specifier-style': ['error', 'prefer-top-level'],
+      "import-x/no-duplicates": ["warning", {"prefer-inline": false}]
     },
   },
   {

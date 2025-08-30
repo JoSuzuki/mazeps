@@ -44,6 +44,7 @@ export const googleStrategy = new OAuth2Strategy(
       create: {
         email: googleUser.email,
         name: googleUser.name,
+        nickname: googleUser.name,
         googleId: googleUser.sub,
       }
     })
