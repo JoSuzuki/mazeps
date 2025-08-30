@@ -28,10 +28,6 @@ export default function Route({ loaderData }: Route.ComponentProps) {
         <TextInput id="email" name="email" label="Email" type="email" required={true} defaultValue={loaderData.currentUser.email} />
         <Spacer size="sm" />
         <TextInput id="nickname" name="nickname" label="Apelido" type="text" required={true} defaultValue={loaderData.currentUser.nickname} />
-        {loaderData.currentUser.role === Role.ADMIN && <>
-          <Spacer size="sm" />
-          <RadioGroup label="Role" name="role" required={true} defaultValue={loaderData.currentUser.role} options={Object.values(Role).map(role => ({ id: role, label: role, value: role }))} />
-        </>}
         <Spacer size="md" />
         <Button className="w-full" type="submit">Salvar</Button>
       </Form>
@@ -52,7 +48,6 @@ export async function action({ context, request }: Route.ActionArgs) {
       name: formData.get('name') as string,
       email: formData.get('email') as string,
       nickname: formData.get('nickname') as string,
-      ...(context.currentUser.role === Role.ADMIN && { role: formData.get('role') as Role })
     }
   });
 
