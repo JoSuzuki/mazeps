@@ -42,8 +42,8 @@ Run the migrations:
 npm run migrate:dev
 ```
 
-Your application will be available at `http://localhost:3000`.
-You can access Adminer at `http://localhost:8080`.
+Your application will be available at `http://localhost:3000`. You can access
+Adminer at `http://localhost:8080`.
 
 ## Building for Production
 
