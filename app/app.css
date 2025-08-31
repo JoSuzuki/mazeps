@@ -103,6 +103,14 @@
 
     --color-tile-surface: var(--color-white);
     --color-tile-step: var(--color-dark-gray);
+
+    --color-flamingo-beak-tip: var(--color-white);
+    --color-flamingo-beak-tip-dark: var(--color-gray);
+    --color-flamingo-beak: var(--color-dark-gray);
+    --color-flamingo-beak-dark: var(--color-black);
+    --color-flamingo-body: var(--color-white);
+    --color-flamingo-body-shadow: var(--color-gray);
+    --color-flamingo-eye: var(--color-black);
   }
 
   [data-theme='dark'] {

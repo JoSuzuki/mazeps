@@ -79,13 +79,15 @@ model Match {
 
 model TournamentPlayer {
   id                Int        @id @default(autoincrement())
-  name              String?
   activeTournament  Tournament @relation(fields: [tournamentId], references: [id])
   tournamentId      Int
   matches           Match[]
   matchResults      MatchResult[]
-  user              User?      @relation(fields: [userId], references: [id])
+  user              User       @relation(fields: [userId], references: [id])
   userId            Int
+
+  @@unique([tournamentId, userId])
+  @@index([tournamentId, userId])
 }
 
 model MatchResult {

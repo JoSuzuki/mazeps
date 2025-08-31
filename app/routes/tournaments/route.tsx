@@ -1,14 +1,14 @@
-import { data, Link, redirect } from 'react-router'
+import { data, redirect, useFetcher } from 'react-router'
 import type { Route } from './+types/route'
+import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
+import Link from '~/components/link/link.component'
 import LinkButton from '~/components/link-button/link-button.component'
 import Pagination from '~/components/pagination/pagination.component'
 import Table from '~/components/table/table.component'
 import { Role } from '~/generated/prisma/enums'
 
 export async function loader({ context, request }: Route.LoaderArgs) {
-  if (!context.currentUser) return redirect('/login')
-
   const url = new URL(request.url)
   const page = Number(url.searchParams.get('page') || 1)
   const limit = 10
@@ -18,6 +18,11 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     context.prisma.tournament.findMany({
       skip,
       take: limit,
+      include: {
+        players: {
+          where: { userId: context.currentUser?.id },
+        },
+      },
     }),
     context.prisma.tournament.count(),
   ])
@@ -26,6 +31,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 
   return {
     tournaments,
+    currentUser: context.currentUser,
     pagination: {
       currentPage: page,
       totalPages,
@@ -35,13 +41,27 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export default function Route({ loaderData }: Route.ComponentProps) {
+  let fetcher = useFetcher()
+
   return (
     <Center>
+      <Link to="/" className="absolute top-2 left-2">
+        ← Voltar
+      </Link>
+      {loaderData.currentUser?.role === Role.ADMIN && (
+        <LinkButton
+          className="absolute top-2 right-2"
+          styleType="secondary"
+          to="/tournaments/new"
+        >
+          Criar torneio
+        </LinkButton>
+      )}
       <h1 className="flex justify-center text-lg">Torneios</h1>
       <Table
+        emptyState={'Não há torneios cadastrados ainda'}
         data={loaderData.tournaments}
         columns={[
-          { key: 'id', title: 'Id', value: (tournament) => tournament.id },
           {
             key: 'name',
             title: 'Nome',
@@ -54,14 +74,21 @@ export default function Route({ loaderData }: Route.ComponentProps) {
           {
             key: 'edit',
             title: 'Ações',
-            value: (tournament) => (
-              <LinkButton
-                styleType="secondary"
-                to={`/tournament/${tournament.id}/tournament-players/new`}
-              >
-                Inscrever-se
-              </LinkButton>
-            ),
+            value: (tournament) => {
+              const player = tournament.players[0]
+              return player ? (
+                <div>Inscrito</div>
+              ) : (
+                <fetcher.Form
+                  method="post"
+                  action={`/tournaments/${tournament.id}/tournament-players/new`}
+                >
+                  <Button styleType="secondary" type="submit">
+                    Inscrever-se
+                  </Button>
+                </fetcher.Form>
+              )
+            },
           },
         ]}
       />
