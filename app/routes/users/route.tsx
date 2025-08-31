@@ -46,6 +46,7 @@ export default function Route({ loaderData }: Route.ComponentProps) {
       <h1 className="flex justify-center text-lg">Usuários</h1>
       <Spacer size="md" />
       <Table
+        emptyState={'Não existem usuários'}
         data={loaderData.users}
         columns={[
           { key: 'id', title: 'Id', value: (user) => user.id },

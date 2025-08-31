@@ -11,12 +11,16 @@ interface TableColumn<TData> {
 interface TableProps<TableData extends TableRow> {
   data: TableData[]
   columns: TableColumn<TableData>[]
+  emptyState: React.ReactNode
 }
 
 const Table = <TableData extends TableRow>({
   columns,
   data,
+  emptyState,
 }: TableProps<TableData>) => {
+  if (data.length === 0) return emptyState
+
   return (
     <table>
       <thead>

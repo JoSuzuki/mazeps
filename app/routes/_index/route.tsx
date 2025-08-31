@@ -3,6 +3,7 @@ import Title from './title.component'
 import Board from '~/components/board/board.component'
 import Link from '~/components/link/link.component'
 import LinkButton from '~/components/link-button/link-button.component'
+import { Role } from '~/generated/prisma/enums'
 
 export const meta = ({}: Route.MetaArgs) => {
   return [
@@ -18,9 +19,13 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
 export default function Route({ loaderData }: Route.ComponentProps) {
   return (
     <>
-      <nav className="flex items-center justify-end p-4">
+      <nav className="flex items-center justify-end gap-4 p-4">
+        <Link to="/tournaments">Torneios</Link>
+        {loaderData.currentUser?.role === Role.ADMIN && (
+          <Link to="/users">Usuários</Link>
+        )}
         {loaderData.currentUser ? (
-          <div>
+          <div className="ml-auto">
             Bem vindo,{' '}
             <Link
               to="/profile"
