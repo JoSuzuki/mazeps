@@ -53,7 +53,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           }}
         ></script>
       </head>
-      <body className="h-full">
+      <body className="flex h-full flex-col">
         {children}
         <ScrollRestoration />
         <Scripts />
