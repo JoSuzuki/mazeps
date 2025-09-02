@@ -16,7 +16,7 @@ const LinkButton = (props: LinkProps): React.ReactElement => {
   return (
     <Link
       {...linkProps}
-      className={`${MAP_CLASSES[styleType]} active:pressed rounded-md p-2 text-center ${linkProps.className}`}
+      className={`${MAP_CLASSES[styleType]} active:pressed rounded-md p-2 text-center ${linkProps.className ?? ''}`}
     />
   )
 }

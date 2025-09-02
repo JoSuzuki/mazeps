@@ -40,9 +40,6 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 export default function Route({ loaderData }: Route.ComponentProps) {
   return (
     <Center>
-      <Link to="/" className="absolute top-2 left-2">
-        ← Voltar
-      </Link>
       <h1 className="flex justify-center text-lg">Usuários</h1>
       <Spacer size="md" />
       <Table

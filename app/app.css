@@ -37,7 +37,37 @@
 }
 
 @layer base {
+  @media screen and (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+
+    ::view-transition-group(*) {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+
+  @view-transition {
+    navigation: auto;
+  }
+
+  ::view-transition-new(*):only-child {
+    animation: none;
+  }
+  ::view-transition-old(*):only-child {
+    animation-duration: 1ms;
+  }
+
+  ::view-transition-group(root) {
+    animation: none;
+  }
+
   :root {
+    will-change: transform;
     --color-white: #ffffff;
     --color-black: #000000;
     --color-gray: #7e8c86;

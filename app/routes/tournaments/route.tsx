@@ -45,9 +45,6 @@ export default function Route({ loaderData }: Route.ComponentProps) {
 
   return (
     <Center>
-      <Link to="/" className="absolute top-2 left-2">
-        ← Voltar
-      </Link>
       {loaderData.currentUser?.role === Role.ADMIN && (
         <LinkButton
           className="absolute top-2 right-2"
@@ -66,7 +63,13 @@ export default function Route({ loaderData }: Route.ComponentProps) {
             key: 'name',
             title: 'Nome',
             value: (tournament) => (
-              <Link to={`/tournaments/${tournament.id}`}>
+              <Link
+                to={`/tournaments/${tournament.id}`}
+                viewTransition
+                style={{
+                  viewTransitionName: `tournament-title-${tournament.id}`,
+                }}
+              >
                 {tournament.name}
               </Link>
             ),

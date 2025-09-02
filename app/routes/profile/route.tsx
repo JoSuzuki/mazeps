@@ -28,7 +28,7 @@ const Field = ({ label, value }: FieldProps) => (
 export default function Route({ loaderData }: Route.ComponentProps) {
   return (
     <Center>
-      <Link to="/" className="absolute top-2 left-2">
+      <Link to="/" className="absolute top-2 left-6">
         ← Voltar
       </Link>
       <h1 className="flex justify-center text-lg">Perfil</h1>

@@ -5,7 +5,7 @@ const Link = (props: LinkProps): React.ReactElement => {
   return (
     <ReactRouterLink
       {...props}
-      className={`active:pressed hover:underline ${props.className}`}
+      className={`active:pressed hover:underline ${props.className ?? ''}`}
     />
   )
 }

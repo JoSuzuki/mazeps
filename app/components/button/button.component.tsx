@@ -12,7 +12,7 @@ const Button = (props: ButtonProps): React.ReactElement => {
   return (
     <button
       {...buttonProps}
-      className={`${MAP_CLASSES[styleType]} active:pressed rounded-md p-2 hover:cursor-pointer ${props.className}`}
+      className={`${MAP_CLASSES[styleType]} active:pressed rounded-md p-2 hover:cursor-pointer ${props.className ?? ''}`}
     />
   )
 }

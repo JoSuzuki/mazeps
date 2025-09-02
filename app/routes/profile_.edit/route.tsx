@@ -17,7 +17,7 @@ export async function loader({ context }: Route.LoaderArgs) {
 export default function Route({ loaderData }: Route.ComponentProps) {
   return (
     <Center>
-      <Link to="/profile" className="absolute top-2 left-2">
+      <Link to="/profile" className="absolute top-2 left-6">
         ← Voltar
       </Link>
       <h1 className="flex justify-center text-lg">Editar Profile</h1>

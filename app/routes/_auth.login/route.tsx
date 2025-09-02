@@ -22,7 +22,7 @@ export const meta = ({}: Route.MetaArgs) => {
 export default function Route({ actionData }: Route.ComponentProps) {
   return (
     <Center>
-      <Link to="/" className="absolute top-2 left-2">
+      <Link to="/" className="absolute top-2 left-6">
         ← Voltar
       </Link>
       <h1 className="flex justify-center text-lg">Login</h1>

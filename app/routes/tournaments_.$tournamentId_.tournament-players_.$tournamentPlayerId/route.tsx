@@ -30,13 +30,21 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
     <Center>
       <Link
         to={`/tournaments/${params.tournamentId}`}
-        className="absolute top-2 left-2"
+        className="absolute top-2 left-6"
+        viewTransition
       >
         ← Voltar
       </Link>
-      <h1 className="flex justify-center text-lg">
-        {loaderData.tournamentPlayer.user.nickname}
-      </h1>
+      <div className="flex justify-center">
+        <h1
+          className={`text-lg`}
+          style={{
+            viewTransitionName: `tournament-player-${params.tournamentPlayerId}`,
+          }}
+        >
+          {loaderData.tournamentPlayer.user.nickname}
+        </h1>
+      </div>
       {loaderData.tournamentPlayer.matches.length === 0 &&
         'Não há partidas jogadas ainda'}
       {loaderData.tournamentPlayer.matches.map((match) => (

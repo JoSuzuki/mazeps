@@ -27,7 +27,7 @@ export default function Route({ loaderData }: Route.ComponentProps) {
     <Center>
       <Link
         to={`/users/${loaderData.user.id}`}
-        className="absolute top-2 left-2"
+        className="absolute top-2 left-6"
       >
         ← Voltar
       </Link>

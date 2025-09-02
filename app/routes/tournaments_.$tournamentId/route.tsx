@@ -33,7 +33,7 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
   const fetcher = useFetcher()
   return (
     <Center>
-      <Link to="/tournaments" className="absolute top-2 left-2">
+      <Link to="/tournaments" viewTransition className="absolute top-2 left-6">
         ← Voltar
       </Link>
       <div className="absolute top-2 right-2">
@@ -52,7 +52,12 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
           </fetcher.Form>
         )}
       </div>
-      <h1 className="flex justify-center text-lg">
+      <h1
+        className={`flex justify-center text-lg`}
+        style={{
+          viewTransitionName: `tournament-title-${params.tournamentId}`,
+        }}
+      >
         {loaderData.tournament.name}
       </h1>
       <h2>Jogadores</h2>
@@ -60,7 +65,9 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
         {loaderData.tournament.players.map((player) => (
           <li key={player.user.nickname}>
             <Link
+              viewTransition
               to={`/tournaments/${params.tournamentId}/tournament-players/${player.id}`}
+              style={{ viewTransitionName: `tournament-player-${player.id}` }}
             >
               {player.user.nickname}
             </Link>
