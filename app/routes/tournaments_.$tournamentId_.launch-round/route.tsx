@@ -1,7 +1,7 @@
 import { data, redirect } from "react-router"
 import type { Route } from "../+types/_base-layout"
 import { Role, TournamentStatus } from "~/generated/prisma/enums"
-
+import type { ContextType } from "react"
 
 
 export async function action({context,  params}: Route.ActionArgs) {
@@ -22,6 +22,24 @@ export async function action({context,  params}: Route.ActionArgs) {
       data: { 
         status: TournamentStatus.OPEN_ROUND 
       }
+    })
+
+    let lastRound = await context.prisma.round.findFirst({
+      where: { tournamentId: Number(params.tournamentId)},
+      orderBy: { roundNumber: "desc"}
+    })
+
+    let lastRoundNumber = 0
+
+    if (lastRound) {
+      lastRoundNumber = lastRound.roundNumber
+    }
+
+    await context.prisma.round.create({
+      data: {
+        tournamentId: Number(params.tournamentId),
+        roundNumber: lastRoundNumber +1 
+      },
     })
 
     return data({ success: true })
