@@ -3,6 +3,7 @@ import type { Route } from './+types/route'
 import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
 import Link from '~/components/link/link.component'
+import { Role, TournamentStatus } from '~/generated/prisma/enums'
 
 export async function loader({ context, params }: Route.LoaderArgs) {
   if (!context.currentUser) return redirect('/login')
@@ -23,9 +24,12 @@ export async function loader({ context, params }: Route.LoaderArgs) {
       }),
   ])
 
+  let isAdmin = context.currentUser.role == Role.ADMIN
+
   return {
     tournament,
     tournamentPlayer,
+    isAdmin
   }
 }
 
@@ -60,6 +64,14 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
       >
         {loaderData.tournament.name}
       </h1>
+      <h1
+        className={`flex justify-center text-lg`}
+        style={{
+          viewTransitionName: `tournament-title-${params.tournamentId}`,
+        }}
+      >
+        {loaderData.tournament.status}
+      </h1>
       <h2>Jogadores</h2>
       <ul className="list-inside list-disc">
         {loaderData.tournament.players.map((player) => (
@@ -74,6 +86,14 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
           </li>
         ))}
       </ul>
+      {loaderData.isAdmin && loaderData.tournament.status === TournamentStatus.REGISTRATION_OPEN && (
+        <fetcher.Form
+        method="post"
+        action={`/tournaments/${params.tournamentId}/launch-round`}
+      >
+        <Button type="submit">Lançar Rodada</Button>
+      </fetcher.Form>
+      )}
     </Center>
   )
 }
