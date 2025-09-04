@@ -66,9 +66,6 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
       </h1>
       <h1
         className={`flex justify-center text-lg`}
-        style={{
-          viewTransitionName: `tournament-title-${params.tournamentId}`,
-        }}
       >
         {loaderData.tournament.status}
       </h1>
