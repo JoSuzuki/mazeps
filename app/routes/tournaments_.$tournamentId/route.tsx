@@ -29,7 +29,7 @@ export async function loader({ context, params }: Route.LoaderArgs) {
   return {
     tournament,
     tournamentPlayer,
-    isAdmin
+    isAdmin,
   }
 }
 
@@ -86,14 +86,15 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
           </li>
         ))}
       </ul>
-      {loaderData.isAdmin && loaderData.tournament.status === TournamentStatus.REGISTRATION_OPEN && (
-        <fetcher.Form
-        method="post"
-        action={`/tournaments/${params.tournamentId}/launch-round`}
-      >
-        <Button type="submit">Lançar Rodada</Button>
-      </fetcher.Form>
-      )}
+      {loaderData.isAdmin &&
+        loaderData.tournament.status === TournamentStatus.REGISTRATION_OPEN && (
+          <fetcher.Form
+            method="post"
+            action={`/tournaments/${params.tournamentId}/launch-round`}
+          >
+            <Button type="submit">Lançar Rodada</Button>
+          </fetcher.Form>
+        )}
     </Center>
   )
 }
