@@ -15,7 +15,7 @@ async function createRound(
   const newRound = await context.prisma.round.create({
     data: {
       tournamentId: Number(tournamentId),
-      roundNumber: (lastRound.roundNumber ?? 0) + 1,
+      roundNumber: (lastRound?.roundNumber ?? 0) + 1,
     },
   })
 
