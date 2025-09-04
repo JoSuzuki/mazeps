@@ -1,8 +1,30 @@
 import { data, redirect } from "react-router"
 import type { Route } from "../+types/_base-layout"
 import { Role, TournamentStatus } from "~/generated/prisma/enums"
-import type { ContextType } from "react"
+import type { Round } from "~/generated/prisma/client"
 
+async function createRound(context: Route.ActionArgs["context"], tournamentId: number): Promise<Round> {
+  let lastRound = await context.prisma.round.findFirst({
+    where: { tournamentId: Number(tournamentId)},
+    orderBy: { roundNumber: "desc"}
+  })
+
+  let lastRoundNumber = 0
+
+  if (lastRound) {
+    lastRoundNumber = lastRound.roundNumber
+  }
+
+  const newRound = await context.prisma.round.create({
+    data: {
+      tournamentId: Number(tournamentId),
+      roundNumber: lastRoundNumber + 1 
+    },
+  })
+
+  return newRound
+  
+}
 
 export async function action({context,  params}: Route.ActionArgs) {
     if (!context.currentUser) return redirect('/login')
@@ -24,23 +46,7 @@ export async function action({context,  params}: Route.ActionArgs) {
       }
     })
 
-    let lastRound = await context.prisma.round.findFirst({
-      where: { tournamentId: Number(params.tournamentId)},
-      orderBy: { roundNumber: "desc"}
-    })
-
-    let lastRoundNumber = 0
-
-    if (lastRound) {
-      lastRoundNumber = lastRound.roundNumber
-    }
-
-    await context.prisma.round.create({
-      data: {
-        tournamentId: Number(params.tournamentId),
-        roundNumber: lastRoundNumber +1 
-      },
-    })
+    const newRound = await createRound(context, Number(params.tournamentId))
 
     return data({ success: true })
   }
