@@ -120,20 +120,32 @@ async function createRoundMatches(
   roundId: number,
   tournamentRank: number[],
 ) {
-  let aux = 0
+  let cumulativeIndex = 0
 
-  for (const numberOfPlayersInTable of playersPerTable) {
+  let headPlayerOfNextTableIndexes = playersPerTable.map((num) => {
+    cumulativeIndex += num
+    return cumulativeIndex
+  })
+
+  for (var i = 0; i < headPlayerOfNextTableIndexes.length; i++) {
+    let headPlayerIndex
+
+    if (i == 0) {
+      headPlayerIndex = 0
+    } else {
+      headPlayerIndex = headPlayerOfNextTableIndexes[i - 1]
+    }
+
     await context.prisma.match.create({
       data: {
         roundId: roundId,
         players: {
           connect: tournamentRank
-            .slice(aux, aux + numberOfPlayersInTable)
+            .slice(headPlayerIndex, headPlayerOfNextTableIndexes[i])
             .map((playerId) => ({ id: playerId })),
         },
       },
     })
-    aux += numberOfPlayersInTable
   }
 }
 
