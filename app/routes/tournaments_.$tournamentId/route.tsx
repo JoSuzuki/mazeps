@@ -64,9 +64,7 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
       >
         {loaderData.tournament.name}
       </h1>
-      <h1
-        className={`flex justify-center text-lg`}
-      >
+      <h1 className={`flex justify-center text-lg`}>
         {loaderData.tournament.status}
       </h1>
       <h2>Jogadores</h2>
