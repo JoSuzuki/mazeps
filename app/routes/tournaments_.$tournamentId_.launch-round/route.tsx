@@ -98,20 +98,20 @@ function calculateTournamentRank(
   return rank
 }
 
-function calculatePlayersPerTable(
+function calculateNumberOfPlayersPerTable(
   numberOfTables: number,
   numberOfPlayers: number,
 ): number[] {
-  let playersPerTable: number[] = Array.from(
+  let numberOfPlayersPerTable: number[] = Array.from(
     { length: numberOfTables },
     () => 0,
   )
 
   for (var i = 0; i < numberOfPlayers; i++) {
-    playersPerTable[i % numberOfTables] += 1
+    numberOfPlayersPerTable[i % numberOfTables] += 1
   }
 
-  return playersPerTable
+  return numberOfPlayersPerTable
 }
 
 async function createRoundMatches(
@@ -165,14 +165,14 @@ async function calculateAndCreateRoundMatches(
     tournamentPlayersIds.length / tournament.desiredTableSize,
   )
 
-  const playersPerTable = calculatePlayersPerTable(
+  const numberOfPlayersPerTable = calculateNumberOfPlayersPerTable(
     numberOfTables,
     tournamentPlayersIds.length,
   )
 
   await createRoundMatches(
     context,
-    playersPerTable,
+    numberOfPlayersPerTable,
     currentRound.id,
     tournamentRank,
   )
