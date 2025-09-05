@@ -38,12 +38,106 @@ async function createRound(
     },
   })
 
-  console.log('criei_round_novo')
-
   return newRound
 }
 
+interface TournamentPoints {
+  [key: number | string]: number
+}
+
+async function calculateTournamentPoints(
+  context: Route.ActionArgs['context'],
+  tournamentPlayersIds: number[],
+): Promise<TournamentPoints> {
+  const tournamentMatchResults = await context.prisma.matchResult.findMany({
+    where: {
+      playerId: {
+        in: tournamentPlayersIds,
+      },
+    },
+  })
+
+  const totalPoints = Object.fromEntries(
+    tournamentPlayersIds.map((playerId) => [playerId, 0]),
+  )
+
+  tournamentMatchResults.forEach((matchResult) => {
+    totalPoints[matchResult.playerId] += matchResult.points
+  })
+
+  return totalPoints
+}
+
+function calculateTournamentRank(
+  tournamentPlayersIds: number[],
+  tournamentPoints: TournamentPoints,
+): number[] {
+  let rank: number[] = []
+
+  let shuffledPlayerIds = shuffle(tournamentPlayersIds)
+
+  shuffledPlayerIds.forEach((playerId) => {
+    if (rank.length == 0) {
+      rank[0] = playerId
+    } else {
+      let i = 0
+      let inserted = false
+      while (i < rank.length && !inserted) {
+        if (tournamentPoints[playerId] > tournamentPoints[rank[i]]) {
+          rank.splice(i, 0, playerId)
+          inserted = true
+        }
+        i++
+      }
+      if (!inserted) {
+        rank.push(playerId)
+      }
+    }
+  })
+
+  return rank
+}
+
+function calculatePlayersPerTable(
+  numberOfTables: number,
+  numberOfPlayers: number,
+): number[] {
+  let playersPerTable: number[] = Array.from(
+    { length: numberOfTables },
+    () => 0,
+  )
+
+  for (var i = 0; i < numberOfPlayers; i++) {
+    playersPerTable[i % numberOfTables] += 1
+  }
+
+  return playersPerTable
+}
+
 async function createRoundMatches(
+  context: Route.ActionArgs['context'],
+  playersPerTable: number[],
+  roundId: number,
+  tournamentRank: number[],
+) {
+  let aux = 0
+
+  for (const numberOfPlayersInTable of playersPerTable) {
+    await context.prisma.match.create({
+      data: {
+        roundId: roundId,
+        players: {
+          connect: tournamentRank
+            .slice(aux, aux + numberOfPlayersInTable)
+            .map((playerId) => ({ id: playerId })),
+        },
+      },
+    })
+    aux += numberOfPlayersInTable
+  }
+}
+
+async function calculateAndCreateRoundMatches(
   context: Route.ActionArgs['context'],
   currentRound: Round,
   tournamentId: Number,
@@ -55,87 +149,33 @@ async function createRoundMatches(
     },
   })
 
-  console.log('busquei_torneio')
-
   const tournamentPlayersIds = tournament.players.map((player) => player.id)
 
-  const tournamentMatchResults = await context.prisma.matchResult.findMany({
-    where: {
-      playerId: {
-        in: tournamentPlayersIds,
-      },
-    },
-  })
-
-  console.log('busquei_resultados')
-
-  const totalPoints = Object.fromEntries(
-    tournamentPlayersIds.map((playerId) => [playerId, 0]),
+  const totalPoints = await calculateTournamentPoints(
+    context,
+    tournamentPlayersIds,
   )
 
-  tournamentMatchResults.forEach((matchResult) => {
-    totalPoints[matchResult.playerId] += matchResult.points
-  })
-
-  console.log('calculei_resultado')
-
-  let rank: number[] = []
-
-  let shuffledPlayerIds = shuffle(tournamentPlayersIds)
-
-  console.log('embaralhei_players')
-
-  shuffledPlayerIds.forEach((playerId) => {
-    if (rank.length == 0) {
-      rank[0] = playerId
-      console.log(rank)
-    } else {
-      let i = 0
-      let inserted = false
-      while (i < rank.length && !inserted) {
-        if (totalPoints[playerId] > totalPoints[rank[i]]) {
-          rank.splice(i, 0, playerId)
-          inserted = true
-        }
-        console.log(rank)
-        i++
-      }
-      if (!inserted) {
-        rank.push(playerId)
-      }
-    }
-  })
-
-  console.log(rank)
+  const tournamentRank = calculateTournamentRank(
+    tournamentPlayersIds,
+    totalPoints,
+  )
 
   const numberOfTables = Math.ceil(
     tournamentPlayersIds.length / tournament.desiredTableSize,
   )
 
-  let playersPerTable: number[] = Array.from(
-    { length: numberOfTables },
-    () => 0,
+  const playersPerTable = calculatePlayersPerTable(
+    numberOfTables,
+    tournamentPlayersIds.length,
   )
 
-  for (var i = 0; i < tournamentPlayersIds.length; i++) {
-    playersPerTable[i % numberOfTables] += 1
-  }
-
-  let aux = 0
-
-  for (const numberOfPlayers of playersPerTable) {
-    await context.prisma.match.create({
-      data: {
-        roundId: currentRound.id,
-        players: {
-          connect: rank
-            .slice(aux, aux + numberOfPlayers)
-            .map((playerId) => ({ id: playerId })),
-        },
-      },
-    })
-    aux += numberOfPlayers
-  }
+  await createRoundMatches(
+    context,
+    playersPerTable,
+    currentRound.id,
+    tournamentRank,
+  )
 }
 
 export async function action({ context, params }: Route.ActionArgs) {
@@ -151,7 +191,11 @@ export async function action({ context, params }: Route.ActionArgs) {
 
   const newRound = await createRound(context, Number(params.tournamentId))
 
-  await createRoundMatches(context, newRound, Number(params.tournamentId))
+  await calculateAndCreateRoundMatches(
+    context,
+    newRound,
+    Number(params.tournamentId),
+  )
 
   return data({ success: true })
 }
