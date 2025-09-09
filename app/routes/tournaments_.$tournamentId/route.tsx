@@ -3,8 +3,8 @@ import type { Route } from './+types/route'
 import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
 import Link from '~/components/link/link.component'
-import { Role, TournamentStatus } from '~/generated/prisma/enums'
 import Spacer from '~/components/spacer/spacer.component'
+import { Role, TournamentStatus } from '~/generated/prisma/enums'
 
 export async function loader({ context, params }: Route.LoaderArgs) {
   if (!context.currentUser) return redirect('/login')
@@ -14,14 +14,17 @@ export async function loader({ context, params }: Route.LoaderArgs) {
       where: { id: Number(params.tournamentId) },
       include: {
         players: { include: { user: { select: { nickname: true } } } },
-        rounds: { include: 
-          {matches: 
-            {include: 
-              {players: 
-                {include: 
-                  {user: 
-                    {select:{nickname: true}}}}}}}}}
-      }),
+        rounds: {
+          include: {
+            matches: {
+              include: {
+                players: { include: { user: { select: { nickname: true } } } },
+              },
+            },
+          },
+        },
+      },
+    }),
     context.currentUser &&
       context.prisma.tournamentPlayer.findFirst({
         where: {
@@ -43,8 +46,9 @@ export async function loader({ context, params }: Route.LoaderArgs) {
 export default function Route({ loaderData, params }: Route.ComponentProps) {
   const fetcher = useFetcher()
 
-  let lastRound = loaderData.tournament.rounds.sort((a,b) => b.roundNumber - a.roundNumber)[0]
-
+  let lastRound = loaderData.tournament.rounds.sort(
+    (a, b) => b.roundNumber - a.roundNumber,
+  )[0]
 
   return (
     <Center>
@@ -75,9 +79,6 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
       >
         {loaderData.tournament.name}
       </h1>
-      <h1 className={`flex justify-center text-lg`}>
-        {loaderData.tournament.status}
-      </h1>
       <h2>Jogadores</h2>
       <ul className="list-outside list-disc">
         {loaderData.tournament.players.map((player) => (
@@ -93,7 +94,8 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
         ))}
       </ul>
       {loaderData.isAdmin &&
-        (loaderData.tournament.status === TournamentStatus.REGISTRATION_OPEN || loaderData.tournament.status === TournamentStatus.FINISHED_ROUND) && (
+        (loaderData.tournament.status === TournamentStatus.REGISTRATION_OPEN ||
+          loaderData.tournament.status === TournamentStatus.FINISHED_ROUND) && (
           <fetcher.Form
             method="post"
             action={`/tournaments/${params.tournamentId}/launch-round`}
@@ -102,31 +104,29 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
           </fetcher.Form>
         )}
       <Spacer size="md" />
-      {(loaderData.tournament.status === TournamentStatus.OPEN_ROUND) && (
+      {loaderData.tournament.status === TournamentStatus.OPEN_ROUND && (
         <div>
           <h2>Round Ativo</h2>
-          <ul className="list-outside list-disc"> 
+          <ul className="list-outside list-disc">
             {lastRound.matches.map((match) => (
               <li key={match.id}>
                 <Link
                   viewTransition
                   to={`/matches/${match.id}`}
-                  style={{ viewTransitionName: `match-${match.id}`}}>
-                Match {match.id}
+                  style={{ viewTransitionName: `match-${match.id}` }}
+                >
+                  Match {match.id}
                 </Link>
-                <ul className = "list-inside list-circle ml-6">
-                {match.players.map((player) =>(
-                  <li key={player.id}>
-                    {player.user.nickname}
-                  </li>
-                ))}
+                <ul className="list-circle ml-6 list-inside">
+                  {match.players.map((player) => (
+                    <li key={player.id}>{player.user.nickname}</li>
+                  ))}
                 </ul>
               </li>
             ))}
           </ul>
         </div>
       )}
-      
     </Center>
   )
 }

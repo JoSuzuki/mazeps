@@ -97,4 +97,7 @@ model MatchResult {
   match     Match   @relation(fields: [matchId], references: [id])
   matchId   Int
   points    Float
+
+  @@unique([playerId, matchId])
+  @@index([playerId, matchId])
 }
