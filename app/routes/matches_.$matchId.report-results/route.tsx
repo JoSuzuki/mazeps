@@ -1,27 +1,24 @@
 import { data, redirect } from 'react-router'
 import type { Route } from './+types/route'
 
-export async function action({ request, context, params }: Route.ActionArgs) {
-  if (!context.currentUser) return redirect('/login')
+export async function action({request, context, params}: Route.ActionArgs) {
+    if (!context.currentUser) return redirect('/login')
 
-  const formData = await request.formData()
+    const formData = await request.formData()
 
-  console.log(formData)
-  const matchId = Number(params.matchId)
-  console.log(matchId)
+    const matchId = Number(params.matchId)
+    
+    for (const [playerIdRaw, pointsRaw] of formData.entries()) {
+        const playerId = Number(playerIdRaw)
+        const points = Number(pointsRaw)
 
-  for (const [playerIdRaw, pointsRaw] of formData.entries()) {
-    const playerId = Number(playerIdRaw)
-    const points = Number(pointsRaw)
+        context.prisma.matchResult.upsert({
+            where:  {playerId_matchId: {playerId: playerId, matchId: matchId}},
+            update: {points: points},
+            create: {playerId: playerId, matchId: matchId, points: points}
+        })
+    }
 
-    console.log(playerId, points)
-
-    await context.prisma.matchResult.upsert({
-      where: { playerId_matchId: { playerId: playerId, matchId: matchId } },
-      update: { points: points },
-      create: { playerId: playerId, matchId: matchId, points: points },
-    })
-  }
-
-  return data({ success: true })
+    return data({ success: true })
+    
 }
