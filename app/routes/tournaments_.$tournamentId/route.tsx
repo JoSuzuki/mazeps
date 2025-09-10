@@ -125,6 +125,12 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
               </li>
             ))}
           </ul>
+          <fetcher.Form
+            method="post"
+            action={`/tournaments/${params.tournamentId}/end-round`}
+          >
+            <Button type="submit">Encerrar Rodada</Button>
+          </fetcher.Form>
         </div>
       )}
     </Center>
