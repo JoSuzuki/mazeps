@@ -1,7 +1,6 @@
-import { number } from 'motion/react'
 import { data, redirect } from 'react-router'
 import type { Route } from '../+types/_base-layout'
-import type { Round, Tournament } from '~/generated/prisma/client'
+import type { Round } from '~/generated/prisma/client'
 import { Role, TournamentStatus } from '~/generated/prisma/enums'
 
 function shuffle<T>(array: T[]): T[] {
