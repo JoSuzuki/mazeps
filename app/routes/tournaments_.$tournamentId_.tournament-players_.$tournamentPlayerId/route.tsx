@@ -1,8 +1,10 @@
-import { redirect } from 'react-router'
+import { redirect, useFetcher } from 'react-router'
 import type { Route } from './+types/route'
+import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
 import Link from '~/components/link/link.component'
 import Table from '~/components/table/table.component'
+import { Role, TournamentPlayerStatus } from '~/generated/prisma/enums'
 
 export async function loader({ context, params }: Route.LoaderArgs) {
   if (!context.currentUser) return redirect('/login')
@@ -20,12 +22,17 @@ export async function loader({ context, params }: Route.LoaderArgs) {
       },
     })
 
+  let isAdmin = context.currentUser.role == Role.ADMIN
+
   return {
     tournamentPlayer,
+    isAdmin,
   }
 }
 
 export default function Route({ loaderData, params }: Route.ComponentProps) {
+  const fetcher = useFetcher()
+
   return (
     <Center>
       <Link
@@ -68,6 +75,29 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
           />
         </div>
       ))}
+      <div>
+        {loaderData.isAdmin &&
+          loaderData.tournamentPlayer.status ===
+            TournamentPlayerStatus.ACTIVE && (
+            <fetcher.Form
+              method="post"
+              action={`/tournaments/${params.tournamentId}/tournament-players/${params.tournamentPlayerId}/change-status`}
+            >
+              <Button type="submit">Dropar Jogador</Button>
+            </fetcher.Form>
+          )}
+
+        {loaderData.isAdmin &&
+          loaderData.tournamentPlayer.status ===
+            TournamentPlayerStatus.DROPPED && (
+            <fetcher.Form
+              method="post"
+              action={`/tournaments/${params.tournamentId}/tournament-players/${params.tournamentPlayerId}/change-status`}
+            >
+              <Button type="submit">Reativar Jogador</Button>
+            </fetcher.Form>
+          )}
+      </div>
     </Center>
   )
 }

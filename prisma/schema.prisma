@@ -85,9 +85,15 @@ model TournamentPlayer {
   matchResults      MatchResult[]
   user              User       @relation(fields: [userId], references: [id])
   userId            Int
+  status            TournamentPlayerStatus  @default(ACTIVE)
 
   @@unique([tournamentId, userId])
   @@index([tournamentId, userId])
+}
+
+enum TournamentPlayerStatus{
+  ACTIVE
+  DROPPED
 }
 
 model MatchResult {

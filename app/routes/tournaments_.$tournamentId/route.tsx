@@ -164,7 +164,6 @@ function calculateRankAndComposeTable(
   tournamentMatches: MatchWithPlayers[],
   tournamentPlayers: PlayerWithUser[],
   tournamentId: number,
-
 ) {
   const totalPoints = calculateTotalPoints(
     tournamentPlayersIds,
@@ -199,15 +198,20 @@ function calculateRankAndComposeTable(
     <tr key={playerId}>
       <td>{index + 1}</td>
       <td>
-        {<Link viewTransition 
-        to={`/tournaments/${tournamentId}/tournament-players/${playerId}`}
-        style={{ viewTransitionName: `tournament-player-${playerId}` }}>
-          {Object.fromEntries(
-            tournamentPlayers.map((player) => [
-              player.id,
-              player.user.nickname,
-            ]),
-          )[playerId]}
+        {
+          <Link
+            viewTransition
+            to={`/tournaments/${tournamentId}/tournament-players/${playerId}`}
+            style={{ viewTransitionName: `tournament-player-${playerId}` }}
+          >
+            {
+              Object.fromEntries(
+                tournamentPlayers.map((player) => [
+                  player.id,
+                  player.user.nickname,
+                ]),
+              )[playerId]
+            }
           </Link>
         }
       </td>
@@ -351,7 +355,7 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
             tournamentPlayersIds,
             loaderData.tournamentMatches,
             loaderData.tournament.players,
-            loaderData.tournament.id
+            loaderData.tournament.id,
           )}
         </table>
       )}
