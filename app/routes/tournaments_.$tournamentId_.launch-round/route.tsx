@@ -1,7 +1,11 @@
 import { data, redirect } from 'react-router'
 import type { Route } from '../+types/_base-layout'
 import type { Round } from '~/generated/prisma/client'
-import { Role, TournamentStatus } from '~/generated/prisma/enums'
+import {
+  Role,
+  TournamentPlayerStatus,
+  TournamentStatus,
+} from '~/generated/prisma/enums'
 
 function shuffle<T>(array: T[]): T[] {
   let currentIndex = array.length
@@ -156,11 +160,16 @@ async function calculateAndCreateRoundMatches(
   let tournament = await context.prisma.tournament.findUniqueOrThrow({
     where: { id: Number(tournamentId) },
     include: {
-      players: { select: { id: true } },
+      players: {
+        where: { status: TournamentPlayerStatus.ACTIVE },
+        select: { id: true },
+      },
     },
   })
 
   const tournamentPlayersIds = tournament.players.map((player) => player.id)
+
+  console.log(tournamentPlayersIds)
 
   const totalPoints = await calculateTournamentPoints(
     context,
