@@ -1,8 +1,13 @@
-import { data, redirect } from 'react-router'
+import { redirect } from 'react-router'
 import type { Route } from './+types/route'
+import { Role } from '~/generated/prisma/enums'
 
 export async function action({ request, context, params }: Route.ActionArgs) {
   if (!context.currentUser) return redirect('/login')
+  if (context.currentUser.role !== Role.ADMIN)
+    return redirect(
+      `/tournaments/${params.tournamentId}/matches/${params.matchId}`,
+    )
 
   const formData = await request.formData()
 
@@ -19,5 +24,5 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     })
   }
 
-  return data({ success: true })
+  return redirect(`/tournaments/${params.tournamentId}`)
 }

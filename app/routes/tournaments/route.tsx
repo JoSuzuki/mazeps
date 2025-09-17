@@ -5,8 +5,9 @@ import Center from '~/components/center/center.component'
 import Link from '~/components/link/link.component'
 import LinkButton from '~/components/link-button/link-button.component'
 import Pagination from '~/components/pagination/pagination.component'
+import Spacer from '~/components/spacer/spacer.component'
 import Table from '~/components/table/table.component'
-import { Role } from '~/generated/prisma/enums'
+import { Role, TournamentStatus } from '~/generated/prisma/enums'
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const url = new URL(request.url)
@@ -44,63 +45,71 @@ export default function Route({ loaderData }: Route.ComponentProps) {
   let fetcher = useFetcher()
 
   return (
-    <Center>
+    <>
       {loaderData.currentUser?.role === Role.ADMIN && (
-        <LinkButton
-          className="absolute top-2 right-2"
-          styleType="secondary"
-          to="/tournaments/new"
-        >
-          Criar torneio
-        </LinkButton>
+        <div className="flex justify-end px-6 py-2">
+          <LinkButton styleType="secondary" to="/tournaments/new">
+            Criar torneio
+          </LinkButton>
+        </div>
       )}
-      <h1 className="flex justify-center text-lg">Torneios</h1>
-      <Table
-        emptyState={'Não há torneios cadastrados ainda'}
-        data={loaderData.tournaments}
-        columns={[
-          {
-            key: 'name',
-            title: 'Nome',
-            value: (tournament) => (
-              <Link
-                to={`/tournaments/${tournament.id}`}
-                viewTransition
-                style={{
-                  viewTransitionName: `tournament-title-${tournament.id}`,
-                }}
-              >
-                {tournament.name}
-              </Link>
-            ),
-          },
-          {
-            key: 'edit',
-            title: 'Ações',
-            value: (tournament) => {
-              const player = tournament.players[0]
-              return player ? (
-                <div>Inscrito</div>
-              ) : (
-                <fetcher.Form
-                  method="post"
-                  action={`/tournaments/${tournament.id}/tournament-players/new`}
+      <Center>
+        <h1 className="flex justify-center text-lg">Torneios</h1>
+        <Spacer size="lg" />
+        <Table
+          emptyState={'Não há torneios cadastrados ainda'}
+          data={loaderData.tournaments}
+          columns={[
+            {
+              key: 'name',
+              title: 'Nome',
+              value: (tournament) => (
+                <Link
+                  to={`/tournaments/${tournament.id}`}
+                  viewTransition
+                  style={{
+                    viewTransitionName: `tournament-title-${tournament.id}`,
+                  }}
                 >
-                  <Button styleType="secondary" type="submit">
-                    Inscrever-se
-                  </Button>
-                </fetcher.Form>
-              )
+                  {tournament.name}
+                </Link>
+              ),
             },
-          },
-        ]}
-      />
-      <Pagination
-        currentPage={loaderData.pagination.currentPage}
-        totalPages={loaderData.pagination.totalPages}
-        baseUrl="/tournaments"
-      />
-    </Center>
+            {
+              key: 'edit',
+              title: 'Ações',
+              value: (tournament) => {
+                const player = tournament.players[0]
+
+                if (loaderData.currentUser && player) {
+                  return <div>Inscrito</div>
+                }
+
+                if (tournament.status !== TournamentStatus.REGISTRATION_OPEN) {
+                  return <div>Inscrições encerradas</div>
+                }
+
+                return (
+                  <fetcher.Form
+                    method="post"
+                    action={`/tournaments/${tournament.id}/tournament-players/new`}
+                  >
+                    <Button styleType="secondary" type="submit">
+                      Inscrever-se
+                    </Button>
+                  </fetcher.Form>
+                )
+              },
+            },
+          ]}
+        />
+        <Pagination
+          currentPage={loaderData.pagination.currentPage}
+          totalPages={loaderData.pagination.totalPages}
+          baseUrl="/tournaments"
+        />
+      </Center>
+    </>
   )
 }
 

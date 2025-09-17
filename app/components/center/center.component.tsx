@@ -1,9 +1,15 @@
 interface CenterProps {
+  className?: string
   children: React.ReactNode
 }
 
-const Center = ({ children }: CenterProps): React.ReactElement => (
-  <div className="align-center relative grid h-full place-content-center">
+const Center = ({
+  children,
+  className = '',
+}: CenterProps): React.ReactElement => (
+  <div
+    className={`relative mr-auto ml-auto h-full w-fit px-6 py-2 ${className}`}
+  >
     {children}
   </div>
 )

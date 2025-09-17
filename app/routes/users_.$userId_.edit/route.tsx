@@ -24,64 +24,63 @@ export async function loader({ context, params }: Route.LoaderArgs) {
 
 export default function Route({ loaderData }: Route.ComponentProps) {
   return (
-    <Center>
-      <Link
-        to={`/users/${loaderData.user.id}`}
-        className="absolute top-2 left-6"
-      >
-        ← Voltar
-      </Link>
-      <h1 className="flex justify-center text-lg">Editar usuário</h1>
-      <Spacer size="md" />
-      <Form method="post">
-        <TextInput
-          id="name"
-          name="name"
-          label="Nome"
-          type="text"
-          required={true}
-          defaultValue={loaderData.user.name}
-        />
-        <Spacer size="sm" />
-        <TextInput
-          id="email"
-          name="email"
-          label="Email"
-          type="email"
-          required={true}
-          defaultValue={loaderData.user.email}
-        />
-        <Spacer size="sm" />
-        <TextInput
-          id="nickname"
-          name="nickname"
-          label="Apelido"
-          type="text"
-          required={true}
-          defaultValue={loaderData.user.nickname}
-        />
-        {loaderData.currentUser.role === Role.ADMIN && (
-          <>
-            <Spacer size="sm" />
-            <RadioGroup
-              label="Role"
-              name="role"
-              required={true}
-              defaultValue={loaderData.user.role}
-              options={Object.values(Role).map((role) => ({
-                id: role,
-                label: role,
-                value: role,
-              }))}
-            />
-          </>
-        )}
+    <>
+      <div className="flex justify-between px-6 py-2">
+        <Link to={`/users/${loaderData.user.id}`}>← Voltar</Link>
+      </div>
+      <Center>
+        <h1 className="flex justify-center text-lg">Editar usuário</h1>
         <Spacer size="md" />
-        <Button className="w-full" type="submit">
-          Salvar
-        </Button>
-      </Form>
-    </Center>
+        <Form method="post">
+          <TextInput
+            id="name"
+            name="name"
+            label="Nome"
+            type="text"
+            required={true}
+            defaultValue={loaderData.user.name}
+          />
+          <Spacer size="sm" />
+          <TextInput
+            id="email"
+            name="email"
+            label="Email"
+            type="email"
+            required={true}
+            defaultValue={loaderData.user.email}
+          />
+          <Spacer size="sm" />
+          <TextInput
+            id="nickname"
+            name="nickname"
+            label="Apelido"
+            type="text"
+            required={true}
+            defaultValue={loaderData.user.nickname}
+          />
+          {loaderData.currentUser.role === Role.ADMIN && (
+            <>
+              <Spacer size="sm" />
+              <RadioGroup
+                label="Role"
+                name="role"
+                required={true}
+                defaultValue={loaderData.user.role}
+                options={Object.values(Role).map((role) => ({
+                  id: role,
+                  label: role,
+                  value: role,
+                }))}
+              />
+            </>
+          )}
+          <Spacer size="md" />
+          <Button className="w-full" type="submit">
+            Salvar
+          </Button>
+        </Form>
+      </Center>
+    </>
   )
 }
 

@@ -1,29 +1,22 @@
+import { Fragment } from 'react/jsx-runtime'
 import { redirect, useFetcher } from 'react-router'
 import type { Route } from './+types/route'
 import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
 import Link from '~/components/link/link.component'
 import Spacer from '~/components/spacer/spacer.component'
-import type { MatchResult, Prisma } from '~/generated/prisma/client'
+import Table from '~/components/table/table.component'
+import type { MatchResult } from '~/generated/prisma/client'
 import { Role, TournamentStatus } from '~/generated/prisma/enums'
+import type { Unpacked } from '~/lib/type-helpers'
 
-type MatchWithPlayers = Prisma.MatchGetPayload<{
-  include: {
-    players: {
-      include: {
-        user: {
-          select: { nickname: true }
-        }
-      }
-    }
-  }
-}>
+type MatchWithPlayers = Unpacked<
+  Route.ComponentProps['loaderData']['tournamentMatches']
+>
 
-type PlayerWithUser = Prisma.TournamentPlayerGetPayload<{
-  include: {
-    user: { select: { nickname: true } }
-  }
-}>
+type PlayerWithUser = Unpacked<
+  Route.ComponentProps['loaderData']['tournament']['players']
+>
 
 interface TournamentPoints {
   [key: number | string]: number
@@ -52,8 +45,6 @@ function calculateOpponentsWeights(
   tournamentMatches: MatchWithPlayers[],
   tournamentPlayersIds: number[],
 ): OpponentsWeights {
-  // result[player][opponent] = x
-
   const opponentsWeights = Object.fromEntries(
     tournamentPlayersIds.map((playerId) => [
       playerId,
@@ -84,45 +75,20 @@ function calculateTieBreaker(
   const totalTieBreakers = Object.fromEntries(
     tournamentPlayersIds.map((playerId) => [playerId, 0]),
   )
-  // console.log(opponentsWeights[13])
   tournamentPlayersIds.forEach((playerId) => {
     let denominator = 0.0
     let numerator = 0.0
     let opponents = opponentsWeights[playerId]
 
     tournamentPlayersIds.forEach((opponentId) => {
-      // console.log(`opponentes: ${opponents}`)
-      // console.log(`timesFacedOpponent: ${opponents[opponentId]}`)
       denominator += opponents[opponentId]
-      // console.log(denominator)
       numerator += opponents[opponentId] * points[opponentId]
-      // console.log(numerator)
     })
 
     totalTieBreakers[playerId] = numerator / denominator
-    // console.log(totalTieBreakers[playerId])
   })
 
-  // console.log(totalTieBreakers)
   return totalTieBreakers
-}
-
-function shuffle<T>(array: T[]): T[] {
-  let currentIndex = array.length
-
-  // While there remain elements to shuffle...
-  while (currentIndex != 0) {
-    // Pick a remaining element...
-    let randomIndex = Math.floor(Math.random() * currentIndex)
-    currentIndex--
-
-    // And swap it with the current element.
-    ;[array[currentIndex], array[randomIndex]] = [
-      array[randomIndex],
-      array[currentIndex],
-    ]
-  }
-  return array
 }
 
 function calculateRankWithTieBreakers(
@@ -131,9 +97,7 @@ function calculateRankWithTieBreakers(
   tournamentFirstTieBreaker: TournamentPoints,
   tournamentSecondTieBreaker: TournamentPoints,
 ): number[] {
-  let shuffledPlayerIds = shuffle(tournamentPlayersIds)
-
-  return shuffledPlayerIds.sort(function (a, b) {
+  return tournamentPlayersIds.sort(function (a, b) {
     if (tournamentPoints[a] > tournamentPoints[b]) {
       return -1
     } else if (tournamentPoints[a] < tournamentPoints[b]) {
@@ -158,12 +122,11 @@ function calculateRankWithTieBreakers(
   })
 }
 
-function calculateRankAndComposeTable(
+function calculateRank(
   tournamentMatchResults: MatchResult[],
   tournamentPlayersIds: number[],
   tournamentMatches: MatchWithPlayers[],
   tournamentPlayers: PlayerWithUser[],
-  tournamentId: number,
 ) {
   const totalPoints = calculateTotalPoints(
     tournamentPlayersIds,
@@ -194,38 +157,27 @@ function calculateRankAndComposeTable(
     secondTieBreaker,
   )
 
-  return rank.map((playerId, index) => (
-    <tr key={playerId}>
-      <td>{index + 1}</td>
-      <td>
-        {
-          <Link
-            viewTransition
-            to={`/tournaments/${tournamentId}/tournament-players/${playerId}`}
-            style={{ viewTransitionName: `tournament-player-${playerId}` }}
-          >
-            {
-              Object.fromEntries(
-                tournamentPlayers.map((player) => [
-                  player.id,
-                  player.user.nickname,
-                ]),
-              )[playerId]
-            }
-          </Link>
-        }
-      </td>
-      <td>{totalPoints[playerId]}</td>
-      <td>{Math.round(firstTieBreaker[playerId] * 100) / 100}</td>
-      <td>{Math.round(secondTieBreaker[playerId] * 100) / 100}</td>
-    </tr>
-  ))
+  const tournamentPlayersById = Object.fromEntries(
+    tournamentPlayers.map((tournamentPlayer) => [
+      tournamentPlayer.id,
+      tournamentPlayer,
+    ]),
+  )
+
+  return rank.map((playerId, index) => ({
+    id: playerId,
+    position: index + 1,
+    player: tournamentPlayersById[playerId],
+    points: totalPoints[playerId],
+    firstTieBreaker: firstTieBreaker[playerId],
+    secondTieBreaker: secondTieBreaker[playerId],
+  }))
 }
 
 export async function loader({ context, params }: Route.LoaderArgs) {
   if (!context.currentUser) return redirect('/login')
 
-  let [tournament, tournamentPlayer] = await Promise.all([
+  let [tournament, currentTournamentPlayer] = await Promise.all([
     context.prisma.tournament.findUniqueOrThrow({
       where: { id: Number(params.tournamentId) },
       include: {
@@ -235,6 +187,7 @@ export async function loader({ context, params }: Route.LoaderArgs) {
             matches: {
               include: {
                 players: { include: { user: { select: { nickname: true } } } },
+                matchResults: true,
               },
             },
           },
@@ -247,6 +200,7 @@ export async function loader({ context, params }: Route.LoaderArgs) {
           userId: context.currentUser.id,
           tournamentId: Number(params.tournamentId),
         },
+        include: { user: { select: { nickname: true } } },
       }),
   ])
 
@@ -258,7 +212,8 @@ export async function loader({ context, params }: Route.LoaderArgs) {
     },
   })
 
-  let tournamentMatches: MatchWithPlayers[] = []
+  type Matches = Unpacked<typeof tournament.rounds>['matches']
+  let tournamentMatches: Matches = []
 
   tournament.rounds.forEach((round) =>
     round.matches.forEach((match) => tournamentMatches.push(match)),
@@ -268,7 +223,7 @@ export async function loader({ context, params }: Route.LoaderArgs) {
 
   return {
     tournament,
-    tournamentPlayer,
+    currentTournamentPlayer,
     isAdmin,
     tournamentMatchResults,
     tournamentMatches,
@@ -286,119 +241,191 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
     (player) => player.id,
   )
 
+  let rankData = calculateRank(
+    loaderData.tournamentMatchResults,
+    tournamentPlayersIds,
+    loaderData.tournamentMatches,
+    loaderData.tournament.players,
+  )
+
   return (
-    <Center>
-      <Link to="/tournaments" viewTransition className="absolute top-2 left-6">
-        ← Voltar
-      </Link>
-      <div className="absolute top-2 right-2">
-        {loaderData.tournamentPlayer ? (
+    <>
+      <div className="flex justify-between px-6 py-2">
+        <Link to="/tournaments" viewTransition>
+          ← Voltar
+        </Link>
+        {loaderData.currentTournamentPlayer ? (
           <Link
-            to={`/tournaments/${params.tournamentId}/tournament-players/${loaderData.tournamentPlayer.id}`}
+            viewTransition
+            to={`/tournaments/${params.tournamentId}/tournament-players/${loaderData.currentTournamentPlayer.id}`}
           >
             Ver inscrição
           </Link>
         ) : (
-          <fetcher.Form
-            method="post"
-            action={`/tournaments/${params.tournamentId}/tournament-players/new`}
-          >
-            <Button type="submit">Inscrever-se</Button>
-          </fetcher.Form>
+          loaderData.tournament.status === 'REGISTRATION_OPEN' && (
+            <fetcher.Form
+              method="post"
+              action={`/tournaments/${params.tournamentId}/tournament-players/new`}
+            >
+              <Button type="submit">Inscrever-se</Button>
+            </fetcher.Form>
+          )
         )}
       </div>
-      <h1
-        className={`flex justify-center text-lg`}
-        style={{
-          viewTransitionName: `tournament-title-${params.tournamentId}`,
-        }}
-      >
-        {loaderData.tournament.name}
-      </h1>
-      <h2>Jogadores</h2>
-      {loaderData.tournament.status === TournamentStatus.REGISTRATION_OPEN && (
-        <ul className="list-outside list-disc">
-          {loaderData.tournament.players.map((player) => (
-            <li key={player.user.nickname}>
-              <Link
-                viewTransition
-                to={`/tournaments/${params.tournamentId}/tournament-players/${player.id}`}
-                style={{ viewTransitionName: `tournament-player-${player.id}` }}
-              >
-                {player.user.nickname}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-      {loaderData.tournament.status != TournamentStatus.REGISTRATION_OPEN && (
-        <table>
-          <tr>
-            <th>
-              Classificação&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            </th>
-            <th>
-              Jogador&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            </th>
-            <th>
-              Pontos&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            </th>
-            <th>
-              SoS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            </th>
-            <th>
-              SSoS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            </th>
-          </tr>
-          {calculateRankAndComposeTable(
-            loaderData.tournamentMatchResults,
-            tournamentPlayersIds,
-            loaderData.tournamentMatches,
-            loaderData.tournament.players,
-            loaderData.tournament.id,
-          )}
-        </table>
-      )}
-      {loaderData.isAdmin &&
-        (loaderData.tournament.status === TournamentStatus.REGISTRATION_OPEN ||
-          loaderData.tournament.status === TournamentStatus.FINISHED_ROUND) && (
-          <fetcher.Form
-            method="post"
-            action={`/tournaments/${params.tournamentId}/launch-round`}
+      <Center>
+        <div className={`flex justify-center`}>
+          <h1
+            className="text-xl"
+            style={{
+              viewTransitionName: `tournament-title-${params.tournamentId}`,
+            }}
           >
-            <Button type="submit">Lançar Rodada</Button>
-          </fetcher.Form>
+            {loaderData.tournament.name}
+          </h1>
+        </div>
+        <Spacer size="lg" />
+        {loaderData.tournament.status ===
+          TournamentStatus.REGISTRATION_OPEN && (
+          <>
+            <h2 className="flex justify-center text-lg">Inscritos</h2>
+            <Spacer size="md" />
+            <ol className="list-inside list-decimal">
+              {loaderData.tournament.players.map((player) => (
+                <li key={player.id}>
+                  <Link
+                    viewTransition
+                    to={`/tournaments/${params.tournamentId}/tournament-players/${player.id}`}
+                    style={{
+                      viewTransitionName: `tournament-player-${player.id}`,
+                    }}
+                    styleType={
+                      loaderData.currentTournamentPlayer?.id === player.id
+                        ? 'solid'
+                        : 'default'
+                    }
+                  >
+                    {player.user.nickname}
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          </>
         )}
-      <Spacer size="md" />
-      {loaderData.tournament.status === TournamentStatus.OPEN_ROUND && (
-        <div>
-          <h2>Round Ativo</h2>
-          <ul className="list-outside list-disc">
-            {lastRound.matches.map((match) => (
-              <li key={match.id}>
-                <Link
-                  viewTransition
-                  to={`/matches/${match.id}`}
-                  style={{ viewTransitionName: `match-${match.id}` }}
-                >
-                  Match {match.id}
-                </Link>
-                <ul className="list-circle ml-6 list-inside">
+        {loaderData.tournament.status != TournamentStatus.REGISTRATION_OPEN && (
+          <Table
+            data={rankData}
+            columns={[
+              {
+                key: 'position',
+                title: 'Classificação',
+                value: (rank) => rank.position,
+              },
+              {
+                key: 'player',
+                title: 'Jogador',
+                value: (rank) => (
+                  <Link
+                    to={`/tournaments/${params.tournamentId}/tournament-players/${rank.id}`}
+                    viewTransition
+                    style={{
+                      viewTransitionName: `tournament-player-${rank.id}`,
+                    }}
+                    styleType={
+                      loaderData.currentTournamentPlayer?.id === rank.id
+                        ? 'solid'
+                        : 'default'
+                    }
+                  >
+                    {rank.player.user.nickname}
+                  </Link>
+                ),
+              },
+              {
+                key: 'points',
+                title: 'Pontos',
+                value: (rank) => rank.points,
+              },
+              {
+                key: 'firstTieBreaker',
+                title: 'SoS',
+                value: (rank) => rank.firstTieBreaker.toFixed(3),
+              },
+              {
+                key: 'secondTieBreaker',
+                title: 'SSoS',
+                value: (rank) => rank.secondTieBreaker.toFixed(3),
+              },
+            ]}
+            emptyState="Sem classificação"
+          />
+        )}
+        {loaderData.isAdmin &&
+          (loaderData.tournament.status ===
+            TournamentStatus.REGISTRATION_OPEN ||
+            loaderData.tournament.status ===
+              TournamentStatus.FINISHED_ROUND) && (
+            <>
+              <Spacer size="md" />
+              <fetcher.Form
+                method="post"
+                action={`/tournaments/${params.tournamentId}/launch-round`}
+              >
+                <Button type="submit">Lançar Rodada</Button>
+              </fetcher.Form>
+            </>
+          )}
+        <Spacer size="md" />
+        {loaderData.tournament.status === TournamentStatus.OPEN_ROUND && (
+          <div>
+            <h2 className="flex justify-center text-lg">Round Ativo</h2>
+            <Spacer size="md" />
+            {lastRound.matches.map((match, index) => (
+              <Fragment key={match.id}>
+                <h3>
+                  <Link
+                    viewTransition
+                    to={`/tournaments/${params.tournamentId}/matches/${match.id}`}
+                  >
+                    Mesa {index + 1} - <span style={{ viewTransitionName: `match-${match.id}` }}>Partida {match.id}</span>
+                  </Link>
+                </h3>
+                <Spacer size="sm" />
+                <ul className="list-inside list-disc">
                   {match.players.map((player) => (
-                    <li key={player.id}>{player.user.nickname}</li>
+                    <li key={player.id}>
+                      {player.user.nickname} -{' '}
+                      {match.matchResults.find(
+                        (matchResult) => matchResult.playerId === player.id,
+                      )?.points ?? 0}{' '}
+                      pontos
+                    </li>
                   ))}
                 </ul>
-              </li>
+                <Spacer size="md" />
+              </Fragment>
             ))}
-          </ul>
-          <fetcher.Form
-            method="post"
-            action={`/tournaments/${params.tournamentId}/end-round`}
-          >
-            <Button type="submit">Encerrar Rodada</Button>
-          </fetcher.Form>
-        </div>
-      )}
-    </Center>
+            {loaderData.isAdmin && (
+              <fetcher.Form
+                method="post"
+                action={`/tournaments/${params.tournamentId}/end-round`}
+              >
+                <input
+                  className="hidden"
+                  name="lastRoundId"
+                  defaultValue={lastRound.id}
+                />
+                <Button type="submit">Encerrar Rodada</Button>
+                {fetcher.data && (
+                  <>
+                    <Spacer size="sm" />
+                    <div className="text-error">{fetcher.data?.error}</div>
+                  </>
+                )}
+              </fetcher.Form>
+            )}
+          </div>
+        )}
+      </Center>
+    </>
   )
 }

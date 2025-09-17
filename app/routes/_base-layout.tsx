@@ -45,11 +45,7 @@ export default function Route({ loaderData, matches }: Route.ComponentProps) {
         {loaderData.currentUser ? (
           <div className="ml-auto">
             Bem vindo,{' '}
-            <Link
-              to="/profile"
-              className="bg-primary text-on-primary rounded-md p-0.5"
-              viewTransition
-            >
+            <Link to="/profile" styleType="solid" viewTransition>
               {loaderData.currentUser.nickname}
             </Link>
           </div>
