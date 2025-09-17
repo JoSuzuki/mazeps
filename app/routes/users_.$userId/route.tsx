@@ -31,27 +31,29 @@ const Field = ({ label, value }: FieldProps) => (
 
 export default function Route({ loaderData }: Route.ComponentProps) {
   return (
-    <Center>
-      <Link to="/users" className="absolute top-2 left-6">
-        ← Voltar
-      </Link>
-      <h1 className="flex justify-center text-lg">{loaderData.user.name}</h1>
-      <Spacer size="md" />
-      <Field label="Nome" value={loaderData.user.name} />
-      <Spacer size="sm" />
-      <Field label="Nickname" value={loaderData.user.nickname} />
-      <Spacer size="sm" />
-      <Field label="Email" value={loaderData.user.email} />
-      <Spacer size="sm" />
-      <Field label="Role" value={loaderData.user.role} />
-      <Spacer size="md" />
-      <LinkButton
-        to={`/users/${loaderData.user.id}/edit`}
-        styleType="secondary"
-        className="w-full"
-      >
-        Editar
-      </LinkButton>
-    </Center>
+    <>
+      <div className="flex justify-between px-6 py-2">
+        <Link to="/users">← Voltar</Link>
+      </div>
+      <Center>
+        <h1 className="flex justify-center text-lg">{loaderData.user.name}</h1>
+        <Spacer size="md" />
+        <Field label="Nome" value={loaderData.user.name} />
+        <Spacer size="sm" />
+        <Field label="Nickname" value={loaderData.user.nickname} />
+        <Spacer size="sm" />
+        <Field label="Email" value={loaderData.user.email} />
+        <Spacer size="sm" />
+        <Field label="Role" value={loaderData.user.role} />
+        <Spacer size="md" />
+        <LinkButton
+          to={`/users/${loaderData.user.id}/edit`}
+          styleType="secondary"
+          className="block w-full"
+        >
+          Editar
+        </LinkButton>
+      </Center>
+    </>
   )
 }

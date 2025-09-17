@@ -21,53 +21,58 @@ export const meta = ({}: Route.MetaArgs) => {
 
 export default function Route({ actionData }: Route.ComponentProps) {
   return (
-    <Center>
-      <Link to="/" className="absolute top-2 left-6">
-        ← Voltar
-      </Link>
-      <h1 className="flex justify-center text-lg">Login</h1>
+    <>
+      <div className="flex justify-between px-6 py-2">
+        <Link to="/">← Voltar</Link>
+      </div>
+      <Center className="align-center grid place-content-center">
+        <h1 className="flex justify-center text-lg">Login</h1>
+        <Form method="post">
+          <TextInput
+            id="email"
+            name="email"
+            label="Email"
+            type="email"
+            required={true}
+          />
+          <Spacer size="sm" />
+          <TextInput
+            id="password"
+            name="password"
+            label="Senha"
+            type="password"
+            required={true}
+            autoComplete="current-password"
+          />
+          <div className="flex justify-end">
+            <Link className="text-xs" to="/forgot-password">
+              Esqueceu a senha?
+            </Link>
+          </div>
 
-      <Form method="post">
-        <TextInput
-          id="email"
-          name="email"
-          label="Email"
-          type="email"
-          required={true}
-        />
+          {actionData?.error ? (
+            <>
+              <Spacer size="sm" />
+              <div className="text-error">{actionData.error}</div>
+            </>
+          ) : null}
+          <Spacer size="md" />
+          <Button className="w-full" type="submit">
+            Login
+          </Button>
+        </Form>
         <Spacer size="sm" />
-        <TextInput
-          id="password"
-          name="password"
-          label="Senha"
-          type="password"
-          required={true}
-          autoComplete="current-password"
-        />
-        <div className="flex justify-end">
-          <Link className="text-xs" to="/forgot-password">
-            Esqueceu a senha?
-          </Link>
-        </div>
-
-        {actionData?.error ? (
-          <>
-            <Spacer size="sm" />
-            <div className="text-error">{actionData.error}</div>
-          </>
-        ) : null}
-        <Spacer size="md" />
-        <Button className="w-full" type="submit">
-          Login
-        </Button>
-      </Form>
-      <Spacer size="sm" />
-      <GoogleLoginButton />
-      <Spacer size="sm" />
-      <LinkButton to="/sign-up" styleType="secondary" className="w-full">
-        Cadastre-se
-      </LinkButton>
-    </Center>
+        <GoogleLoginButton />
+        <Spacer size="sm" />
+        <LinkButton
+          to="/sign-up"
+          styleType="secondary"
+          className="block w-full"
+        >
+          Cadastre-se
+        </LinkButton>
+      </Center>
+    </>
   )
 }
 

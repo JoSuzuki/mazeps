@@ -27,29 +27,37 @@ const Field = ({ label, value }: FieldProps) => (
 
 export default function Route({ loaderData }: Route.ComponentProps) {
   return (
-    <Center>
-      <Link to="/" className="absolute top-2 left-6">
-        ← Voltar
-      </Link>
-      <h1 className="flex justify-center text-lg">Perfil</h1>
-      <Spacer size="md" />
-      <Field label="Nome" value={loaderData.currentUser.name} />
-      <Spacer size="sm" />
-      <Field label="Nickname" value={loaderData.currentUser.nickname} />
-      <Spacer size="sm" />
-      <Field label="Email" value={loaderData.currentUser.email} />
-      <Spacer size="sm" />
-      <Field label="Role" value={loaderData.currentUser.role} />
-      <Spacer size="md" />
-      <LinkButton to="/profile/edit" styleType="secondary" className="w-full">
-        Editar
-      </LinkButton>
-      <Spacer size="sm" />
-      <Form method="post" action="/logout">
-        <Button className="w-full" type="submit">
-          Logout
-        </Button>
-      </Form>
-    </Center>
+    <>
+      <div className="flex justify-between px-6 py-2">
+        <Link to="/" viewTransition>
+          ← Voltar
+        </Link>
+      </div>
+      <Center>
+        <h1 className="flex justify-center text-lg">Perfil</h1>
+        <Spacer size="md" />
+        <Field label="Nome" value={loaderData.currentUser.name} />
+        <Spacer size="sm" />
+        <Field label="Nickname" value={loaderData.currentUser.nickname} />
+        <Spacer size="sm" />
+        <Field label="Email" value={loaderData.currentUser.email} />
+        <Spacer size="sm" />
+        <Field label="Role" value={loaderData.currentUser.role} />
+        <Spacer size="md" />
+        <LinkButton
+          to="/profile/edit"
+          styleType="secondary"
+          className="block w-full"
+        >
+          Editar
+        </LinkButton>
+        <Spacer size="sm" />
+        <Form method="post" action="/logout">
+          <Button className="w-full" type="submit">
+            Logout
+          </Button>
+        </Form>
+      </Center>
+    </>
   )
 }

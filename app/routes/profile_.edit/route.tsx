@@ -16,45 +16,47 @@ export async function loader({ context }: Route.LoaderArgs) {
 
 export default function Route({ loaderData }: Route.ComponentProps) {
   return (
-    <Center>
-      <Link to="/profile" className="absolute top-2 left-6">
-        ← Voltar
-      </Link>
-      <h1 className="flex justify-center text-lg">Editar Profile</h1>
-      <Spacer size="md" />
-      <Form method="post">
-        <TextInput
-          id="name"
-          name="name"
-          label="Nome"
-          type="text"
-          required={true}
-          defaultValue={loaderData.currentUser.name}
-        />
-        <Spacer size="sm" />
-        <TextInput
-          id="email"
-          name="email"
-          label="Email"
-          type="email"
-          required={true}
-          defaultValue={loaderData.currentUser.email}
-        />
-        <Spacer size="sm" />
-        <TextInput
-          id="nickname"
-          name="nickname"
-          label="Apelido"
-          type="text"
-          required={true}
-          defaultValue={loaderData.currentUser.nickname}
-        />
+    <>
+      <div className="flex justify-between px-6 py-2">
+        <Link to="/profile">← Voltar</Link>
+      </div>
+      <Center>
+        <h1 className="flex justify-center text-lg">Editar Profile</h1>
         <Spacer size="md" />
-        <Button className="w-full" type="submit">
-          Salvar
-        </Button>
-      </Form>
-    </Center>
+        <Form method="post">
+          <TextInput
+            id="name"
+            name="name"
+            label="Nome"
+            type="text"
+            required={true}
+            defaultValue={loaderData.currentUser.name}
+          />
+          <Spacer size="sm" />
+          <TextInput
+            id="email"
+            name="email"
+            label="Email"
+            type="email"
+            required={true}
+            defaultValue={loaderData.currentUser.email}
+          />
+          <Spacer size="sm" />
+          <TextInput
+            id="nickname"
+            name="nickname"
+            label="Apelido"
+            type="text"
+            required={true}
+            defaultValue={loaderData.currentUser.nickname}
+          />
+          <Spacer size="md" />
+          <Button className="w-full" type="submit">
+            Salvar
+          </Button>
+        </Form>
+      </Center>
+    </>
   )
 }
 
