@@ -46,6 +46,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
         <script
           nonce={nonce}
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `
             (function(){
