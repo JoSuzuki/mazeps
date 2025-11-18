@@ -1,6 +1,7 @@
 import { Fragment } from 'react/jsx-runtime'
 import { redirect, useFetcher } from 'react-router'
 import type { Route } from './+types/route'
+import BackButtonPortal from '~/components/back-button-portal/back-button-portal.component'
 import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
 import Link from '~/components/link/link.component'
@@ -250,10 +251,8 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
 
   return (
     <>
-      <div className="flex justify-between px-6 py-2">
-        <Link to="/tournaments" viewTransition>
-          ← Voltar
-        </Link>
+      <BackButtonPortal to="/tournaments" />
+      <div className="flex justify-end px-6 py-2">
         {loaderData.currentTournamentPlayer ? (
           <Link
             viewTransition
@@ -386,7 +385,10 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
                     viewTransition
                     to={`/tournaments/${params.tournamentId}/matches/${match.id}`}
                   >
-                    Mesa {index + 1} - <span style={{ viewTransitionName: `match-${match.id}` }}>Partida {match.id}</span>
+                    Mesa {index + 1} -{' '}
+                    <span style={{ viewTransitionName: `match-${match.id}` }}>
+                      Partida {match.id}
+                    </span>
                   </Link>
                 </h3>
                 <Spacer size="sm" />

@@ -1,5 +1,7 @@
+import crypto from 'crypto'
 import compression from 'compression'
 import express from 'express'
+import helmet from "helmet";
 import morgan from 'morgan'
 
 // Short-circuit the type-checking of the built output.
@@ -9,11 +11,33 @@ const PORT = Number.parseInt(process.env.PORT || '3000')
 
 const app = express()
 
+app.set('trust proxy', true)
+
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
+ */
+const generateCspNonce = (req, res, next) => {
+  res.locals.cspNonce = crypto.randomBytes(16).toString('base64')
+  next()
+}
+
+app.use(generateCspNonce)
+
 app.use(compression())
+
 app.disable('x-powered-by')
 
 if (DEVELOPMENT) {
   console.log('Starting development server')
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+      crossOriginEmbedderPolicy: false,
+      crossOriginOpenerPolicy: false,
+    }),
+  )
   const viteDevServer = await import('vite').then((vite) =>
     vite.createServer({
       server: { middlewareMode: true },
@@ -33,6 +57,46 @@ if (DEVELOPMENT) {
   })
 } else {
   console.log('Starting production server')
+
+  app.use((req, res, next) => {
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: [
+            "'self'",
+            `'nonce-${res.locals.cspNonce}'`, // Nonce for inline scripts
+          ],
+          styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+          fontSrc: ["'self'", "https://fonts.gstatic.com"],
+          connectSrc: ["'self'"],
+          imgSrc: ["'self'", "data:", "blob:"],
+          objectSrc: ["'none'"],
+          baseUri: ["'self'"],
+          formAction: ["'self'"],
+          frameAncestors: ["'none'"],
+          upgradeInsecureRequests: [],
+        },
+      },
+    })(req, res, next)
+  })
+
+  /**
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   * @param {import('express').NextFunction} next
+   */
+  const forceHttps = (req, res, next) => {
+    const isLocalhost = req.hostname === 'localhost' || req.hostname === '127.0.0.1'
+    const isSecure = req.secure || req.headers['x-forwarded-proto'] === 'https'
+
+    if (!isLocalhost && !isSecure) {
+      return res.redirect(301, `https://${req.headers.host}${req.url}`)
+    }
+    next()
+  }
+
+  app.use(forceHttps)
   app.use(
     '/assets',
     express.static('build/client/assets', { immutable: true, maxAge: '1y' }),

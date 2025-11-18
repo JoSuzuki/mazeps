@@ -19,31 +19,33 @@ const Table = <TableData extends TableRow>({
   data,
   emptyState,
 }: TableProps<TableData>) => {
-  if (data.length === 0) return emptyState
+  if (data.length === 0) return <div className="text-center">{emptyState}</div>
 
   return (
-    <table>
-      <thead>
-        <tr>
-          {columns.map((column) => (
-            <td className="p-2" key={column.key}>
-              {column.title}
-            </td>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {data.map((row) => (
-          <tr key={row.id}>
+    <div className="overflow-x-auto">
+      <table className="mr-auto ml-auto">
+        <thead>
+          <tr>
             {columns.map((column) => (
-              <td className="p-2" key={`${row.id}-${column.key}`}>
-                {column.value(row)}
+              <td className="p-2" key={column.key}>
+                {column.title}
               </td>
             ))}
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {data.map((row) => (
+            <tr key={row.id}>
+              {columns.map((column) => (
+                <td className="p-2" key={`${row.id}-${column.key}`}>
+                  {column.value(row)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   )
 }
 

@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router'
 import type { Route } from './+types/_base-layout'
+import { BackButtonPortalContainer } from '~/components/back-button-portal/back-button-portal.component'
 import Link from '~/components/link/link.component'
 import LinkButton from '~/components/link-button/link-button.component'
 import Title from '~/components/title/title.component'
@@ -20,7 +21,8 @@ export default function Route({ loaderData, matches }: Route.ComponentProps) {
   let isInHome = matches.find((match) => match?.id === 'routes/_index')
   return (
     <>
-      <nav className="flex items-center justify-end gap-4 p-4">
+      <nav id="main-nav" className="flex items-center justify-end gap-4 p-4">
+        <BackButtonPortalContainer />
         {!isInHome && (
           <Link to="/" className="mx-2" viewTransition>
             <Title size="navbar" />
@@ -50,7 +52,7 @@ export default function Route({ loaderData, matches }: Route.ComponentProps) {
             </Link>
           </div>
         ) : (
-          <LinkButton className="ml-auto" to="/login">
+            <LinkButton className="ml-auto" to="/login" viewTransition>
             Login
           </LinkButton>
         )}

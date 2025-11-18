@@ -7,9 +7,7 @@ const Center = ({
   children,
   className = '',
 }: CenterProps): React.ReactElement => (
-  <div
-    className={`relative mr-auto ml-auto h-full w-fit px-6 py-2 ${className}`}
-  >
+  <div className={`relative mr-auto ml-auto h-full px-6 py-2 ${className}`}>
     {children}
   </div>
 )

@@ -58,7 +58,7 @@ enum TournamentStatus{
 model Round {
   id           Int        @id @default(autoincrement())
   roundNumber  Int
-  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   tournamentId Int
   matches      Match[]
   status       RoundStatus  @default(ACTIVE)
@@ -71,7 +71,7 @@ enum RoundStatus{
 
 model Match {
   id            Int      @id @default(autoincrement())
-  round         Round    @relation(fields: [roundId], references: [id])
+  round         Round    @relation(fields: [roundId], references: [id], onDelete: Cascade)
   roundId       Int
   players       TournamentPlayer[]
   matchResults  MatchResult[]
@@ -79,7 +79,7 @@ model Match {
 
 model TournamentPlayer {
   id                Int        @id @default(autoincrement())
-  activeTournament  Tournament @relation(fields: [tournamentId], references: [id])
+  tournament        Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   tournamentId      Int
   matches           Match[]
   matchResults      MatchResult[]
@@ -100,7 +100,7 @@ model MatchResult {
   id        Int     @id @default(autoincrement())
   player    TournamentPlayer  @relation(fields: [playerId], references: [id])
   playerId  Int
-  match     Match   @relation(fields: [matchId], references: [id])
+  match     Match   @relation(fields: [matchId], references: [id], onDelete: Cascade)
   matchId   Int
   points    Float
 
