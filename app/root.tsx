@@ -7,6 +7,7 @@ import {
   ScrollRestoration,
 } from 'react-router'
 import type { Route } from './+types/root'
+import { useNonce } from './services/nonce'
 import './app.css'
 
 export const links: Route.LinksFunction = () => [
@@ -30,6 +31,8 @@ export const meta = ({}: Route.MetaArgs) => {
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const nonce = useNonce()
+
   return (
     <html
       lang="pt-BR"
@@ -42,6 +45,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
         <script
+          nonce={nonce}
           dangerouslySetInnerHTML={{
             __html: `
             (function(){
@@ -55,8 +59,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body className="flex h-full flex-col">
         {children}
-        <ScrollRestoration />
-        <Scripts />
+        <ScrollRestoration nonce={nonce} />
+        <Scripts nonce={nonce} />
       </body>
     </html>
   )

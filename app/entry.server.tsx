@@ -4,6 +4,7 @@ import { isbot } from 'isbot'
 import { renderToPipeableStream } from 'react-dom/server'
 import { ServerRouter } from 'react-router'
 import type { AppLoadContext, EntryContext } from 'react-router'
+import { NonceContext } from './services/nonce'
 
 const ABORT_DELAY = 5_000
 
@@ -43,7 +44,9 @@ function handleBotRequest(
     const nonce = loadContext.cspNonce
 
     const { pipe, abort } = renderToPipeableStream(
-      <ServerRouter context={entryContext} url={request.url} nonce={nonce} />,
+      <NonceContext.Provider value={nonce}>
+        <ServerRouter context={entryContext} url={request.url} nonce={nonce} />
+      </NonceContext.Provider>,
       {
         nonce,
         onAllReady() {
@@ -90,7 +93,9 @@ function handleBrowserRequest(
     const nonce = loadContext.cspNonce
 
     const { pipe, abort } = renderToPipeableStream(
-      <ServerRouter context={entryContext} url={request.url} nonce={nonce} />,
+      <NonceContext.Provider value={nonce}>
+        <ServerRouter context={entryContext} url={request.url} nonce={nonce} />
+      </NonceContext.Provider>,
       {
         nonce,
         onShellReady() {
