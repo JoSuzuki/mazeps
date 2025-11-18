@@ -1,3 +1,4 @@
+import { motion } from 'motion/react'
 import { Link as ReactRouterLink } from 'react-router'
 import type { LinkProps as ReactRouterLinkProps } from 'react-router'
 
@@ -10,7 +11,7 @@ const MAP_CLASSES = {
   solid: 'bg-primary text-on-primary rounded-md p-0.5',
 }
 
-const Link = (props: LinkProps): React.ReactElement => {
+const BaseLink = (props: LinkProps): React.ReactElement => {
   const { styleType = 'default', ...linkProps } = props
   return (
     <ReactRouterLink
@@ -19,5 +20,7 @@ const Link = (props: LinkProps): React.ReactElement => {
     />
   )
 }
+
+const Link = motion.create(BaseLink);
 
 export default Link

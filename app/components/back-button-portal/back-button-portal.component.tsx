@@ -29,7 +29,7 @@ const BackButtonPortal = ({
   return createPortal(
     <Link
       to={to}
-      className="flex hover:shadow-[inset_0px_-1px_0px_0px_currentColor]"
+      className="flex"
       {...(viewTransition && { viewTransition })}
     >
       <ChevronLeftIcon />
