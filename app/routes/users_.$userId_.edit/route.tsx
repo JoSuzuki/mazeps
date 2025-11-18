@@ -1,5 +1,6 @@
-import { data, Form, Link, redirect } from 'react-router'
+import { data, Form, redirect } from 'react-router'
 import type { Route } from './+types/route'
+import BackButtonPortal from '~/components/back-button-portal/back-button-portal.component'
 import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
 import RadioGroup from '~/components/radio-group/radio-group.component'
@@ -25,9 +26,7 @@ export async function loader({ context, params }: Route.LoaderArgs) {
 export default function Route({ loaderData }: Route.ComponentProps) {
   return (
     <>
-      <div className="flex justify-between px-6 py-2">
-        <Link to={`/users/${loaderData.user.id}`}>← Voltar</Link>
-      </div>
+      <BackButtonPortal to={`/users/${loaderData.user.id}`} />
       <Center>
         <h1 className="flex justify-center text-lg">Editar usuário</h1>
         <Spacer size="md" />

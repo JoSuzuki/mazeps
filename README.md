@@ -53,6 +53,14 @@ Create a production build:
 npm run build
 ```
 
+### Testing Production Locally
+
+Test the production build with all security features enabled:
+
+```bash
+npm run start:prod
+```
+
 ## Deployment
 
 ### Docker Deployment

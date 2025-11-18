@@ -1,10 +1,10 @@
 import bcrypt from 'bcrypt'
 import { Form, data, redirect } from 'react-router'
 import type { Route } from './+types/route'
+import BackButtonPortal from '~/components/back-button-portal/back-button-portal.component'
 import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
 import GoogleLoginButton from '~/components/google-login-button/google-login-button.component'
-import Link from '~/components/link/link.component'
 import Spacer from '~/components/spacer/spacer.component'
 import TextInput from '~/components/text-input/text-input.component'
 import { PrismaClientKnownRequestError } from '~/generated/prisma/internal/prismaNamespace'
@@ -19,12 +19,10 @@ export async function loader({ context }: Route.LoaderArgs) {
 export default function Route({ actionData }: Route.ComponentProps) {
   return (
     <>
-      <div className="flex justify-between px-6 py-2">
-        <Link to="/login">← Voltar</Link>
-      </div>
+      <BackButtonPortal to="/login" />
       <Center className="align-center grid place-content-center">
         <h1 className="flex justify-center text-lg">Cadastrar</h1>
-        <Form method="post">
+        <Form method="post" viewTransition>
           <TextInput
             id="name"
             name="name"

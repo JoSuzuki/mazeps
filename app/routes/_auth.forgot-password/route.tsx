@@ -1,7 +1,7 @@
 import { data, redirect } from 'react-router'
 import type { Route } from './+types/route'
+import BackButtonPortal from '~/components/back-button-portal/back-button-portal.component'
 import Center from '~/components/center/center.component'
-import Link from '~/components/link/link.component'
 import Spacer from '~/components/spacer/spacer.component'
 
 export async function loader({ context }: Route.LoaderArgs) {
@@ -13,9 +13,7 @@ export async function loader({ context }: Route.LoaderArgs) {
 export default function Route() {
   return (
     <>
-      <div className="flex justify-between px-6 py-2">
-        <Link to="/login">← Voltar</Link>
-      </div>
+      <BackButtonPortal to="/tournaments" />
       <Center className="align-center grid place-content-center">
         <h1 className="flex justify-center text-xl">Esqueci minha senha</h1>
         <Spacer size="md" />

@@ -10,6 +10,7 @@ declare module 'react-router' {
   interface AppLoadContext {
     prisma: PrismaClient
     currentUser?: CurrentUser
+    cspNonce: string
   }
 }
 
@@ -33,13 +34,18 @@ app.use(
             'Set-Cookie',
             await sessionStorage.commitSession(session),
           )
-          return { currentUser: user as unknown as CurrentUser, prisma }
+          return {
+            currentUser: user as unknown as CurrentUser,
+            prisma,
+            cspNonce: response.locals.cspNonce,
+          }
         }
       }
 
       return {
         prisma,
         currentUser,
+        cspNonce: response.locals.cspNonce,
       }
     },
   }),

@@ -1,5 +1,6 @@
 import { Form, data, redirect } from 'react-router'
 import type { Route } from './+types/route'
+import BackButtonPortal from '~/components/back-button-portal/back-button-portal.component'
 import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
 import GoogleLoginButton from '~/components/google-login-button/google-login-button.component'
@@ -22,12 +23,10 @@ export const meta = ({}: Route.MetaArgs) => {
 export default function Route({ actionData }: Route.ComponentProps) {
   return (
     <>
-      <div className="flex justify-between px-6 py-2">
-        <Link to="/">← Voltar</Link>
-      </div>
+      <BackButtonPortal to="/" />
       <Center className="align-center grid place-content-center">
         <h1 className="flex justify-center text-lg">Login</h1>
-        <Form method="post">
+        <Form method="post" viewTransition>
           <TextInput
             id="email"
             name="email"

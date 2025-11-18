@@ -1,7 +1,7 @@
 import { redirect } from 'react-router'
 import type { Route } from './+types/route'
+import BackButtonPortal from '~/components/back-button-portal/back-button-portal.component'
 import Center from '~/components/center/center.component'
-import Link from '~/components/link/link.component'
 import LinkButton from '~/components/link-button/link-button.component'
 import Spacer from '~/components/spacer/spacer.component'
 import { Role } from '~/generated/prisma/enums'
@@ -32,9 +32,7 @@ const Field = ({ label, value }: FieldProps) => (
 export default function Route({ loaderData }: Route.ComponentProps) {
   return (
     <>
-      <div className="flex justify-between px-6 py-2">
-        <Link to="/users">← Voltar</Link>
-      </div>
+      <BackButtonPortal to="/users" />
       <Center>
         <h1 className="flex justify-center text-lg">{loaderData.user.name}</h1>
         <Spacer size="md" />
