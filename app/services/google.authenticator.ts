@@ -1,5 +1,6 @@
 import { OAuth2Strategy } from 'remix-auth-oauth2'
 import prisma from '~/lib/prisma'
+import { cookieUserFields } from './session'
 
 if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
   throw new Error('GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET is required')
@@ -49,6 +50,7 @@ export const googleStrategy = new OAuth2Strategy(
         nickname: googleUser.name,
         googleId: googleUser.sub,
       },
+      select: cookieUserFields,
     })
 
     return user

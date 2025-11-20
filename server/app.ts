@@ -3,8 +3,9 @@ import { createRequestHandler } from '@react-router/express'
 import express from 'express'
 import type { PrismaClient } from '~/generated/prisma/client'
 import prisma from '~/lib/prisma'
-import { sessionStorage } from '~/services/session'
+import { cookieUserFields, mapPrismaToCurrentUser, sessionStorage } from '~/services/session'
 import type { CurrentUser } from '~/services/session'
+import type { ExtendedError, Server } from "socket.io";
 
 declare module 'react-router' {
   interface AppLoadContext {
@@ -15,6 +16,31 @@ declare module 'react-router' {
 }
 
 export const app = express()
+
+export const socket = (io: Server) => {
+
+  io.use(async (socket, next) => {
+    try {
+      const session = await sessionStorage.getSession(socket.handshake.headers.cookie)
+      const currentUser = session.get('user') as unknown as CurrentUser
+      if (!currentUser) {
+        return next(new Error('Unauthorized'))
+      }
+      console.log(currentUser);
+      socket.data.currentUser = currentUser
+      next()
+    } catch (error) {
+      next(error as unknown as ExtendedError)
+    }
+  })
+
+  io.on("connection", (socket) => {
+    console.log("a user connected");
+    socket.on("test", (data) => {
+      console.log("test received!!2", data, socket.data.currentUser);
+    });
+  });
+};
 
 app.use(
   createRequestHandler({
@@ -27,9 +53,10 @@ app.use(
         currentUser.id = Number(currentUser.id)
         const user = await prisma.user.findUnique({
           where: { id: currentUser.id },
+          select: cookieUserFields,
         })
         if (user && currentUser.updatedAt !== user.updatedAt.toISOString()) {
-          session.set('user', user)
+          session.set('user', mapPrismaToCurrentUser(user))
           response.setHeader(
             'Set-Cookie',
             await sessionStorage.commitSession(session),

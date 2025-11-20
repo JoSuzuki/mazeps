@@ -8,12 +8,16 @@ if (!process.env.SESSION_SECRET) {
   throw new Error('SESSION_SECRET is not defined')
 }
 
-export interface CurrentUser extends Omit<User, 'createdAt' | 'updatedAt'> {
-  createdAt: string
-  updatedAt: string
+export interface PrismaCurrentUser extends Pick<User, 'id' | 'name' | 'nickname' | 'email' | 'updatedAt' | 'role'> {
+  password?: never;
 }
 
-export const sessionStorage = createCookieSessionStorage<{ user: User }>({
+export interface CurrentUser extends Pick<User, 'id' | 'name' | 'nickname' | 'email' | 'role'> {
+  updatedAt: string
+  password?: never;
+}
+
+export const sessionStorage = createCookieSessionStorage<{ user: CurrentUser }>({
   cookie: {
     name: '__session',
     httpOnly: true,
@@ -24,13 +28,31 @@ export const sessionStorage = createCookieSessionStorage<{ user: User }>({
   },
 })
 
-export const setSession = async (request: Request, user: User) => {
+export const cookieUserFields = {
+  id: true,
+  name: true,
+  nickname: true,
+  email: true,
+  updatedAt: true,
+  role: true,
+};
+
+export const mapPrismaToCurrentUser = (user: PrismaCurrentUser): CurrentUser => ({
+  id: user.id,
+  name: user.name,
+  nickname: user.nickname,
+  email: user.email,
+  updatedAt: user.updatedAt.toISOString(),
+  role: user.role,
+})
+
+export const setSession = async (request: Request, user: PrismaCurrentUser) => {
   const session = await sessionStorage.getSession(request.headers.get('cookie'))
-  session.set('user', user)
+  session.set('user', mapPrismaToCurrentUser(user))
   return sessionStorage.commitSession(session)
 }
 
-export const authenticator = new Authenticator<User>()
+export const authenticator = new Authenticator<PrismaCurrentUser>()
 
 authenticator.use(googleStrategy, 'google')
 authenticator.use(emailPasswordStrategy, 'email-password')
