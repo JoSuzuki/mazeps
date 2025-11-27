@@ -1,22 +1,24 @@
 import bcrypt from 'bcrypt'
 import { FormStrategy } from 'remix-auth-form'
-import type { User } from '~/generated/prisma/client'
 import prisma from '~/lib/prisma'
+import { cookieUserFields, type PrismaCurrentUser } from './session'
 
-async function login(email: string, password: string): Promise<User> {
-  const user = await prisma.user.findUnique({ where: { email } })
+async function login(email: string, password: string): Promise<PrismaCurrentUser> {
+  const checkUser = await prisma.user.findUnique({ where: { email }, select: { ...cookieUserFields, password: true } })
 
-  if (!user) {
+  if (!checkUser) {
     throw new Error('Usuário e/ou Senha inválidos')
   }
 
-  const match = await bcrypt.compare(password, user.password || '')
+  const match = await bcrypt.compare(password, checkUser.password || '')
 
   if (!match) {
     throw new Error('Usuário e/ou Senha inválidos')
   }
 
-  return user
+  const { password: _password, ...user } = checkUser;
+
+  return user;
 }
 
 export const emailPasswordStrategy = new FormStrategy(async ({ form }) => {

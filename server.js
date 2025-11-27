@@ -1,8 +1,10 @@
 import crypto from 'crypto'
+import { createServer } from 'http'
 import compression from 'compression'
 import express from 'express'
-import helmet from "helmet";
+import helmet from 'helmet'
 import morgan from 'morgan'
+import { Server } from "socket.io";
 
 // Short-circuit the type-checking of the built output.
 const BUILD_PATH = './build/server/index.js'
@@ -10,6 +12,8 @@ const DEVELOPMENT = process.env.NODE_ENV === 'development'
 const PORT = Number.parseInt(process.env.PORT || '3000')
 
 const app = express()
+const httpServer = createServer(app);
+const io = new Server(httpServer);
 
 app.set('trust proxy', true)
 
@@ -23,6 +27,17 @@ const generateCspNonce = (req, res, next) => {
   next()
 }
 
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
+ */
+const ioSocketMiddleware = (req, res, next) => {
+  res.locals.io = io;
+  next();
+}
+
+app.use(ioSocketMiddleware)
 app.use(generateCspNonce)
 
 app.use(compression())
@@ -43,10 +58,21 @@ if (DEVELOPMENT) {
       server: { middlewareMode: true },
     }),
   )
+
+  /**
+   * @type {Record<string, any>}
+   */
+  let currentSocketModule;
+
   app.use(viteDevServer.middlewares)
   app.use(async (req, res, next) => {
     try {
       const source = await viteDevServer.ssrLoadModule('./server/app.ts')
+      if (source !== currentSocketModule) {
+        currentSocketModule = source
+        io.removeAllListeners()
+        if (source.socket) source.socket(io)
+      }
       return await source.app(req, res, next)
     } catch (error) {
       if (typeof error === 'object' && error instanceof Error) {
@@ -103,9 +129,12 @@ if (DEVELOPMENT) {
   )
   app.use(morgan('tiny'))
   app.use(express.static('build/client', { maxAge: '1h' }))
-  app.use(await import(BUILD_PATH).then((mod) => mod.app))
+  let mod = await import(BUILD_PATH)
+  mod.socket(io)
+
+  app.use(mod.app)
 }
 
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`)
 })

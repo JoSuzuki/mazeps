@@ -251,27 +251,27 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
 
   return (
     <>
-      <BackButtonPortal to="/tournaments" />
-      <div className="flex justify-end px-6 py-2">
-        {loaderData.currentTournamentPlayer ? (
-          <Link
-            viewTransition
-            to={`/tournaments/${params.tournamentId}/tournament-players/${loaderData.currentTournamentPlayer.id}`}
-          >
-            Ver inscrição
-          </Link>
-        ) : (
-          loaderData.tournament.status === 'REGISTRATION_OPEN' && (
-            <fetcher.Form
-              method="post"
-              action={`/tournaments/${params.tournamentId}/tournament-players/new`}
-            >
-              <Button type="submit">Inscrever-se</Button>
-            </fetcher.Form>
-          )
-        )}
-      </div>
       <Center>
+        <BackButtonPortal to="/tournaments" />
+        <div className="flex justify-end py-2">
+          {loaderData.currentTournamentPlayer ? (
+            <Link
+              viewTransition
+              to={`/tournaments/${params.tournamentId}/tournament-players/${loaderData.currentTournamentPlayer.id}`}
+            >
+              Ver inscrição
+            </Link>
+          ) : (
+            loaderData.tournament.status === 'REGISTRATION_OPEN' && (
+              <fetcher.Form
+                method="post"
+                action={`/tournaments/${params.tournamentId}/tournament-players/new`}
+              >
+                <Button type="submit">Inscrever-se</Button>
+              </fetcher.Form>
+            )
+          )}
+        </div>
         <div className={`flex justify-center`}>
           <h1
             className="text-xl"

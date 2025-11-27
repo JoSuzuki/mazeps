@@ -5,7 +5,7 @@ import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
 import Spacer from '~/components/spacer/spacer.component'
 import TextInput from '~/components/text-input/text-input.component'
-import { setSession } from '~/services/session'
+import { cookieUserFields, setSession } from '~/services/session'
 
 export async function loader({ context }: Route.LoaderArgs) {
   if (!context.currentUser) return redirect('/login')
@@ -76,6 +76,7 @@ export async function action({ context, request }: Route.ActionArgs) {
       email: formData.get('email') as string,
       nickname: formData.get('nickname') as string,
     },
+    select: cookieUserFields,
   })
 
   return redirect('/profile', {

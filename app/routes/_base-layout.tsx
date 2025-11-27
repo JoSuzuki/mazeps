@@ -40,6 +40,13 @@ export default function Route({ loaderData, matches }: Route.ComponentProps) {
         >
           Torneios
         </Link>
+        <Link
+          to="/games"
+          className="[view-transition-name:nav-games] max-sm:hidden"
+          viewTransition
+        >
+          Jogos
+        </Link>
         {loaderData.currentUser?.role === Role.ADMIN && (
           <Link
             to="/users"
@@ -71,6 +78,14 @@ export default function Route({ loaderData, matches }: Route.ComponentProps) {
                 viewTransition
               >
                 Torneios
+              </Link>
+              <Link
+                to="/games"
+                className="px-4 py-2"
+                onClick={closeMenu}
+                viewTransition
+              >
+                Jogos
               </Link>
               {loaderData.currentUser?.role === Role.ADMIN && (
                 <Link

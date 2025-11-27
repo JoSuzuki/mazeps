@@ -8,7 +8,7 @@ import GoogleLoginButton from '~/components/google-login-button/google-login-but
 import Spacer from '~/components/spacer/spacer.component'
 import TextInput from '~/components/text-input/text-input.component'
 import { PrismaClientKnownRequestError } from '~/generated/prisma/internal/prismaNamespace'
-import { setSession } from '~/services/session'
+import { cookieUserFields, setSession } from '~/services/session'
 
 export async function loader({ context }: Route.LoaderArgs) {
   if (context.currentUser) return redirect('/')
@@ -88,6 +88,7 @@ export async function action({ request, context }: Route.ActionArgs) {
         email,
         password: hashedPassword,
       },
+      select: cookieUserFields,
     })
 
     return redirect('/', {
