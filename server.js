@@ -1,9 +1,9 @@
 import crypto from 'crypto'
+import { createServer } from 'http'
 import compression from 'compression'
 import express from 'express'
-import helmet from "helmet";
+import helmet from 'helmet'
 import morgan from 'morgan'
-import { createServer } from "http";
 import { Server } from "socket.io";
 
 // Short-circuit the type-checking of the built output.
@@ -27,6 +27,17 @@ const generateCspNonce = (req, res, next) => {
   next()
 }
 
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
+ */
+const ioSocketMiddleware = (req, res, next) => {
+  res.locals.io = io;
+  next();
+}
+
+app.use(ioSocketMiddleware)
 app.use(generateCspNonce)
 
 app.use(compression())

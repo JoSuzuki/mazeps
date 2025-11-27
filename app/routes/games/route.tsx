@@ -10,7 +10,10 @@ export default function Route({ }: Route.ComponentProps) {
       <Center>
         <h1 className="flex justify-center text-lg">Jogos</h1>
         <Spacer size="lg" />
-        <Link to="/games/santorini" className="p-8 border rounded-lg flex justify-between items-center">
+        <Link
+          to="/games/santorini/rooms/index"
+          className="flex items-center justify-between rounded-lg border p-8"
+        >
           <h2 className="text-lg">Santorini</h2>
           Jogar
         </Link>

@@ -46,14 +46,14 @@ export default function Route({ loaderData }: Route.ComponentProps) {
 
   return (
     <>
-      {loaderData.currentUser?.role === Role.ADMIN && (
-        <div className="flex justify-end px-6 py-2">
-          <LinkButton styleType="secondary" to="/tournaments/new">
-            Criar torneio
-          </LinkButton>
-        </div>
-      )}
       <Center>
+        {loaderData.currentUser?.role === Role.ADMIN && (
+          <div className="flex justify-end px-6 py-2">
+            <LinkButton styleType="secondary" to="/tournaments/new">
+              Criar torneio
+            </LinkButton>
+          </div>
+        )}
         <h1 className="flex justify-center text-lg">Torneios</h1>
         <Spacer size="lg" />
         <Table
