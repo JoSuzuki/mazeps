@@ -39,14 +39,13 @@ export default function Route({}: Route.ComponentProps) {
     }
   }, [])
 
-  console.log('contextSocket', contextSocket)
   return (
     <>
       <BackButtonPortal to="/games" />
       <Center className="flex flex-col pb-8">
         <h1 className="flex justify-center text-lg">Santorini</h1>
         <Spacer size="lg" />
-        <div className="h-full rounded-md border">
+        <div className="relative h-full rounded-md border">
           {error && <div>{error}</div>}
           {!error && !contextSocket && <div>Carregando...</div>}
           {!error && contextSocket && (

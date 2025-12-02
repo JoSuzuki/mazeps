@@ -169,8 +169,6 @@ async function calculateAndCreateRoundMatches(
 
   const tournamentPlayersIds = tournament.players.map((player) => player.id)
 
-  console.log(tournamentPlayersIds)
-
   const totalPoints = await calculateTournamentPoints(
     context,
     tournamentPlayersIds,

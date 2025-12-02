@@ -126,7 +126,7 @@ model SantoriniRoom {
   @@index([roomCode])
 }
 
-enum SantoriniRoomStatus{
+enum SantoriniRoomStatus {
   WAITING
   PLAYING
   FINISHED
@@ -138,6 +138,7 @@ model SantoriniRoomPlayer {
   userId Int
   room SantoriniRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
   roomId Int
+  winner Boolean @default(false)
 
   @@unique([roomId, userId])
   @@index([roomId, userId])

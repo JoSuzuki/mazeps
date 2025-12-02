@@ -50,14 +50,12 @@ export default function Route({
     socket.emit('join_room', loaderData.room.roomCode)
 
     socket.on('room_joined', async (socketId: string) => {
-      console.log('room joined', socket.id, socketId)
       if (socket.id !== socketId) {
         await revalidator.revalidate()
       }
     })
 
     socket.on('room_left', async (socketId: string) => {
-      console.log('room left', socket.id, socketId)
       if (socket.id !== socketId) {
         await revalidator.revalidate()
       }
@@ -166,6 +164,8 @@ export const action = async ({
         },
       })
     }
+
+    context.io.emit('room_left')
 
     return redirect(`/games/santorini/rooms/index`)
   }

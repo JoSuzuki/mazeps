@@ -41,7 +41,9 @@ export const socket = (io: Server) => {
   })
 
   io.on('connection', (socket) => {
-    console.log(`User connected: ${socket.data.currentUser.nickname}`)
+    console.log(
+      `User connected: ${socket.data.currentUser.nickname}, ${socket.id}`,
+    )
 
     registerSantoriniHandlers(io, socket)
   })

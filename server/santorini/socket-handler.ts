@@ -1,23 +1,24 @@
 import type { Server, Socket } from 'socket.io'
+import type { SantoriniRoomPlayer } from '~/generated/prisma/client'
 import { SantoriniRoomStatus } from '~/generated/prisma/enums'
 import prisma from '~/lib/prisma'
 import {
   applyActionsToGameState,
   canExecuteAction,
   getNextActionType,
+  verifyCurrentPlayerCanAct,
+  verifyWinningMove,
 } from '~/lib/santorini'
 import type { Action, GameState } from '~/lib/santorini'
 import { deepClone } from '~/lib/utils'
 
 export const registerSantoriniHandlers = (io: Server, socket: Socket) => {
   socket.on('join_room', async (roomCode) => {
-    console.log('room_joined', socket.data.currentUser.nickname)
     await socket.join(roomCode)
     io.to(roomCode).emit('room_joined', socket.id)
   })
 
   socket.on('leave_room', async (roomCode) => {
-    console.log('room_left', socket.data.currentUser.nickname)
     await socket.leave(roomCode)
     io.to(roomCode).emit('room_left', socket.id)
   })
@@ -39,6 +40,15 @@ export const registerSantoriniHandlers = (io: Server, socket: Socket) => {
       )
 
       io.to(roomCode).emit('game_state_updated', updatedRoom.gameState)
+
+      if (verifyWinningMove(updatedRoom.gameState)) {
+        await finishGame(
+          roomCode,
+          socket.data.currentUser.id,
+          updatedRoom.gameState.currentTurn.playerId,
+        )
+        io.to(roomCode).emit('game_finished')
+      }
     },
   )
 
@@ -48,6 +58,19 @@ export const registerSantoriniHandlers = (io: Server, socket: Socket) => {
       socket.data.currentUser.id,
     )
     io.to(roomCode).emit('game_state_updated', updatedRoom.gameState)
+
+    if (!verifyCurrentPlayerCanAct(updatedRoom.gameState)) {
+      await finishGame(
+        roomCode,
+        socket.data.currentUser.id,
+        getOtherPlayerId(
+          updatedRoom.players,
+          updatedRoom.gameState.currentTurn.playerId,
+        ),
+      )
+
+      io.to(roomCode).emit('game_finished')
+    }
   })
 
   socket.on('finish_game', async (roomCode) => {
@@ -86,7 +109,17 @@ const loadRoom = async (roomCode: string, userId: number) => {
   return room
 }
 
-const finishGame = async (roomCode: string, userId: number) => {
+const finishGame = async (
+  roomCode: string,
+  userId: number,
+  winnerPlayerId?: number,
+) => {
+  const room = await loadRoom(roomCode, userId)
+  const actions = room.gameState.currentTurn.actions
+  const currentPlayerId = room.players.find((p) => p.userId === userId)?.id!
+
+  const appliedGameState = applyActionsToGameState(room.gameState)
+
   const updatedRoom = await prisma.santoriniRoom.update({
     where: {
       roomCode,
@@ -98,6 +131,25 @@ const finishGame = async (roomCode: string, userId: number) => {
     },
     data: {
       status: SantoriniRoomStatus.FINISHED,
+      gameState: {
+        ...appliedGameState,
+        currentTurn: {
+          ...appliedGameState.currentTurn,
+          actions: [],
+        },
+        history: [...appliedGameState.history, ...actions],
+      },
+      players: {
+        update: {
+          where: {
+            id:
+              winnerPlayerId ?? getOtherPlayerId(room.players, currentPlayerId),
+          },
+          data: {
+            winner: true,
+          },
+        },
+      },
     },
   })
 
@@ -110,6 +162,11 @@ const addActionToRoom = async (
   action: Pick<Action, 'type' | 'tile'>,
 ) => {
   const room = await loadRoom(roomCode, userId)
+
+  if (room.status !== SantoriniRoomStatus.PLAYING) {
+    throw new Error('Jogo finalizado')
+  }
+
   const playerId = room.players.find((a) => a.userId === userId)?.id!
   const fullAction = { ...action, playerId }
 
@@ -159,12 +216,14 @@ const getNextPhase = (gameState: GameState) => {
 const commitActionsToRoom = async (roomCode: string, userId: number) => {
   const room = await loadRoom(roomCode, userId)
 
-  const actions = room.gameState.currentTurn.actions
+  if (room.status !== SantoriniRoomStatus.PLAYING) {
+    throw new Error('Jogo finalizado')
+  }
 
+  const actions = room.gameState.currentTurn.actions
   const appliedGameState = applyActionsToGameState(room.gameState)
 
   const nextPhase = getNextPhase(appliedGameState)
-
   const updatedRoom = await prisma.santoriniRoom.update({
     where: {
       roomCode,
@@ -179,10 +238,10 @@ const commitActionsToRoom = async (roomCode: string, userId: number) => {
         ...appliedGameState,
         phase: nextPhase,
         currentTurn: {
-          playerId:
-            room.gameState.currentTurn.playerId === room.players[0].id
-              ? room.players[1].id
-              : room.players[0].id,
+          playerId: getOtherPlayerId(
+            room.players,
+            room.gameState.currentTurn.playerId,
+          ),
           actions: [],
         },
         history: [...room.gameState.history, ...actions],
@@ -202,12 +261,23 @@ const commitActionsToRoom = async (roomCode: string, userId: number) => {
   return updatedRoom
 }
 
+const getOtherPlayerId = (
+  players: Pick<SantoriniRoomPlayer, 'id'>[],
+  playerId: number,
+) => {
+  return players.find((player) => player.id !== playerId)?.id!
+}
+
 const undoActionsToRoom = async (roomCode: string, userId: number) => {
   const room = await loadRoom(roomCode, userId)
+
+  if (room.status !== SantoriniRoomStatus.PLAYING) {
+    throw new Error('Jogo finalizado')
+  }
   const playerId = room.players.find((a) => a.userId === userId)?.id!
 
   if (room.gameState.currentTurn.playerId !== playerId) {
-    throw new Error('You are not the current player')
+    throw new Error('Não é possível realizar ações fora do seu turno')
   }
 
   const updatedRoom = await prisma.santoriniRoom.update({

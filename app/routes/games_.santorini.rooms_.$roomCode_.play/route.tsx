@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { redirect, useNavigate, useRevalidator } from 'react-router'
+import { redirect, useRevalidator } from 'react-router'
 import type { Route } from './+types/route'
 import Button from '~/components/button/button.component'
 import Spacer from '~/components/spacer/spacer.component'
@@ -30,7 +30,10 @@ export const loader = async ({ context, params }: Route.LoaderArgs) => {
     return redirect('/games/santorini/rooms/index')
   }
 
-  if (room.status !== SantoriniRoomStatus.PLAYING) {
+  if (
+    room.status !== SantoriniRoomStatus.PLAYING &&
+    room.status !== SantoriniRoomStatus.FINISHED
+  ) {
     return redirect(`/games/santorini/rooms/${params.roomCode}`)
   }
 
@@ -43,7 +46,8 @@ export default function Route({ loaderData }: Route.ComponentProps) {
   const [gameState, setGameState] = useState(
     loaderData.room.gameState as unknown as GameState,
   )
-  const navigate = useNavigate()
+  const gameFinished = loaderData.room.status === SantoriniRoomStatus.FINISHED
+  const canPerformActions = !gameFinished
   let player = loaderData.player!
   let roomCode = loaderData.room.roomCode
   let nextActionType = getNextActionType(gameState, player.id)
@@ -54,14 +58,12 @@ export default function Route({ loaderData }: Route.ComponentProps) {
     socket.emit('join_room', roomCode)
 
     socket.on('room_joined', async (socketId: string) => {
-      console.log('room joined', socket.id, socketId)
       if (socket.id !== socketId) {
         await revalidator.revalidate()
       }
     })
 
     socket.on('room_left', async (socketId: string) => {
-      console.log('room left', socket.id, socketId)
       if (socket.id !== socketId) {
         await revalidator.revalidate()
       }
@@ -72,7 +74,7 @@ export default function Route({ loaderData }: Route.ComponentProps) {
     })
 
     socket.on('game_finished', async () => {
-      await navigate(`/games/santorini/rooms/index`)
+      await revalidator.revalidate()
     })
 
     return () => {
@@ -116,19 +118,28 @@ export default function Route({ loaderData }: Route.ComponentProps) {
 
   const computedGameState = applyActionsToGameState(deepClone(gameState))
 
-  console.log(loaderData.room.gameState)
   return (
     <>
-      <div>Phase: {computedGameState.phase}</div>
-      <div>
-        Turn: {mapPlayerIdToNickname[computedGameState.currentTurn.playerId]}
-      </div>
-      <div>Next action type: {nextActionType}</div>
-      <div className="flex justify-end">
-        <Button onClick={() => socket.emit('finish_game', roomCode)}>
-          Finish Game
-        </Button>
-      </div>
+      {canPerformActions && (
+        <div className="flex justify-end">
+          <Button
+            styleType="secondary"
+            onClick={() => socket.emit('finish_game', roomCode)}
+          >
+            Desistir
+          </Button>
+        </div>
+      )}
+      {gameFinished && (
+        <h2 className="text-2xl font-bold">
+          Vencedor:{' '}
+          {
+            mapPlayerIdToNickname[
+              loaderData.room.players.find((player) => player.winner)?.id!
+            ]
+          }
+        </h2>
+      )}
       {computedGameState.board.map((row, rowIndex) => (
         <div className="flex" key={rowIndex}>
           {row.map((tile, colIndex) => {
@@ -182,17 +193,25 @@ export default function Route({ loaderData }: Route.ComponentProps) {
               canPlaceWorker || canMoveWorker || canBuildFromWorker
 
             const tileClasses = [
-              canPlaceWorker && 'bg-primary text-on-primary',
-              canMoveWorker && 'bg-primary text-on-primary',
-              canBuildFromWorker && 'bg-primary text-on-primary',
-              canClickTile && 'cursor-pointer',
+              canPerformActions &&
+                canPlaceWorker &&
+                'bg-primary text-on-primary',
+              canPerformActions &&
+                canMoveWorker &&
+                'bg-primary text-on-primary',
+              canPerformActions &&
+                canBuildFromWorker &&
+                'bg-primary text-on-primary',
+              canPerformActions && canClickTile && 'cursor-pointer',
             ]
               .filter(Boolean)
               .join(' ')
 
             const workerClasses = [
-              canSelectWorker && 'bg-primary text-on-primary',
-              canSelectWorker && 'cursor-pointer',
+              canPerformActions &&
+                canSelectWorker &&
+                'bg-primary text-on-primary',
+              canPerformActions && canSelectWorker && 'cursor-pointer',
             ]
               .filter(Boolean)
               .join(' ')
@@ -203,7 +222,9 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                   className={`h-12 w-12 border ${tileClasses}`}
                   key={colIndex}
                   onClick={() =>
-                    canClickTile && handleTileClick(rowIndex, colIndex)
+                    canPerformActions &&
+                    canClickTile &&
+                    handleTileClick(rowIndex, colIndex)
                   }
                 >
                   {tile.height}
@@ -212,7 +233,9 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                       className={`border ${workerClasses}`}
                       onClick={(e) => {
                         e.stopPropagation()
-                        canSelectWorker && handleWorkerClick(worker)
+                        canPerformActions &&
+                          canSelectWorker &&
+                          handleWorkerClick(worker)
                       }}
                     >
                       {mapPlayerIdToNickname[worker.playerId]}
@@ -224,7 +247,8 @@ export default function Route({ loaderData }: Route.ComponentProps) {
           })}
         </div>
       ))}
-      {gameState.currentTurn.actions.length > 0 &&
+      {canPerformActions &&
+        gameState.currentTurn.actions.length > 0 &&
         gameState.currentTurn.playerId === player.id && (
           <>
             <Spacer size="md" />
@@ -236,7 +260,7 @@ export default function Route({ loaderData }: Route.ComponentProps) {
             </Button>
           </>
         )}
-      {nextActionType === 'commit_actions' && (
+      {canPerformActions && nextActionType === 'commit_actions' && (
         <>
           <Spacer size="md" />
           <Button onClick={() => socket.emit('commit_actions', roomCode)}>
