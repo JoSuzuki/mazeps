@@ -1,8 +1,10 @@
-import { data, Form, redirect, useFetcher } from 'react-router'
+import { useEffect } from 'react'
+import { data, Form, redirect, useFetcher, useRevalidator } from 'react-router'
 import type { Route } from './+types/route'
 import Button from '~/components/button/button.component'
 import Table from '~/components/table/table.component'
 import { SantoriniRoomStatus } from '~/generated/prisma/enums'
+import { useSocket } from '~/services/socket-context'
 
 export const loader = async ({ context }: Route.LoaderArgs) => {
   if (!context.currentUser) return redirect('/login')
@@ -31,7 +33,10 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
     where: {
       status: SantoriniRoomStatus.WAITING,
     },
-    include: { creator: { select: { nickname: true } } },
+    include: {
+      creator: { select: { nickname: true } },
+      players: { select: { id: true } },
+    },
   })
 
   return { currentUser: context.currentUser, rooms }
@@ -42,6 +47,31 @@ export default function Route({
   actionData,
 }: Route.ComponentProps) {
   const fetcher = useFetcher()
+  const socket = useSocket()
+  const revalidator = useRevalidator()
+
+  useEffect(() => {
+    if (!socket) return
+
+    socket.on('room_created', async () => {
+      await revalidator.revalidate()
+    })
+
+    socket.on('room_joined', async () => {
+      await revalidator.revalidate()
+    })
+
+    socket.on('room_left', async () => {
+      await revalidator.revalidate()
+    })
+
+    return () => {
+      socket.off('room_created')
+      socket.off('room_joined')
+      socket.off('room_left')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div className="p-4">
@@ -73,6 +103,11 @@ export default function Route({
             key: 'creator',
             title: 'Criador',
             value: (room) => room.creator.nickname,
+          },
+          {
+            key: 'players',
+            title: 'Jogadores',
+            value: (room) => `${room.players.length}/2`,
           },
           {
             key: 'action',
@@ -130,6 +165,8 @@ export const action = async ({ context, request }: Route.ActionArgs) => {
       roomId: room.id,
     },
   })
+
+  context.io.emit('room_joined')
 
   return redirect(`/games/santorini/rooms/${roomCode}`)
 }

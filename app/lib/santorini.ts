@@ -5,8 +5,13 @@ export interface Action {
     | 'move_worker'
     | 'build_from_worker'
     | 'commit_actions'
-  tile: { x: number; y: number }
+  tile: Position
   playerId: number
+}
+
+interface Position {
+  x: number
+  y: number
 }
 
 export interface Tile {
@@ -15,7 +20,7 @@ export interface Tile {
 
 export interface Worker {
   playerId: number
-  position: { x: number; y: number }
+  position: Position
 }
 
 export type Board = [
@@ -44,13 +49,6 @@ export interface GameState {
 
 export const getNextActionType = (gameState: GameState, playerId: number) => {
   if (gameState.currentTurn.playerId !== playerId) return null
-  console.log(
-    'getNextActionType',
-    gameState.currentTurn.playerId,
-    playerId,
-    gameState.phase,
-    gameState.currentTurn.actions,
-  )
 
   if (
     gameState.phase === 'move_and_build' &&
@@ -168,7 +166,6 @@ export const canExecuteAction = (
       const workerPosition = gameState.currentTurn.actions.find(
         (a) => a.type === 'move_worker',
       )?.tile!
-      console.log('build_from_worker', workerPosition)
       const withinX = action.tile.x >= 0 && action.tile.x <= 4
       const withinY = action.tile.y >= 0 && action.tile.y <= 4
       const withinBounds = withinX && withinY
@@ -224,12 +221,6 @@ const applyActionToGameState = (gameState: GameState, action: Action) => {
           worker.position.x === selectWorkerAction.tile.x &&
           worker.position.y === selectWorkerAction.tile.y,
       )
-      console.log(
-        'move_worker',
-        selectWorkerAction,
-        workerIndex,
-        gameState.workers,
-      )
       gameState.workers[workerIndex].position = action.tile
       break
     case 'build_from_worker':
@@ -248,4 +239,56 @@ export const applyActionsToGameState = (gameState: GameState) => {
   })
 
   return updatedGameState
+}
+
+export const verifyWinningMove = (gameState: GameState) => {
+  const lastAction = gameState.currentTurn.actions.at(-1)
+
+  if (!lastAction) return false
+
+  return (
+    lastAction.type === 'move_worker' &&
+    gameState.board[lastAction.tile.y][lastAction.tile.x].height === 3
+  )
+}
+
+export const verifyCurrentPlayerCanAct = (gameState: GameState) => {
+  if (gameState.phase === 'placement') return true
+
+  return gameState.workers
+    .filter((worker) => worker.playerId === gameState.currentTurn.playerId)
+    .some((worker) => canMoveWorker(gameState, worker))
+}
+
+export const canMoveWorker = (gameState: GameState, worker: Worker) => {
+  const workerPosition = worker.position
+  const workerHeight =
+    gameState.board[workerPosition.y][workerPosition.x].height
+  const adjacentTiles = getAdjacentTiles(workerPosition)
+
+  return adjacentTiles.some((tile) => {
+    const tileHeight = gameState.board[tile.y][tile.x].height
+    const notFullyBuilt = tileHeight < 4
+    const noWorkerOnTile = !gameState.workers.some(
+      (worker) => worker.position.x === tile.x && worker.position.y === tile.y,
+    )
+    const notTooHigh = tileHeight - workerHeight <= 1
+    return notFullyBuilt && noWorkerOnTile && notTooHigh
+  })
+}
+
+const getAdjacentTiles = (position: Position) => {
+  const { x, y } = position
+  const adjacentTiles = [
+    { x: x - 1, y: y - 1 },
+    { x: x - 1, y: y },
+    { x: x - 1, y: y + 1 },
+    { x: x, y: y - 1 },
+    { x: x, y: y + 1 },
+    { x: x + 1, y: y - 1 },
+    { x: x + 1, y: y },
+    { x: x + 1, y: y + 1 },
+  ].filter((tile) => tile.x >= 0 && tile.x <= 4 && tile.y >= 0 && tile.y <= 4)
+
+  return adjacentTiles
 }
