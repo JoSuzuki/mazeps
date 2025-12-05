@@ -2,13 +2,9 @@ import { useEffect, useState } from 'react'
 import { redirect, useRevalidator } from 'react-router'
 import type { Route } from './+types/route'
 import Button from '~/components/button/button.component'
-import Spacer from '~/components/spacer/spacer.component'
+import Santorini from '~/components/santorini/santorini.component'
 import { SantoriniRoomStatus } from '~/generated/prisma/enums'
-import {
-  applyActionsToGameState,
-  canExecuteAction,
-  getNextActionType,
-} from '~/lib/santorini'
+import { applyActionsToGameState, getNextActionType } from '~/lib/santorini'
 import type { GameState, Worker } from '~/lib/santorini'
 import { deepClone } from '~/lib/utils'
 import { useSocket } from '~/services/socket-context'
@@ -119,17 +115,7 @@ export default function Route({ loaderData }: Route.ComponentProps) {
   const computedGameState = applyActionsToGameState(deepClone(gameState))
 
   return (
-    <>
-      {canPerformActions && (
-        <div className="flex justify-end">
-          <Button
-            styleType="secondary"
-            onClick={() => socket.emit('finish_game', roomCode)}
-          >
-            Desistir
-          </Button>
-        </div>
-      )}
+    <div className="flex h-full flex-col">
       {gameFinished && (
         <h2 className="text-2xl font-bold">
           Vencedor:{' '}
@@ -140,134 +126,48 @@ export default function Route({ loaderData }: Route.ComponentProps) {
           }
         </h2>
       )}
-      {computedGameState.board.map((row, rowIndex) => (
-        <div className="flex" key={rowIndex}>
-          {row.map((tile, colIndex) => {
-            const worker = computedGameState.workers.find(
-              (worker) =>
-                worker.position.x === colIndex &&
-                worker.position.y === rowIndex,
-            )
-
-            const canPlaceWorker = canExecuteAction(
-              computedGameState,
-              {
-                type: 'place_worker',
-                tile: { x: colIndex, y: rowIndex },
-                playerId: player.id,
-              },
-              nextActionType,
-            )
-
-            const canSelectWorker = canExecuteAction(
-              computedGameState,
-              {
-                type: 'select_worker',
-                tile: { x: colIndex, y: rowIndex },
-                playerId: player.id,
-              },
-              nextActionType,
-            )
-
-            const canMoveWorker = canExecuteAction(
-              computedGameState,
-              {
-                type: 'move_worker',
-                tile: { x: colIndex, y: rowIndex },
-                playerId: player.id,
-              },
-              nextActionType,
-            )
-
-            const canBuildFromWorker = canExecuteAction(
-              computedGameState,
-              {
-                type: 'build_from_worker',
-                tile: { x: colIndex, y: rowIndex },
-                playerId: player.id,
-              },
-              nextActionType,
-            )
-
-            const canClickTile =
-              canPlaceWorker || canMoveWorker || canBuildFromWorker
-
-            const tileClasses = [
-              canPerformActions &&
-                canPlaceWorker &&
-                'bg-primary text-on-primary',
-              canPerformActions &&
-                canMoveWorker &&
-                'bg-primary text-on-primary',
-              canPerformActions &&
-                canBuildFromWorker &&
-                'bg-primary text-on-primary',
-              canPerformActions && canClickTile && 'cursor-pointer',
-            ]
-              .filter(Boolean)
-              .join(' ')
-
-            const workerClasses = [
-              canPerformActions &&
-                canSelectWorker &&
-                'bg-primary text-on-primary',
-              canPerformActions && canSelectWorker && 'cursor-pointer',
-            ]
-              .filter(Boolean)
-              .join(' ')
-
-            return (
-              <>
-                <div
-                  className={`h-12 w-12 border ${tileClasses}`}
-                  key={colIndex}
-                  onClick={() =>
-                    canPerformActions &&
-                    canClickTile &&
-                    handleTileClick(rowIndex, colIndex)
-                  }
-                >
-                  {tile.height}
-                  {worker && (
-                    <div
-                      className={`border ${workerClasses}`}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        canPerformActions &&
-                          canSelectWorker &&
-                          handleWorkerClick(worker)
-                      }}
-                    >
-                      {mapPlayerIdToNickname[worker.playerId]}
-                    </div>
-                  )}
-                </div>
-              </>
-            )
-          })}
+      <div className="flex w-full flex-1 flex-col px-4 pb-4">
+        <div
+          className="mt-4 w-full flex-1 overflow-hidden rounded-lg"
+          id="canvas-container"
+        >
+          <Santorini
+            gameState={computedGameState}
+            nextActionType={nextActionType}
+            onTileClick={handleTileClick}
+            onWorkerClick={handleWorkerClick}
+            canPerformActions={canPerformActions}
+            playerId={player.id}
+          />
         </div>
-      ))}
-      {canPerformActions &&
-        gameState.currentTurn.actions.length > 0 &&
-        gameState.currentTurn.playerId === player.id && (
-          <>
-            <Spacer size="md" />
+      </div>
+      {canPerformActions && (
+        <div className="absolute top-0 right-0 p-8">
+          <Button
+            styleType="secondary"
+            onClick={() => socket.emit('finish_game', roomCode)}
+          >
+            Desistir
+          </Button>
+        </div>
+      )}
+      <div className="absolute right-0 bottom-0 flex flex-col gap-4 p-8">
+        {canPerformActions &&
+          gameState.currentTurn.actions.length > 0 &&
+          gameState.currentTurn.playerId === player.id && (
             <Button
               styleType="secondary"
               onClick={() => socket.emit('undo_actions', roomCode)}
             >
               Undo turn actions
             </Button>
-          </>
-        )}
-      {canPerformActions && nextActionType === 'commit_actions' && (
-        <>
-          <Spacer size="md" />
+          )}
+        {canPerformActions && nextActionType === 'commit_actions' && (
           <Button onClick={() => socket.emit('commit_actions', roomCode)}>
             Commit turn actions
           </Button>
-        </>
-      )}
-    </>
+        )}
+      </div>
+    </div>
   )
 }

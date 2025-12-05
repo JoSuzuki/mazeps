@@ -19,6 +19,10 @@
     "@react-router/express": "^7.6.1",
     "@react-router/fs-routes": "^7.6.1",
     "@react-router/node": "^7.6.1",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.4.2",
+    "@react-three/postprocessing": "^3.0.4",
+    "@types/three": "^0.181.0",
     "bcrypt": "^6.0.0",
     "compression": "^1.7.5",
     "express": "^5.1.0",
@@ -33,7 +37,8 @@
     "remix-auth-form": "^3.0.0",
     "remix-auth-oauth2": "^3.4.1",
     "socket.io": "^4.8.1",
-    "socket.io-client": "^4.8.1"
+    "socket.io-client": "^4.8.1",
+    "three": "^0.181.2"
   },
   "devDependencies": {
     "@epic-web/config": "^1.21.0",

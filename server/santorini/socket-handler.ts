@@ -164,7 +164,8 @@ const addActionToRoom = async (
   const room = await loadRoom(roomCode, userId)
 
   if (room.status !== SantoriniRoomStatus.PLAYING) {
-    throw new Error('Jogo finalizado')
+    console.error('Jogo finalizado')
+    return room
   }
 
   const playerId = room.players.find((a) => a.userId === userId)?.id!
@@ -174,7 +175,8 @@ const addActionToRoom = async (
   const nextActionType = getNextActionType(room.gameState, playerId)
 
   if (!canExecuteAction(appliedGameState, fullAction, nextActionType)) {
-    throw new Error(`Ação inválida: ${action.type} ${action.tile}`)
+    console.error(`Ação inválida: ${action.type} ${action.tile}`)
+    return room
   }
 
   const updatedRoom = await prisma.santoriniRoom.update({
@@ -217,7 +219,8 @@ const commitActionsToRoom = async (roomCode: string, userId: number) => {
   const room = await loadRoom(roomCode, userId)
 
   if (room.status !== SantoriniRoomStatus.PLAYING) {
-    throw new Error('Jogo finalizado')
+    console.error('Jogo finalizado')
+    return room
   }
 
   const actions = room.gameState.currentTurn.actions
@@ -272,12 +275,14 @@ const undoActionsToRoom = async (roomCode: string, userId: number) => {
   const room = await loadRoom(roomCode, userId)
 
   if (room.status !== SantoriniRoomStatus.PLAYING) {
-    throw new Error('Jogo finalizado')
+    console.error('Jogo finalizado')
+    return room
   }
   const playerId = room.players.find((a) => a.userId === userId)?.id!
 
   if (room.gameState.currentTurn.playerId !== playerId) {
-    throw new Error('Não é possível realizar ações fora do seu turno')
+    console.error('Não é possível realizar ações fora do seu turno')
+    return room
   }
 
   const updatedRoom = await prisma.santoriniRoom.update({
