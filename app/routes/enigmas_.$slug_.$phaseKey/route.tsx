@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { data, redirect, useFetcher } from 'react-router'
 import type { Route } from './+types/route'
 import Center from '~/components/center/center.component'
@@ -94,6 +94,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 export default function Route({ loaderData, params }: Route.ComponentProps) {
   const fetcher = useFetcher<typeof action>()
   const answerRef = useRef<HTMLInputElement>(null)
+  const [inputLength, setInputLength] = useState(0)
 
   useEffect(() => {
     if (fetcher.data?.wrong) {
@@ -101,6 +102,7 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
       if (answerRef.current) {
         answerRef.current.value = ''
         answerRef.current.focus()
+        setInputLength(0)
       }
     }
   }, [fetcher.data])
@@ -187,7 +189,11 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
           required
           autoComplete="off"
           className="w-48 rounded-md border-1 p-1 text-center"
+          onChange={(e) => setInputLength(e.target.value.length)}
         />
+        <p className="text-sm opacity-60">
+          Caracteres Restantes: {Math.max(0, phase!.answer.length - inputLength)}
+        </p>
         <button
           type="submit"
           className="active:pressed cursor-pointer rounded-md bg-primary px-6 py-2 text-on-primary hover:opacity-90"
