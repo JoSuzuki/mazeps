@@ -44,6 +44,11 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     return data({ success: true })
   }
 
+  if (intent === 'delete-enigma') {
+    await context.prisma.enigma.delete({ where: { slug: params.slug } })
+    return redirect('/enigmas')
+  }
+
   return data({ error: 'Ação inválida' })
 }
 
@@ -146,6 +151,20 @@ export default function Route({ loaderData }: Route.ComponentProps) {
         <Link to={`/enigmas/${loaderData.enigma.slug}/comecar`} viewTransition>
           Testar enigma →
         </Link>
+
+        <Spacer size="lg" />
+        <Form method="post">
+          <input type="hidden" name="intent" value="delete-enigma" />
+          <button
+            type="submit"
+            className="cursor-pointer text-red-500 hover:underline text-sm"
+            onClick={(e) => {
+              if (!confirm(`Deletar o enigma "${loaderData.enigma.name}" permanentemente? Esta ação não pode ser desfeita.`)) e.preventDefault()
+            }}
+          >
+            Deletar enigma
+          </button>
+        </Form>
       </Center>
     </>
   )
