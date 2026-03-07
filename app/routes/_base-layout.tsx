@@ -47,6 +47,13 @@ export default function Route({ loaderData, matches }: Route.ComponentProps) {
         >
           Jogos
         </Link>
+        <Link
+          to="/enigmas"
+          className="[view-transition-name:nav-enigmas] max-sm:hidden"
+          viewTransition
+        >
+          Enigmas
+        </Link>
         {loaderData.currentUser?.role === Role.ADMIN && (
           <Link
             to="/users"
@@ -87,6 +94,14 @@ export default function Route({ loaderData, matches }: Route.ComponentProps) {
               >
                 Jogos
               </Link>
+              <Link
+                to="/enigmas"
+                className="px-4 py-2"
+                onClick={closeMenu}
+                viewTransition
+              >
+                Enigmas
+              </Link>
               {loaderData.currentUser?.role === Role.ADMIN && (
                 <Link
                   to="/users"
@@ -120,7 +135,7 @@ export default function Route({ loaderData, matches }: Route.ComponentProps) {
           )}
         </MenuNavigation>
       </nav>
-      <main className="h-full">
+      <main className="min-h-0 flex-1">
         <Outlet />
       </main>
     </>

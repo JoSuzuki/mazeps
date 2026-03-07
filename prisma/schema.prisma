@@ -145,6 +145,41 @@ model MatchResult {
   @@index([playerId, matchId])
 }
 
+model Enigma {
+  id        Int           @id @default(autoincrement())
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  name      String
+  slug      String        @unique
+  phases    EnigmaPhase[]
+}
+
+model EnigmaPhase {
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  enigma    Enigma    @relation(fields: [enigmaId], references: [id], onDelete: Cascade)
+  enigmaId  Int
+  order     Int
+  title     String
+  mediaType MediaType @default(NONE)
+  mediaUrl  String?
+  imageFile String?
+  imageAlt  String?
+  phrase    String
+  answer    String
+  tipPhrase String?
+
+  @@unique([enigmaId, order])
+}
+
+enum MediaType {
+  NONE
+  IMAGE
+  VIDEO
+  AUDIO
+}
+
 model SantoriniRoom {
   id Int @id @default(autoincrement())
   creator User @relation(fields: [creatorId], references: [id], onDelete: Cascade)
