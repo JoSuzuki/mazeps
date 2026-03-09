@@ -44,6 +44,8 @@ app.use(compression())
 
 app.disable('x-powered-by')
 
+app.use('/uploads', express.static('uploads'))
+
 if (DEVELOPMENT) {
   console.log('Starting development server')
   app.use(
@@ -96,7 +98,8 @@ if (DEVELOPMENT) {
           styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
           fontSrc: ["'self'", "https://fonts.gstatic.com"],
           connectSrc: ["'self'"],
-          imgSrc: ["'self'", "data:", "blob:"],
+          imgSrc: ["'self'", "data:", "blob:", "https:"],
+          frameSrc: ["https://www.youtube.com", "https://www.youtube-nocookie.com"],
           objectSrc: ["'none'"],
           baseUri: ["'self'"],
           formAction: ["'self'"],

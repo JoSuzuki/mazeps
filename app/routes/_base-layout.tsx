@@ -34,11 +34,11 @@ export default function Route({ loaderData, matches }: Route.ComponentProps) {
           </Link>
         )}
         <Link
-          to="/tournaments"
-          className="[view-transition-name:nav-tournaments] max-sm:hidden"
+          to="/events"
+          className="[view-transition-name:nav-events] max-sm:hidden"
           viewTransition
         >
-          Torneios
+          Eventos
         </Link>
         <Link
           to="/games"
@@ -46,6 +46,13 @@ export default function Route({ loaderData, matches }: Route.ComponentProps) {
           viewTransition
         >
           Jogos
+        </Link>
+        <Link
+          to="/enigmas"
+          className="[view-transition-name:nav-enigmas] max-sm:hidden"
+          viewTransition
+        >
+          Enigmas
         </Link>
         <Link
           to="/mazeps"
@@ -79,12 +86,12 @@ export default function Route({ loaderData, matches }: Route.ComponentProps) {
           {(closeMenu) => (
             <>
               <Link
-                to="/tournaments"
+                to="/events"
                 className="px-4 py-2"
                 onClick={closeMenu}
                 viewTransition
               >
-                Torneios
+                Eventos
               </Link>
               <Link
                 to="/games"
@@ -93,6 +100,14 @@ export default function Route({ loaderData, matches }: Route.ComponentProps) {
                 viewTransition
               >
                 Jogos
+              </Link>
+              <Link
+                to="/enigmas"
+                className="px-4 py-2"
+                onClick={closeMenu}
+                viewTransition
+              >
+                Enigmas
               </Link>
               <Link
                 to="/mazeps"
@@ -135,7 +150,7 @@ export default function Route({ loaderData, matches }: Route.ComponentProps) {
           )}
         </MenuNavigation>
       </nav>
-      <main className="h-full">
+      <main className="min-h-0 flex-1">
         <Outlet />
       </main>
     </>

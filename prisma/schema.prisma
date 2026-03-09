@@ -33,6 +33,7 @@ model User {
   tournamentPlayers TournamentPlayer[]
   createdSantoriniRooms SantoriniRoom[]
   santoriniRoomPlayers SantoriniRoomPlayer[]
+  eventParticipants EventParticipant[]
 
   @@index([email])
 }
@@ -51,6 +52,38 @@ model Tournament {
   status       TournamentStatus  @default(REGISTRATION_OPEN)
   name         String
   desiredTableSize Int
+  event        Event?
+}
+
+model Event {
+  id           Int       @id @default(autoincrement())
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  name         String
+  description  String?
+  date         DateTime?
+  badgeFile    String?
+  type         EventType @default(GENERAL)
+  tournament   Tournament? @relation(fields: [tournamentId], references: [id])
+  tournamentId Int?      @unique
+  participants EventParticipant[]
+}
+
+enum EventType {
+  TOURNAMENT
+  GENERAL
+}
+
+model EventParticipant {
+  id          Int      @id @default(autoincrement())
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId     Int
+  user        User     @relation(fields: [userId], references: [id])
+  userId      Int
+  checkedInAt DateTime @default(now())
+
+  @@unique([eventId, userId])
+  @@index([eventId, userId])
 }
 
 enum TournamentStatus{
@@ -111,6 +144,41 @@ model MatchResult {
 
   @@unique([playerId, matchId])
   @@index([playerId, matchId])
+}
+
+model Enigma {
+  id        Int           @id @default(autoincrement())
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  name      String
+  slug      String        @unique
+  phases    EnigmaPhase[]
+}
+
+model EnigmaPhase {
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  enigma    Enigma    @relation(fields: [enigmaId], references: [id], onDelete: Cascade)
+  enigmaId  Int
+  order     Int
+  title     String
+  mediaType MediaType @default(NONE)
+  mediaUrl  String?
+  imageFile String?
+  imageAlt  String?
+  phrase    String
+  answer    String
+  tipPhrase String?
+
+  @@unique([enigmaId, order])
+}
+
+enum MediaType {
+  NONE
+  IMAGE
+  VIDEO
+  AUDIO
 }
 
 model SantoriniRoom {

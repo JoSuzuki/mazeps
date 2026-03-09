@@ -9,28 +9,22 @@ import { Role } from '~/generated/prisma/enums'
 export async function loader({ context }: Route.LoaderArgs) {
   if (!context.currentUser) return redirect('/login')
   if (context.currentUser.role !== Role.ADMIN) return redirect('/')
-
   return data(null)
 }
 
-export default function Route({}: Route.ComponentProps) {
+export default function Route() {
   return (
     <Center>
-      <h1>Criar torneio</h1>
+      <h1 className="flex justify-center text-lg">Criar enigma</h1>
+      <Spacer size="md" />
       <Form method="post">
+        <TextInput id="name" name="name" label="Nome" type="text" required={true} />
+        <Spacer size="sm" />
         <TextInput
-          id="name"
-          name="name"
-          label="Nome"
+          id="slug"
+          name="slug"
+          label="Slug (usado na URL, ex: meu-enigma)"
           type="text"
-          required={true}
-        />
-        <Spacer size="md" />
-        <TextInput
-          id="desiredTableSize"
-          name="desiredTableSize"
-          label="Tamanho da mesa"
-          type="number"
           required={true}
         />
         <Spacer size="md" />
@@ -42,24 +36,14 @@ export default function Route({}: Route.ComponentProps) {
 
 export async function action({ request, context }: Route.ActionArgs) {
   if (context.currentUser?.role !== Role.ADMIN) {
-    return data({ error: 'Apenas admins podem criar torneios' })
+    return data({ error: 'Apenas admins podem criar enigmas' })
   }
+
   const formData = await request.formData()
   const name = formData.get('name') as string
-  const desiredTableSize = formData.get('desiredTableSize') as string
+  const slug = (formData.get('slug') as string).toLowerCase().trim()
 
-  const tournament = await context.prisma.tournament.create({
-    data: {
-      name: name,
-      desiredTableSize: Number(desiredTableSize),
-      event: {
-        create: {
-          name: name,
-          type: 'TOURNAMENT',
-        },
-      },
-    },
-  })
+  const enigma = await context.prisma.enigma.create({ data: { name, slug } })
 
-  return redirect(`/tournaments/${tournament.id}`)
+  return redirect(`/enigmas/${enigma.slug}/edit`)
 }
