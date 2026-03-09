@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { data, Form, redirect } from 'react-router'
 import type { Route } from './+types/route'
 import Button from '~/components/button/button.component'
@@ -6,7 +7,7 @@ import Link from '~/components/link/link.component'
 import Spacer from '~/components/spacer/spacer.component'
 import TextInput from '~/components/text-input/text-input.component'
 import { Role } from '~/generated/prisma/enums'
-import { saveUploadedFile } from '~/lib/upload'
+import { AVAILABLE_BADGES } from '~/lib/badges'
 
 export async function loader({ context, params }: Route.LoaderArgs) {
   if (!context.currentUser) return redirect('/login')
@@ -21,6 +22,9 @@ export async function loader({ context, params }: Route.LoaderArgs) {
 
 export default function Route({ loaderData, params }: Route.ComponentProps) {
   const { event } = loaderData
+  const [selectedBadge, setSelectedBadge] = useState<string | null>(
+    event.badgeFile,
+  )
 
   return (
     <>
@@ -32,7 +36,7 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
       <Center>
         <h1>Editar evento</h1>
         <Spacer size="md" />
-        <Form method="post" encType="multipart/form-data">
+        <Form method="post">
           <TextInput
             id="name"
             name="name"
@@ -64,26 +68,52 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
             }
           />
           <Spacer size="md" />
-          <label className="block" htmlFor="badgeFile">
-            Badge (imagem)
-          </label>
-          {event.badgeFile && (
-            <div className="mb-2">
-              <p className="text-sm opacity-60">Badge atual:</p>
-              <img
-                src={event.badgeFile}
-                alt="Badge atual"
-                className="h-12 w-12 object-contain"
+          <label className="block">Badge</label>
+          <Spacer size="sm" />
+          <div className="flex flex-wrap gap-3">
+            <label
+              className={`cursor-pointer rounded-md border-2 p-1 transition-colors ${
+                selectedBadge === null ? 'border-black' : 'border-transparent'
+              }`}
+            >
+              <input
+                type="radio"
+                name="badgeFile"
+                value=""
+                className="sr-only"
+                onChange={() => setSelectedBadge(null)}
+                defaultChecked={!event.badgeFile}
               />
-            </div>
-          )}
-          <input
-            id="badgeFile"
-            name="badgeFile"
-            type="file"
-            accept="image/*"
-            className="w-full"
-          />
+              <div className="flex h-16 w-16 items-center justify-center text-xs opacity-40">
+                Nenhum
+              </div>
+            </label>
+            {AVAILABLE_BADGES.map((badge) => (
+              <label
+                key={badge.path}
+                className={`cursor-pointer rounded-md border-2 p-1 transition-colors ${
+                  selectedBadge === badge.path
+                    ? 'border-black'
+                    : 'border-transparent'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="badgeFile"
+                  value={badge.path}
+                  className="sr-only"
+                  onChange={() => setSelectedBadge(badge.path)}
+                  defaultChecked={event.badgeFile === badge.path}
+                />
+                <img
+                  src={badge.path}
+                  alt={badge.label}
+                  title={badge.label}
+                  className="h-16 w-16 object-contain"
+                />
+              </label>
+            ))}
+          </div>
           <Spacer size="md" />
           <Button type="submit">Salvar</Button>
         </Form>
@@ -101,17 +131,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   const name = formData.get('name') as string
   const description = (formData.get('description') as string) || null
   const dateRaw = formData.get('date') as string
-
-  const existing = await context.prisma.event.findUniqueOrThrow({
-    where: { id: Number(params.eventId) },
-    select: { badgeFile: true },
-  })
-
-  let badgeFile = existing.badgeFile
-  const uploadedBadge = formData.get('badgeFile')
-  if (uploadedBadge instanceof File && uploadedBadge.size > 0) {
-    badgeFile = await saveUploadedFile(uploadedBadge, 'badges')
-  }
+  const badgeFile = (formData.get('badgeFile') as string) || null
 
   await context.prisma.event.update({
     where: { id: Number(params.eventId) },
