@@ -17,7 +17,9 @@ export async function loader({ context, params }: Route.LoaderArgs) {
     context.prisma.user.findUniqueOrThrow({ where: { id: userId } }),
     context.prisma.eventParticipant.findMany({
       where: { userId },
-      include: { event: { select: { id: true, name: true, date: true } } },
+      include: {
+        event: { select: { id: true, name: true, date: true, badgeFile: true } },
+      },
       orderBy: { checkedInAt: 'desc' },
     }),
   ])
@@ -38,6 +40,8 @@ const Field = ({ label, value }: FieldProps) => (
 )
 
 export default function Route({ loaderData }: Route.ComponentProps) {
+  const badges = loaderData.eventParticipants.filter((ep) => ep.event.badgeFile)
+
   return (
     <>
       <BackButtonPortal to="/users" />
@@ -59,6 +63,26 @@ export default function Route({ loaderData }: Route.ComponentProps) {
         >
           Editar
         </LinkButton>
+
+        {badges.length > 0 && (
+          <>
+            <Spacer size="lg" />
+            <h2 className="text-base font-semibold">Badges</h2>
+            <Spacer size="sm" />
+            <div className="flex flex-wrap gap-3">
+              {badges.map((ep) => (
+                <Link key={ep.id} to={`/events/${ep.event.id}`} viewTransition>
+                  <img
+                    src={ep.event.badgeFile!}
+                    alt={`Badge de ${ep.event.name}`}
+                    title={ep.event.name}
+                    className="h-48 w-48 object-contain"
+                  />
+                </Link>
+              ))}
+            </div>
+          </>
+        )}
 
         <Spacer size="lg" />
         <h2 className="text-base font-semibold">Eventos</h2>

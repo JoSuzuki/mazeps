@@ -64,12 +64,26 @@ export default function Route({ loaderData }: Route.ComponentProps) {
           data={loaderData.events}
           columns={[
             {
+              key: 'badge',
+              title: 'Badge',
+              value: (event) =>
+                event.badgeFile ? (
+                  <img
+                    src={event.badgeFile}
+                    alt={`Badge de ${event.name}`}
+                    className="h-10 w-10 object-contain"
+                  />
+                ) : null,
+            },
+            {
               key: 'name',
               title: 'Nome',
               value: (event) => (
                 <Link
                   to={
-                    event.type === EventType.TOURNAMENT && event.tournament
+                    event.type === EventType.TOURNAMENT &&
+                    event.tournament &&
+                    loaderData.currentUser?.role !== Role.ADMIN
                       ? `/tournaments/${event.tournament.id}`
                       : `/events/${event.id}`
                   }

@@ -62,6 +62,7 @@ model Event {
   name         String
   description  String?
   date         DateTime?
+  badgeFile    String?
   type         EventType @default(GENERAL)
   tournament   Tournament? @relation(fields: [tournamentId], references: [id])
   tournamentId Int?      @unique

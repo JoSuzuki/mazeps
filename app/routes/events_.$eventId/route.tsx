@@ -3,6 +3,7 @@ import type { Route } from './+types/route'
 import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
 import Link from '~/components/link/link.component'
+import LinkButton from '~/components/link-button/link-button.component'
 import Spacer from '~/components/spacer/spacer.component'
 import { EventType, Role } from '~/generated/prisma/enums'
 
@@ -18,8 +19,12 @@ export async function loader({ context, params }: Route.LoaderArgs) {
     },
   })
 
-  // Tournament events are managed via the tournament routes
-  if (event.type === EventType.TOURNAMENT && event.tournament) {
+  // Non-admin users are redirected to the tournament page for tournament events
+  if (
+    event.type === EventType.TOURNAMENT &&
+    event.tournament &&
+    context.currentUser?.role !== Role.ADMIN
+  ) {
     return redirect(`/tournaments/${event.tournament.id}`)
   }
 
@@ -76,14 +81,40 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
 
   return (
     <>
-      <div className="px-6 py-2">
+      <div className="flex items-center justify-between px-6 py-2">
         <Link to="/events" viewTransition>
           ← Voltar
         </Link>
+        {currentUser?.role === Role.ADMIN && (
+          <LinkButton styleType="secondary" to={`/events/${params.eventId}/edit`}>
+            Editar
+          </LinkButton>
+        )}
       </div>
       <Center>
+        {event.badgeFile && (
+          <>
+            <div className="flex justify-center">
+              <img
+                src={event.badgeFile}
+                alt={`Badge de ${event.name}`}
+                className="h-24 w-24 object-contain"
+              />
+            </div>
+            <Spacer size="sm" />
+          </>
+        )}
         <h1 className="flex justify-center text-lg">{event.name}</h1>
         <Spacer size="md" />
+
+        {event.type === EventType.TOURNAMENT && event.tournament && (
+          <>
+            <Link to={`/tournaments/${event.tournament.id}`} viewTransition>
+              Ver torneio →
+            </Link>
+            <Spacer size="md" />
+          </>
+        )}
 
         {event.date && (
           <>
