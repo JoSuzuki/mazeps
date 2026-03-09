@@ -15,7 +15,9 @@ export async function loader({ context, params }: Route.LoaderArgs) {
     where: { id: eventId },
     include: {
       tournament: { select: { id: true } },
-      participants: { include: { user: { select: { id: true, nickname: true } } } },
+      participants: {
+        include: { user: { select: { id: true, nickname: true } } },
+      },
     },
   })
 
@@ -54,17 +56,53 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 
   if (intent === 'add-participant') {
     const userId = Number(formData.get('userId'))
-    await context.prisma.eventParticipant.upsert({
-      where: { eventId_userId: { eventId: Number(params.eventId), userId } },
-      update: {},
-      create: { eventId: Number(params.eventId), userId },
+    const eventId = Number(params.eventId)
+
+    const event = await context.prisma.event.findUniqueOrThrow({
+      where: { id: eventId },
+      select: { type: true, tournament: { select: { id: true } } },
     })
+
+    await context.prisma.eventParticipant.upsert({
+      where: { eventId_userId: { eventId, userId } },
+      update: {},
+      create: { eventId, userId },
+    })
+
+    if (event.type === 'TOURNAMENT' && event.tournament) {
+      await context.prisma.tournamentPlayer.upsert({
+        where: { tournamentId_userId: { tournamentId: event.tournament.id, userId } },
+        update: {},
+        create: { tournamentId: event.tournament.id, userId },
+      })
+    }
+
     return data({ success: true })
   }
 
   if (intent === 'remove-participant') {
     const participantId = Number(formData.get('participantId'))
+    const eventId = Number(params.eventId)
+
+    const participant = await context.prisma.eventParticipant.findUniqueOrThrow({
+      where: { id: participantId },
+      select: { userId: true, event: { select: { type: true, tournament: { select: { id: true } } } } },
+    })
+
     await context.prisma.eventParticipant.delete({ where: { id: participantId } })
+
+    if (
+      participant.event.type === 'TOURNAMENT' &&
+      participant.event.tournament
+    ) {
+      await context.prisma.tournamentPlayer.deleteMany({
+        where: {
+          tournamentId: participant.event.tournament.id,
+          userId: participant.userId,
+        },
+      })
+    }
+
     return data({ success: true })
   }
 
