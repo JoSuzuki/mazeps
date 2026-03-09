@@ -6,7 +6,7 @@ import Center from '~/components/center/center.component'
 import Spacer from '~/components/spacer/spacer.component'
 import TextInput from '~/components/text-input/text-input.component'
 import { EventType, Role } from '~/generated/prisma/enums'
-import { saveUploadedFile } from '~/lib/upload'
+import { AVAILABLE_BADGES } from '~/lib/badges'
 
 export async function loader({ context }: Route.LoaderArgs) {
   if (!context.currentUser) return redirect('/login')
@@ -16,12 +16,13 @@ export async function loader({ context }: Route.LoaderArgs) {
 
 export default function Route() {
   const [type, setType] = useState<EventType>(EventType.GENERAL)
+  const [selectedBadge, setSelectedBadge] = useState<string | null>(null)
 
   return (
     <Center>
       <h1>Criar evento</h1>
       <Spacer size="md" />
-      <Form method="post" encType="multipart/form-data">
+      <Form method="post">
         <fieldset>
           <legend>Tipo</legend>
           <div>
@@ -73,16 +74,34 @@ export default function Route() {
           required={false}
         />
         <Spacer size="md" />
-        <label className="block" htmlFor="badgeFile">
-          Badge (imagem)
-        </label>
-        <input
-          id="badgeFile"
-          name="badgeFile"
-          type="file"
-          accept="image/*"
-          className="w-full"
-        />
+        <label className="block">Badge</label>
+        <Spacer size="sm" />
+        <div className="flex flex-wrap gap-3">
+          {AVAILABLE_BADGES.map((badge) => (
+            <label
+              key={badge.path}
+              className={`cursor-pointer rounded-md border-2 p-1 transition-colors ${
+                selectedBadge === badge.path
+                  ? 'border-black'
+                  : 'border-transparent'
+              }`}
+            >
+              <input
+                type="radio"
+                name="badgeFile"
+                value={badge.path}
+                className="sr-only"
+                onChange={() => setSelectedBadge(badge.path)}
+              />
+              <img
+                src={badge.path}
+                alt={badge.label}
+                title={badge.label}
+                className="h-16 w-16 object-contain"
+              />
+            </label>
+          ))}
+        </div>
 
         {type === EventType.TOURNAMENT && (
           <>
@@ -114,12 +133,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   const name = formData.get('name') as string
   const description = (formData.get('description') as string) || null
   const dateRaw = formData.get('date') as string
-
-  let badgeFile: string | null = null
-  const uploadedBadge = formData.get('badgeFile')
-  if (uploadedBadge instanceof File && uploadedBadge.size > 0) {
-    badgeFile = await saveUploadedFile(uploadedBadge, 'badges')
-  }
+  const badgeFile = (formData.get('badgeFile') as string) || null
 
   const eventData = {
     name,
