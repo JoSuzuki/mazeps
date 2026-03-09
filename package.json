@@ -37,7 +37,7 @@
     "remix-auth-form": "^3.0.0",
     "remix-auth-oauth2": "^3.4.1",
     "socket.io": "^4.8.1",
-    "socket.io-client": "^4.8.1",
+    "socket.io-client": "^4.8.3",
     "three": "^0.181.2"
   },
   "devDependencies": {

@@ -34,6 +34,13 @@ export default function Route({ loaderData, matches }: Route.ComponentProps) {
           </Link>
         )}
         <Link
+          to="/mazeps"
+          className="[view-transition-name:nav-mazeps] max-sm:hidden"
+          viewTransition
+        >
+          Mazeps
+        </Link>
+        <Link
           to="/events"
           className="[view-transition-name:nav-events] max-sm:hidden"
           viewTransition
@@ -78,6 +85,14 @@ export default function Route({ loaderData, matches }: Route.ComponentProps) {
         <MenuNavigation className="sm:hidden">
           {(closeMenu) => (
             <>
+              <Link
+                to="/mazeps"
+                className="px-4 py-2"
+                onClick={closeMenu}
+                viewTransition
+              >
+                Mazeps
+              </Link>
               <Link
                 to="/events"
                 className="px-4 py-2"
