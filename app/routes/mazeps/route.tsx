@@ -19,7 +19,7 @@ const TEAM = [
 const SOCIALS = [
   {
     label: 'Instagram',
-    href: 'https://www.instagram.com/mazeps',
+    href: 'https://www.instagram.com/mazeps.br/',
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -41,7 +41,7 @@ const SOCIALS = [
   },
   {
     label: 'Spotify',
-    href: 'https://open.spotify.com/user/mazeps',
+    href: 'https://open.spotify.com/show/4F5XP0krLmZIWJWxO2hftL',
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -57,7 +57,7 @@ const SOCIALS = [
   },
   {
     label: 'YouTube',
-    href: 'https://www.youtube.com/@mazeps',
+    href: 'https://www.youtube.com/@Mazeps-g5s',
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -83,24 +83,30 @@ export default function Route() {
         <h2 className="text-base font-semibold">Nossa Historia</h2>
         <Spacer size="sm" />
         <p className="text-sm leading-relaxed opacity-80">
-          Coloque aqui a historia da empresa. Como tudo comecou, qual e a missao
-          e o que move a Mazeps.
+          Seja no tabuleiro, no TCG ou no RPG de mesa, a gente sempre soube: se
+          divertir é a melhor forma de conectar as pessoas. O MAZEPS é o
+          resultado da mistura de um sonho e de três amigos apaixonados por tudo
+          que envolve regras, estratégia e competição, cada um com seu tantinho
+          a adicionar. Começamos propondo a visita ao nosso Labirinto para
+          desvendar mistérios em um site de enigmas e logo percebemos que
+          queríamos expandir algumas de nossas ideias.
         </p>
-      </section>
-
-      <Spacer size="lg" />
-
-      <section>
-        <h2 className="text-base font-semibold">Time</h2>
         <Spacer size="sm" />
-        <ul className="flex flex-col gap-3">
-          {TEAM.map((member, index) => (
-            <li key={index} className="flex flex-col">
-              <span className="font-medium">{member.name}</span>
-              <span className="text-sm opacity-60">{member.role}</span>
-            </li>
-          ))}
-        </ul>
+        <p className="text-sm leading-relaxed opacity-80">
+          O que era um hobby se transformou em missão em 2023 e criamos a CMBG,
+          nosso campeonato de Board Games para ajudar as pessoas a conhecerem
+          mais jogos, lembrar de se divertir e provar que a atmosfera competitiva
+          tem um valor insubstituível. Organizamos campeonatos, criamos
+          comunidades e hoje queremos ser um conjunto de experiências: podcasts,
+          blog, conteúdo digital, eventos imersivos de RPG e noites de quis que
+          tiram todo mundo da rotina.
+        </p>
+        <Spacer size="sm" />
+        <p className="text-sm leading-relaxed opacity-80">
+          Nosso objetivo é simples: ser um lembrete diário de que o que você
+          gostava quando era criança não precisa ficar para trás e que pra se
+          divertir ninguém precisa estar conectado nem em outro plano.
+        </p>
       </section>
 
       <Spacer size="lg" />
