@@ -99,7 +99,7 @@ if (DEVELOPMENT) {
           fontSrc: ["'self'", "https://fonts.gstatic.com"],
           connectSrc: ["'self'"],
           imgSrc: ["'self'", "data:", "blob:", "https:"],
-          frameSrc: ["https://www.youtube.com", "https://www.youtube-nocookie.com"],
+          frameSrc: ["https://www.youtube.com", "https://www.youtube-nocookie.com", "https://open.spotify.com"],
           objectSrc: ["'none'"],
           baseUri: ["'self'"],
           formAction: ["'self'"],
