@@ -153,6 +153,15 @@
   }
 }
 
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@utility animate-marquee {
+  animation: marquee 400s linear infinite;
+}
+
 @utility pressed {
   transform: scale(0.98);
   transition: transform 150ms;
