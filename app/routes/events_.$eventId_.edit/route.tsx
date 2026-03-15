@@ -115,6 +115,30 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
             ))}
           </div>
           <Spacer size="md" />
+          <fieldset>
+            <legend>Status</legend>
+            <div>
+              <input
+                type="radio"
+                id="status-open"
+                name="isOpen"
+                value="true"
+                defaultChecked={event.isOpen}
+              />
+              <label htmlFor="status-open"> Aberto</label>
+            </div>
+            <div>
+              <input
+                type="radio"
+                id="status-closed"
+                name="isOpen"
+                value="false"
+                defaultChecked={!event.isOpen}
+              />
+              <label htmlFor="status-closed"> Encerrado</label>
+            </div>
+          </fieldset>
+          <Spacer size="md" />
           <Button type="submit">Salvar</Button>
         </Form>
       </Center>
@@ -133,6 +157,8 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   const dateRaw = formData.get('date') as string
   const badgeFile = (formData.get('badgeFile') as string) || null
 
+  const isOpen = formData.get('isOpen') !== 'false'
+
   await context.prisma.event.update({
     where: { id: Number(params.eventId) },
     data: {
@@ -140,6 +166,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       description,
       date: dateRaw ? new Date(dateRaw) : null,
       badgeFile,
+      isOpen,
     },
   })
 

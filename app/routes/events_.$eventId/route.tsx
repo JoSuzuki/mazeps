@@ -143,6 +143,12 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
           </>
         )}
         <h1 className="flex justify-center text-lg">{event.name}</h1>
+        <Spacer size="sm" />
+        <div className="flex justify-center">
+          <span className={`rounded-full px-3 py-0.5 text-xs font-medium ${event.isOpen ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+            {event.isOpen ? 'Aberto' : 'Encerrado'}
+          </span>
+        </div>
         <Spacer size="md" />
 
         {event.type === EventType.TOURNAMENT && event.tournament && (
@@ -181,13 +187,15 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
           <>
             {checkedIn ? (
               <p className="font-medium">Voce esta participando deste evento.</p>
-            ) : (
+            ) : event.isOpen ? (
               <fetcher.Form
                 method="post"
                 action={`/events/${params.eventId}/check-in`}
               >
                 <Button type="submit">Check-in</Button>
               </fetcher.Form>
+            ) : (
+              <p className="text-sm opacity-60">As inscrições para este evento estão encerradas.</p>
             )}
             <Spacer size="lg" />
           </>
