@@ -1,53 +1,18 @@
 import Center from '~/components/center/center.component'
+import Spacer from '~/components/spacer/spacer.component'
 
 const TEAM = [
   {
-    name: 'Pietro Coelho',
-    role: 'CEM — Chief Executive Meeple',
-    photo: '/team/pietro-coelho.jpeg',
-    bio: 'Fundador #1 do Mazeps',
+    name: 'Nome do Membro',
+    role: 'Cargo / Função',
   },
   {
-    name: 'Ivan Cassane',
-    role: 'CCM — Chief Creative Meeple',
-    photo: '/team/ivan-cassane.jpeg',
-    photoPosition: 'object-[100%_30%]',
-    photoScale: 'scale-150',
-    bio: 'Fundador #2 do Mazeps',
+    name: 'Nome do Membro',
+    role: 'Cargo / Função',
   },
   {
-    name: 'Thiago Fonseca',
-    role: 'CFM — Chief Financial Meeple',
-    photo: '/team/thiago-fonseca.jpeg',
-    bio: 'Fundador #3 do Mazeps.',
-  },
-  {
-    name: 'Sabujo',
-    role: 'CSM — Chief Sabujo Meeple',
-    photo: '/team/sabujo.jpeg',
-    photoPosition: 'object-[center_15%]',
-    photoScale: 'scale-150',
-    bio: 'Sabujo',
-  },
-  {
-    name: 'Laura Bobik',
-    role: 'CMM — Chief Marketing Meeple',
-    photo: '/team/laura-bobik.jpeg',
-    bio: '',
-  },
-  {
-    name: 'Pedro Casella',
-    role: 'COM — Chief Operations Meeple',
-    photo: '/team/pedro-casella.jpeg',
-    bio: '',
-  },
-  {
-    name: 'Jonathan Suzuki',
-    role: 'CTM — Chief Technology Meeple',
-    photo: '/team/jonathan-suzuki.jpeg',
-    photoPosition: 'object-top',
-    gridClass: 'sm:col-start-2',
-    bio: '',
+    name: 'Nome do Membro',
+    role: 'Cargo / Função',
   },
 ]
 
@@ -110,112 +75,63 @@ const SOCIALS = [
 
 export default function Route() {
   return (
-    <div className="mx-auto max-w-2xl px-6 py-10">
-      {/* Hero */}
-      <div className="mb-12 text-center">
-        <h1 className="font-brand mb-3 text-7xl tracking-wide">Mazeps</h1>
-        <p className="text-foreground/50 text-base uppercase tracking-widest">
-          Sobre nós
-        </p>
-      </div>
+    <Center>
+      <h1 className="flex justify-center text-lg">Sobre a Mazeps</h1>
+      <Spacer size="lg" />
 
-      {/* Nossa Historia */}
-      <section className="mb-12">
-        <h2 className="font-brand mb-6 text-3xl tracking-wide">
-          Nossa História Desde 2020
-        </h2>
-        <div className="border-foreground/10 space-y-4 border-l-2 pl-5">
-          <p className="text-foreground/70 text-base leading-relaxed">
-            Seja no tabuleiro, no TCG ou no RPG de mesa, a gente sempre soube:
-            se divertir é a melhor forma de conectar as pessoas! O MAZEPS é o
-            resultado da mistura de um sonho e de três amigos apaixonados por
-            tudo que envolve regras, estratégia e competição, cada um com seu
-            tantinho a adicionar. Começamos propondo a visita ao nosso Labirinto
-            para desvendar mistérios em um site de enigmas e logo percebemos que
-            queríamos expandir algumas de nossas ideias.
-          </p>
-          <p className="text-foreground/70 text-base leading-relaxed">
-            O que era um hobby se transformou em missão em 2023 e criamos a
-            CMBG, nosso campeonato de Board Games para ajudar as pessoas a
-            conhecerem mais jogos, lembrar de se divertir e provar que a
-            atmosfera competitiva tem um valor insubstituível. Organizamos
-            campeonatos, criamos comunidades e hoje queremos ser um conjunto de
-            experiências: podcasts, blog, conteúdo digital, eventos imersivos de
-            RPG e noites de quiz que tiram todo mundo da rotina.
-          </p>
-          <p className="text-foreground/70 text-base leading-relaxed">
-            Nosso objetivo é simples: ser um lembrete diário de que o que você
-            gostava quando era criança não precisa ficar para trás e que pra se
-            divertir ninguém precisa estar conectado nem em outro plano.
-          </p>
-        </div>
+      <section>
+        <h2 className="text-base font-semibold">Nossa Historia</h2>
+        <Spacer size="sm" />
+        <p className="text-sm leading-relaxed opacity-80">
+          Seja no tabuleiro, no TCG ou no RPG de mesa, a gente sempre soube: se
+          divertir é a melhor forma de conectar as pessoas. O MAZEPS é o
+          resultado da mistura de um sonho e de três amigos apaixonados por tudo
+          que envolve regras, estratégia e competição, cada um com seu tantinho
+          a adicionar. Começamos propondo a visita ao nosso Labirinto para
+          desvendar mistérios em um site de enigmas e logo percebemos que
+          queríamos expandir algumas de nossas ideias.
+        </p>
+        <Spacer size="sm" />
+        <p className="text-sm leading-relaxed opacity-80">
+          O que era um hobby se transformou em missão em 2023 e criamos a CMBG,
+          nosso campeonato de Board Games para ajudar as pessoas a conhecerem
+          mais jogos, lembrar de se divertir e provar que a atmosfera competitiva
+          tem um valor insubstituível. Organizamos campeonatos, criamos
+          comunidades e hoje queremos ser um conjunto de experiências: podcasts,
+          blog, conteúdo digital, eventos imersivos de RPG e noites de quis que
+          tiram todo mundo da rotina.
+        </p>
+        <Spacer size="sm" />
+        <p className="text-sm leading-relaxed opacity-80">
+          Nosso objetivo é simples: ser um lembrete diário de que o que você
+          gostava quando era criança não precisa ficar para trás e que pra se
+          divertir ninguém precisa estar conectado nem em outro plano.
+        </p>
       </section>
 
-      {/* A Equipe */}
-      <section className="mb-12">
-        <h2 className="font-brand mb-6 text-3xl tracking-wide">A Equipe</h2>
-        <ul className="grid grid-cols-2 gap-6 sm:grid-cols-3">
-          {TEAM.map((member) => (
-            <li key={member.name} className={`flex flex-col items-center text-center ${'gridClass' in member ? member.gridClass : ''}`}>
-              <div className="ring-foreground/10 mb-3 h-44 w-44 overflow-hidden rounded-full ring-2">
-                {member.photo ? (
-                  <img
-                    src={member.photo}
-                    alt={member.name}
-                    className={`h-full w-full object-cover ${'photoPosition' in member ? member.photoPosition : ''} ${'photoScale' in member ? member.photoScale : ''}`}
-                  />
-                ) : (
-                  <div className="bg-foreground/10 flex h-full w-full items-center justify-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="32"
-                      height="32"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                    >
-                      <circle cx="12" cy="8" r="4" />
-                      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-                    </svg>
-                  </div>
-                )}
-              </div>
-              <p className="text-base font-semibold">{member.name}</p>
-              <p className="text-foreground/50 mt-0.5 text-sm">{member.role}</p>
-              {member.bio ? (
-                <p className="text-foreground/60 mt-2 text-sm leading-relaxed">
-                  {member.bio}
-                </p>
-              ) : null}
+      <Spacer size="lg" />
+
+      <section>
+        <h2 className="text-base font-semibold">Redes Sociais</h2>
+        <Spacer size="sm" />
+        <ul className="flex flex-col gap-3">
+          {SOCIALS.map((social) => (
+            <li key={social.label}>
+              <a
+                href={social.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="active:pressed hover:underline flex items-center gap-2"
+              >
+                {social.icon}
+                {social.label}
+              </a>
             </li>
           ))}
         </ul>
       </section>
 
-      {/* Redes Sociais */}
-      <section>
-        <h2 className="font-brand mb-6 text-3xl tracking-wide">
-          Redes Sociais
-        </h2>
-        <div className="flex flex-wrap gap-3">
-          {SOCIALS.map((social) => (
-            <a
-              key={social.label}
-              href={social.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="border-foreground/15 hover:border-foreground/40 hover:bg-foreground/5 flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition-colors"
-            >
-              {social.icon}
-              {social.label}
-            </a>
-          ))}
-        </div>
-      </section>
-    </div>
+      <Spacer size="lg" />
+    </Center>
   )
 }
