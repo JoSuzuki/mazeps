@@ -63,6 +63,7 @@ model Event {
   description  String?
   date         DateTime?
   badgeFile    String?
+  isOpen       Boolean   @default(true)
   type         EventType @default(GENERAL)
   tournament   Tournament? @relation(fields: [tournamentId], references: [id])
   tournamentId Int?      @unique

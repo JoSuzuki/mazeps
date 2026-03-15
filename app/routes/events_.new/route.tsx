@@ -117,6 +117,29 @@ export default function Route() {
         )}
 
         <Spacer size="md" />
+        <fieldset>
+          <legend>Status</legend>
+          <div>
+            <input
+              type="radio"
+              id="status-open"
+              name="isOpen"
+              value="true"
+              defaultChecked
+            />
+            <label htmlFor="status-open"> Aberto</label>
+          </div>
+          <div>
+            <input
+              type="radio"
+              id="status-closed"
+              name="isOpen"
+              value="false"
+            />
+            <label htmlFor="status-closed"> Encerrado</label>
+          </div>
+        </fieldset>
+        <Spacer size="md" />
         <Button type="submit">Criar</Button>
       </Form>
     </Center>
@@ -135,11 +158,14 @@ export async function action({ request, context }: Route.ActionArgs) {
   const dateRaw = formData.get('date') as string
   const badgeFile = (formData.get('badgeFile') as string) || null
 
+  const isOpen = formData.get('isOpen') !== 'false'
+
   const eventData = {
     name,
     description,
     date: dateRaw ? new Date(dateRaw) : null,
     badgeFile,
+    isOpen,
     type,
   }
 

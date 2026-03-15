@@ -9,8 +9,12 @@ export async function action({ params, context }: Route.ActionArgs) {
 
   const event = await context.prisma.event.findUniqueOrThrow({
     where: { id: eventId },
-    select: { type: true, tournament: { select: { id: true } } },
+    select: { type: true, isOpen: true, tournament: { select: { id: true } } },
   })
+
+  if (!event.isOpen) {
+    return data({ error: 'Este evento está encerrado.' }, { status: 403 })
+  }
 
   await context.prisma.eventParticipant.upsert({
     where: { eventId_userId: { eventId, userId } },
