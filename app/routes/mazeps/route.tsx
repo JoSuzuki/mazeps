@@ -11,6 +11,8 @@ const TEAM = [
     name: 'Ivan Cassane',
     role: 'CCM — Chief Creative Meeple',
     photo: '/team/ivan-cassane.jpeg',
+    photoPosition: 'object-[100%_30%]',
+    photoScale: 'scale-150',
     bio: 'Fundador #2 do Mazeps',
   },
   {
@@ -120,7 +122,7 @@ export default function Route() {
       {/* Nossa Historia */}
       <section className="mb-12">
         <h2 className="font-brand mb-6 text-3xl tracking-wide">
-          Nossa História
+          Nossa História Desde 2020
         </h2>
         <div className="border-foreground/10 space-y-4 border-l-2 pl-5">
           <p className="text-foreground/70 text-base leading-relaxed">
