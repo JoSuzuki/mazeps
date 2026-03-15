@@ -127,7 +127,7 @@ export default function Route() {
         <div className="border-foreground/10 space-y-4 border-l-2 pl-5">
           <p className="text-foreground/70 text-base leading-relaxed">
             Seja no tabuleiro, no TCG ou no RPG de mesa, a gente sempre soube:
-            se divertir é a melhor forma de conectar as pessoas. O MAZEPS é o
+            se divertir é a melhor forma de conectar as pessoas! O MAZEPS é o
             resultado da mistura de um sonho e de três amigos apaixonados por
             tudo que envolve regras, estratégia e competição, cada um com seu
             tantinho a adicionar. Começamos propondo a visita ao nosso Labirinto
