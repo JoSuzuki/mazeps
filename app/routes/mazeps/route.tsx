@@ -1,5 +1,4 @@
 import Center from '~/components/center/center.component'
-import Spacer from '~/components/spacer/spacer.component'
 
 const TEAM = [
   {
@@ -18,7 +17,7 @@ const TEAM = [
     name: 'Thiago Fonseca',
     role: 'CFM — Chief Financial Meeple',
     photo: '/team/thiago-fonseca.jpeg',
-    bio: 'Fundador #3 do Mazeps. Aficcionado por jogos que simulam pagamento de imposto de renda e pagamento de juros',
+    bio: 'Fundador #3 do Mazeps.',
   },
   {
     name: 'Sabujo',
@@ -45,6 +44,7 @@ const TEAM = [
     role: 'CTM — Chief Technology Meeple',
     photo: '/team/jonathan-suzuki.jpeg',
     photoPosition: 'object-top',
+    gridClass: 'sm:col-start-2',
     bio: '',
   },
 ]
@@ -108,109 +108,112 @@ const SOCIALS = [
 
 export default function Route() {
   return (
-    <Center>
-      <h1 className="flex justify-center text-lg">Sobre a Mazeps</h1>
-      <Spacer size="lg" />
+    <div className="mx-auto max-w-2xl px-6 py-10">
+      {/* Hero */}
+      <div className="mb-12 text-center">
+        <h1 className="font-brand mb-3 text-7xl tracking-wide">Mazeps</h1>
+        <p className="text-foreground/50 text-base uppercase tracking-widest">
+          Sobre nós
+        </p>
+      </div>
 
-      <section>
-        <h2 className="text-base font-semibold">Nossa Historia</h2>
-        <Spacer size="sm" />
-        <p className="text-sm leading-relaxed opacity-80">
-          Seja no tabuleiro, no TCG ou no RPG de mesa, a gente sempre soube: se
-          divertir é a melhor forma de conectar as pessoas. O MAZEPS é o
-          resultado da mistura de um sonho e de três amigos apaixonados por tudo
-          que envolve regras, estratégia e competição, cada um com seu tantinho
-          a adicionar. Começamos propondo a visita ao nosso Labirinto para
-          desvendar mistérios em um site de enigmas e logo percebemos que
-          queríamos expandir algumas de nossas ideias.
-        </p>
-        <Spacer size="sm" />
-        <p className="text-sm leading-relaxed opacity-80">
-          O que era um hobby se transformou em missão em 2023 e criamos a CMBG,
-          nosso campeonato de Board Games para ajudar as pessoas a conhecerem
-          mais jogos, lembrar de se divertir e provar que a atmosfera competitiva
-          tem um valor insubstituível. Organizamos campeonatos, criamos
-          comunidades e hoje queremos ser um conjunto de experiências: podcasts,
-          blog, conteúdo digital, eventos imersivos de RPG e noites de quiz que
-          tiram todo mundo da rotina.
-        </p>
-        <Spacer size="sm" />
-        <p className="text-sm leading-relaxed opacity-80">
-          Nosso objetivo é simples: ser um lembrete diário de que o que você
-          gostava quando era criança não precisa ficar para trás e que pra se
-          divertir ninguém precisa estar conectado nem em outro plano.
-        </p>
+      {/* Nossa Historia */}
+      <section className="mb-12">
+        <h2 className="font-brand mb-6 text-3xl tracking-wide">
+          Nossa História
+        </h2>
+        <div className="border-foreground/10 space-y-4 border-l-2 pl-5">
+          <p className="text-foreground/70 text-base leading-relaxed">
+            Seja no tabuleiro, no TCG ou no RPG de mesa, a gente sempre soube:
+            se divertir é a melhor forma de conectar as pessoas. O MAZEPS é o
+            resultado da mistura de um sonho e de três amigos apaixonados por
+            tudo que envolve regras, estratégia e competição, cada um com seu
+            tantinho a adicionar. Começamos propondo a visita ao nosso Labirinto
+            para desvendar mistérios em um site de enigmas e logo percebemos que
+            queríamos expandir algumas de nossas ideias.
+          </p>
+          <p className="text-foreground/70 text-base leading-relaxed">
+            O que era um hobby se transformou em missão em 2023 e criamos a
+            CMBG, nosso campeonato de Board Games para ajudar as pessoas a
+            conhecerem mais jogos, lembrar de se divertir e provar que a
+            atmosfera competitiva tem um valor insubstituível. Organizamos
+            campeonatos, criamos comunidades e hoje queremos ser um conjunto de
+            experiências: podcasts, blog, conteúdo digital, eventos imersivos de
+            RPG e noites de quiz que tiram todo mundo da rotina.
+          </p>
+          <p className="text-foreground/70 text-base leading-relaxed">
+            Nosso objetivo é simples: ser um lembrete diário de que o que você
+            gostava quando era criança não precisa ficar para trás e que pra se
+            divertir ninguém precisa estar conectado nem em outro plano.
+          </p>
+        </div>
       </section>
 
-      <Spacer size="lg" />
-
-      <section>
-        <h2 className="text-base font-semibold">A Equipe</h2>
-        <Spacer size="sm" />
-        <ul className="flex flex-col gap-6">
+      {/* A Equipe */}
+      <section className="mb-12">
+        <h2 className="font-brand mb-6 text-3xl tracking-wide">A Equipe</h2>
+        <ul className="grid grid-cols-2 gap-6 sm:grid-cols-3">
           {TEAM.map((member) => (
-            <li key={member.name} className="flex items-start gap-4">
-              {member.photo ? (
-                <div className="h-32 w-32 shrink-0 overflow-hidden rounded-full">
+            <li key={member.name} className={`flex flex-col items-center text-center ${'gridClass' in member ? member.gridClass : ''}`}>
+              <div className="ring-foreground/10 mb-3 h-44 w-44 overflow-hidden rounded-full ring-2">
+                {member.photo ? (
                   <img
                     src={member.photo}
                     alt={member.name}
                     className={`h-full w-full object-cover ${'photoPosition' in member ? member.photoPosition : ''} ${'photoScale' in member ? member.photoScale : ''}`}
                   />
-                </div>
-              ) : (
-                <div className="bg-foreground/10 flex h-32 w-32 shrink-0 items-center justify-center rounded-full">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="32"
-                    height="32"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <circle cx="12" cy="8" r="4" />
-                    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-                  </svg>
-                </div>
-              )}
-              <div>
-                <p className="font-semibold">{member.name}</p>
-                <p className="text-sm opacity-60">{member.role}</p>
-                <Spacer size="xs" />
-                <p className="text-sm leading-relaxed opacity-80">{member.bio}</p>
+                ) : (
+                  <div className="bg-foreground/10 flex h-full w-full items-center justify-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="32"
+                      height="32"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <circle cx="12" cy="8" r="4" />
+                      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+                    </svg>
+                  </div>
+                )}
               </div>
+              <p className="text-base font-semibold">{member.name}</p>
+              <p className="text-foreground/50 mt-0.5 text-sm">{member.role}</p>
+              {member.bio ? (
+                <p className="text-foreground/60 mt-2 text-sm leading-relaxed">
+                  {member.bio}
+                </p>
+              ) : null}
             </li>
           ))}
         </ul>
       </section>
 
-      <Spacer size="lg" />
-
+      {/* Redes Sociais */}
       <section>
-        <h2 className="text-base font-semibold">Redes Sociais</h2>
-        <Spacer size="sm" />
-        <ul className="flex flex-col gap-3">
+        <h2 className="font-brand mb-6 text-3xl tracking-wide">
+          Redes Sociais
+        </h2>
+        <div className="flex flex-wrap gap-3">
           {SOCIALS.map((social) => (
-            <li key={social.label}>
-              <a
-                href={social.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="active:pressed hover:underline flex items-center gap-2"
-              >
-                {social.icon}
-                {social.label}
-              </a>
-            </li>
+            <a
+              key={social.label}
+              href={social.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="border-foreground/15 hover:border-foreground/40 hover:bg-foreground/5 flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition-colors"
+            >
+              {social.icon}
+              {social.label}
+            </a>
           ))}
-        </ul>
+        </div>
       </section>
-
-      <Spacer size="lg" />
-    </Center>
+    </div>
   )
 }
