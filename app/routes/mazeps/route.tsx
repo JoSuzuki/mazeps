@@ -3,16 +3,49 @@ import Spacer from '~/components/spacer/spacer.component'
 
 const TEAM = [
   {
-    name: 'Nome do Membro',
-    role: 'Cargo / Função',
+    name: 'Pietro Coelho',
+    role: 'CEM — Chief Executive Meeple',
+    photo: '/team/pietro-coelho.jpeg',
+    bio: 'Fundador #1 do Mazeps',
   },
   {
-    name: 'Nome do Membro',
-    role: 'Cargo / Função',
+    name: 'Ivan Cassane',
+    role: 'CCM — Chief Creative Meeple',
+    photo: '/team/ivan-cassane.jpeg',
+    bio: 'Fundador #2 do Mazeps',
   },
   {
-    name: 'Nome do Membro',
-    role: 'Cargo / Função',
+    name: 'Thiago Fonseca',
+    role: 'CFM — Chief Financial Meeple',
+    photo: '/team/thiago-fonseca.jpeg',
+    bio: 'Fundador #3 do Mazeps. Aficcionado por jogos que simulam pagamento de imposto de renda e pagamento de juros',
+  },
+  {
+    name: 'Sabujo',
+    role: 'CSM — Chief Sabujo Meeple',
+    photo: '/team/sabujo.jpeg',
+    photoPosition: 'object-[center_15%]',
+    photoScale: 'scale-150',
+    bio: 'Sabujo',
+  },
+  {
+    name: 'Laura Bobik',
+    role: 'CMM — Chief Marketing Meeple',
+    photo: '/team/laura-bobik.jpeg',
+    bio: '',
+  },
+  {
+    name: 'Pedro Casella',
+    role: 'COM — Chief Operations Meeple',
+    photo: '/team/pedro-casella.jpeg',
+    bio: '',
+  },
+  {
+    name: 'Jonathan Suzuki',
+    role: 'CTM — Chief Technology Meeple',
+    photo: '/team/jonathan-suzuki.jpeg',
+    photoPosition: 'object-top',
+    bio: '',
   },
 ]
 
@@ -98,7 +131,7 @@ export default function Route() {
           mais jogos, lembrar de se divertir e provar que a atmosfera competitiva
           tem um valor insubstituível. Organizamos campeonatos, criamos
           comunidades e hoje queremos ser um conjunto de experiências: podcasts,
-          blog, conteúdo digital, eventos imersivos de RPG e noites de quis que
+          blog, conteúdo digital, eventos imersivos de RPG e noites de quiz que
           tiram todo mundo da rotina.
         </p>
         <Spacer size="sm" />
@@ -107,6 +140,52 @@ export default function Route() {
           gostava quando era criança não precisa ficar para trás e que pra se
           divertir ninguém precisa estar conectado nem em outro plano.
         </p>
+      </section>
+
+      <Spacer size="lg" />
+
+      <section>
+        <h2 className="text-base font-semibold">A Equipe</h2>
+        <Spacer size="sm" />
+        <ul className="flex flex-col gap-6">
+          {TEAM.map((member) => (
+            <li key={member.name} className="flex items-start gap-4">
+              {member.photo ? (
+                <div className="h-32 w-32 shrink-0 overflow-hidden rounded-full">
+                  <img
+                    src={member.photo}
+                    alt={member.name}
+                    className={`h-full w-full object-cover ${'photoPosition' in member ? member.photoPosition : ''} ${'photoScale' in member ? member.photoScale : ''}`}
+                  />
+                </div>
+              ) : (
+                <div className="bg-foreground/10 flex h-32 w-32 shrink-0 items-center justify-center rounded-full">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="32"
+                    height="32"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <circle cx="12" cy="8" r="4" />
+                    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+                  </svg>
+                </div>
+              )}
+              <div>
+                <p className="font-semibold">{member.name}</p>
+                <p className="text-sm opacity-60">{member.role}</p>
+                <Spacer size="xs" />
+                <p className="text-sm leading-relaxed opacity-80">{member.bio}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <Spacer size="lg" />
