@@ -102,7 +102,7 @@ if (DEVELOPMENT) {
           frameSrc: [
             "https://www.youtube.com",
             "https://www.youtube-nocookie.com",
-            "https://open.spotify.com",
+            "https://*.spotify.com",
           ],
           objectSrc: ["'none'"],
           baseUri: ["'self'"],
