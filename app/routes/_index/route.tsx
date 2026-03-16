@@ -7,13 +7,15 @@ import Title from '~/components/title/title.component'
 export default function Route({}: Route.ComponentProps) {
   return (
     <>
-      <div className="mb-2 flex justify-center">
+      <div className="mb-4 flex justify-center px-4 sm:mb-6">
         <Title />
       </div>
-      <Board />
+      <div className="px-2 sm:px-4 md:px-6">
+        <Board />
+      </div>
       {/* Bloco de frases mais compacto e lado a lado para o calendário aparecer sem scroll */}
-      <div className="mt-8 px-4">
-        <div className="mx-auto flex max-w-5xl flex-col gap-6 md:grid md:grid-cols-3">
+      <div className="mt-6 px-4 sm:mt-8">
+        <div className="mx-auto flex max-w-5xl flex-col gap-5 md:grid md:grid-cols-3">
         {/* Frase 1: Instagram */}
         <div className="flex flex-col items-center gap-3 text-center">
           <p className="text-lg font-medium">
@@ -99,12 +101,12 @@ export default function Route({}: Route.ComponentProps) {
         </div>
       </div>
       <Calendar />
-      <div className="mt-8 flex justify-center">
-        <LinkButton to="/mazeps" className="font-brand w-96 py-3 text-2xl tracking-wide">
+      <div className="mt-8 flex justify-center px-4 sm:mt-10">
+        <LinkButton to="/mazeps" className="font-brand w-full max-w-xs py-3 text-xl tracking-wide sm:w-96 sm:text-2xl">
           Sobre Nós
         </LinkButton>
       </div>
-      <div className="mx-auto mt-12 max-w-2xl px-6 pb-12">
+      <div className="mx-auto mt-10 max-w-2xl px-4 pb-6 sm:mt-12 sm:px-6">
         {/* Frase 3: acima do Spotify */}
         <p className="mb-4 text-center text-lg text-foreground/80">
           Ouça nossos podcasts e faça parte dessa comunidade.
@@ -117,6 +119,9 @@ export default function Route({}: Route.ComponentProps) {
           loading="lazy"
           className="rounded-xl"
         />
+        <p className="mt-8 text-center text-xs text-foreground/50">
+          Mazeps® - Seu Labirinto Lúdico - 2026
+        </p>
       </div>
     </>
   )

@@ -7,6 +7,8 @@ const DAYS_PT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 // Format: 'YYYY-MM-DD' => event label
 const EVENTS: Record<string, string> = {
   '2026-03-21': 'CMBG TACTICS',
+  '2026-04-24': 'Início Youtube',
+  '2026-04-17': 'Enigmas?',
 }
 
 function pad(n: number) {
@@ -82,11 +84,28 @@ const Calendar = () => {
   const next = { year: month === 11 ? year + 1 : year, month: month === 11 ? 0 : month + 1 }
 
   return (
-    <div className="mx-auto max-w-2xl px-6 mt-12">
-      <h2 className="font-brand mb-6 text-center text-3xl tracking-wide">
+    <div className="mx-auto mt-10 max-w-2xl px-4 sm:px-6">
+      <h2 className="font-brand mb-4 text-center text-2xl tracking-wide sm:mb-6 sm:text-3xl">
         Próximos Eventos
       </h2>
-      <div className="relative flex h-80 items-center justify-center">
+
+      {/* Mobile: carrossel horizontal com os três meses lado a lado */}
+      <div className="sm:hidden">
+        <div className="flex gap-4 overflow-x-auto pb-2">
+          <div className="shrink-0 scale-95">
+            <MonthCard year={prev.year} month={prev.month} today={today} />
+          </div>
+          <div className="shrink-0">
+            <MonthCard year={year} month={month} today={today} />
+          </div>
+          <div className="shrink-0 scale-95">
+            <MonthCard year={next.year} month={next.month} today={today} />
+          </div>
+        </div>
+      </div>
+
+      {/* Tablet/Desktop: layout original com meses sobrepostos */}
+      <div className="relative hidden h-80 items-center justify-center sm:flex">
         {/* Previous month */}
         <div className="absolute left-4 z-0 -translate-y-2 scale-90 origin-left opacity-40">
           <MonthCard year={prev.year} month={prev.month} today={today} />
