@@ -71,6 +71,17 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                   value: role,
                 }))}
               />
+              <Spacer size="sm" />
+              <label className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="checkbox"
+                  name="isWriter"
+                  value="on"
+                  defaultChecked={loaderData.user.isWriter}
+                  className="h-4 w-4 rounded border-foreground/30"
+                />
+                <span className="text-sm">Escritor (pode publicar no blog)</span>
+              </label>
             </>
           )}
           <Spacer size="md" />
@@ -101,6 +112,7 @@ export async function action({ context, request, params }: Route.ActionArgs) {
       nickname: formData.get('nickname') as string,
       ...(context.currentUser.role === Role.ADMIN && {
         role: formData.get('role') as Role,
+        isWriter: formData.get('isWriter') === 'on',
       }),
     },
   })

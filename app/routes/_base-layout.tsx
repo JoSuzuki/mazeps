@@ -41,6 +41,13 @@ export default function Route({ loaderData, matches }: Route.ComponentProps) {
           Sobre
         </Link>
         <Link
+          to="/blog"
+          className="[view-transition-name:nav-blog] max-sm:hidden"
+          viewTransition
+        >
+          Blog
+        </Link>
+        <Link
           to="/events"
           className="[view-transition-name:nav-events] max-sm:hidden"
           viewTransition
@@ -92,6 +99,14 @@ export default function Route({ loaderData, matches }: Route.ComponentProps) {
                 viewTransition
               >
                 Sobre
+              </Link>
+              <Link
+                to="/blog"
+                className="px-4 py-2"
+                onClick={closeMenu}
+                viewTransition
+              >
+                Blog
               </Link>
               <Link
                 to="/events"

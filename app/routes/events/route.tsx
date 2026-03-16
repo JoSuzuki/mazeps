@@ -14,19 +14,29 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const page = Number(url.searchParams.get('page') || 1)
   const limit = 10
   const skip = (page - 1) * limit
+  const hasUser = Boolean(context.currentUser)
 
   const [events, totalCount] = await Promise.all([
-    context.prisma.event.findMany({
-      skip,
-      take: limit,
-      orderBy: { date: 'asc' },
-      include: {
-        tournament: { select: { id: true, status: true } },
-        participants: context.currentUser
-          ? { where: { userId: context.currentUser.id } }
-          : false,
-      },
-    }),
+    hasUser
+      ? context.prisma.event.findMany({
+          skip,
+          take: limit,
+          orderBy: { date: 'asc' },
+          include: {
+            tournament: { select: { id: true, status: true } },
+            participants: {
+              where: { userId: context.currentUser!.id },
+            },
+          },
+        })
+      : context.prisma.event.findMany({
+          skip,
+          take: limit,
+          orderBy: { date: 'asc' },
+          include: {
+            tournament: { select: { id: true, status: true } },
+          },
+        }),
     context.prisma.event.count(),
   ])
 
