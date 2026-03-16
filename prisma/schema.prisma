@@ -28,14 +28,32 @@ model User {
   password String?
   googleId String?
   role Role @default(USER)
+  isWriter Boolean @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   tournamentPlayers TournamentPlayer[]
   createdSantoriniRooms SantoriniRoom[]
   santoriniRoomPlayers SantoriniRoomPlayer[]
   eventParticipants EventParticipant[]
+  blogPosts BlogPost[]
 
   @@index([email])
+}
+
+model BlogPost {
+  id          Int       @id @default(autoincrement())
+  title       String
+  slug        String    @unique
+  excerpt     String?
+  content     String
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId    Int
+
+  @@index([slug])
+  @@index([publishedAt])
 }
 
 enum Role {

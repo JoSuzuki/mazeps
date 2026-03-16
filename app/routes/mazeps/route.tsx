@@ -154,15 +154,20 @@ export default function Route() {
       {/* A Equipe */}
       <section className="mb-12">
         <h2 className="font-brand mb-6 text-3xl tracking-wide">A Equipe</h2>
-        <ul className="grid grid-cols-2 gap-6 sm:grid-cols-3">
+        <ul className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
           {TEAM.map((member) => (
-            <li key={member.name} className={`flex flex-col items-center text-center ${'gridClass' in member ? member.gridClass : ''}`}>
-              <div className="ring-foreground/10 mb-3 h-44 w-44 overflow-hidden rounded-full ring-2">
+            <li
+              key={member.name}
+              className={`flex w-full flex-col items-center text-center ${'gridClass' in member ? member.gridClass : ''}`}
+            >
+              <div className="ring-foreground/10 mb-3 h-32 w-32 overflow-hidden rounded-full ring-2 sm:h-40 sm:w-40">
                 {member.photo ? (
                   <img
                     src={member.photo}
                     alt={member.name}
-                    className={`h-full w-full object-cover ${'photoPosition' in member ? member.photoPosition : ''} ${'photoScale' in member ? member.photoScale : ''}`}
+                    className={`h-full w-full object-cover ${
+                      'photoPosition' in member ? `sm:${member.photoPosition}` : ''
+                    } ${'photoScale' in member ? `sm:${member.photoScale}` : ''}`}
                   />
                 ) : (
                   <div className="bg-foreground/10 flex h-full w-full items-center justify-center">
