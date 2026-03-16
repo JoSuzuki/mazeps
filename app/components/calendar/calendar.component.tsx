@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 const MONTHS_PT = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
@@ -83,6 +84,17 @@ const Calendar = () => {
   const prev = { year: month === 0 ? year - 1 : year, month: month === 0 ? 11 : month - 1 }
   const next = { year: month === 11 ? year + 1 : year, month: month === 11 ? 0 : month + 1 }
 
+  const currentMonthRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    // No mobile, garantimos que Março (mês atual) apareça primeiro no viewport
+    currentMonthRef.current?.scrollIntoView({
+      behavior: 'auto',
+      inline: 'start',
+      block: 'nearest',
+    })
+  }, [])
+
   return (
     <div className="mx-auto mt-10 max-w-2xl px-4 sm:px-6">
       <h2 className="font-brand mb-4 text-center text-2xl tracking-wide sm:mb-6 sm:text-3xl">
@@ -95,7 +107,7 @@ const Calendar = () => {
           <div className="shrink-0 scale-95">
             <MonthCard year={prev.year} month={prev.month} today={today} />
           </div>
-          <div className="shrink-0">
+          <div ref={currentMonthRef} className="shrink-0">
             <MonthCard year={year} month={month} today={today} />
           </div>
           <div className="shrink-0 scale-95">
