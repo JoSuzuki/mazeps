@@ -38,7 +38,7 @@ export default function Route({ loaderData, matches }: Route.ComponentProps) {
           className="[view-transition-name:nav-mazeps] max-sm:hidden"
           viewTransition
         >
-          Mazeps
+          Sobre
         </Link>
         <Link
           to="/events"
@@ -91,7 +91,7 @@ export default function Route({ loaderData, matches }: Route.ComponentProps) {
                 onClick={closeMenu}
                 viewTransition
               >
-                Mazeps
+                Sobre
               </Link>
               <Link
                 to="/events"
