@@ -9,6 +9,7 @@ import TextInput from '~/components/text-input/text-input.component'
 import { EventStatus } from '~/lib/event-status'
 import { Role } from '~/generated/prisma/enums'
 import { AVAILABLE_BADGES } from '~/lib/badges'
+import { saveUploadedFile } from '~/lib/upload'
 
 export async function loader({ context, params }: Route.LoaderArgs) {
   if (!context.currentUser) return redirect('/login')
@@ -27,16 +28,25 @@ export async function loader({ context, params }: Route.LoaderArgs) {
 
   // Apenas ADMIN pode alterar status; STAFF não
   const canChangeStatus = context.currentUser.role === Role.ADMIN
+  const isAdmin = context.currentUser.role === Role.ADMIN
 
-  return { event, canChangeStatus }
+  return { event, canChangeStatus, isAdmin }
 }
 
 export default function Route({ loaderData, params }: Route.ComponentProps) {
-  const { event, canChangeStatus } = loaderData
+  const { event, canChangeStatus, isAdmin } = loaderData
+  const badgeOptions = [
+    ...AVAILABLE_BADGES,
+    ...(event.badgeFile &&
+    !AVAILABLE_BADGES.some((b) => b.path === event.badgeFile)
+      ? [{ label: 'Personalizado', path: event.badgeFile }]
+      : []),
+  ]
   const [selectedBadge, setSelectedBadge] = useState<string | null>(
     event.badgeFile,
   )
   const [selectedStatus, setSelectedStatus] = useState<string>(event.status)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   return (
     <>
@@ -50,7 +60,7 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
             </p>
           </header>
 
-          <Form method="post" className="space-y-8">
+          <Form method="post" encType="multipart/form-data" className="space-y-8">
             {/* Dados básicos */}
             <section className="rounded-2xl border border-foreground/10 bg-background/60 p-6 shadow-sm">
               <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/60">
@@ -116,7 +126,7 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
                   />
                   <span className="text-xs text-foreground/50">Nenhum</span>
                 </label>
-                {AVAILABLE_BADGES.map((badge) => (
+                {badgeOptions.map((badge) => (
                   <label
                     key={badge.path}
                     className={`flex h-20 w-20 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border-2 transition-all ${
@@ -141,6 +151,21 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
                     />
                   </label>
                 ))}
+              </div>
+              <div className="mt-4">
+                <label
+                  className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-primary bg-primary/10 px-4 py-3 text-center text-sm font-medium text-primary transition-colors hover:bg-primary/20"
+                  htmlFor="badgeUpload"
+                >
+                  <input
+                    id="badgeUpload"
+                    name="badgeUpload"
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                  />
+                  Enviar imagem personalizada
+                </label>
               </div>
             </section>
 
@@ -211,6 +236,68 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
               </Button>
             </div>
           </Form>
+
+          {/* Excluir evento (apenas ADMIN) */}
+          {isAdmin && (
+            <section className="mt-12 rounded-2xl border border-red-200 bg-red-50/50 p-6">
+              <h2 className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-red-700">
+                Zona de perigo
+              </h2>
+              <p className="mb-4 text-sm text-red-800/90">
+                Excluir um evento remove todos os participantes e, se for torneio,
+                todo o histórico de partidas. Esta ação não pode ser desfeita.
+              </p>
+              <Button
+                type="button"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="bg-red-100 text-red-800 hover:bg-red-200"
+              >
+                Excluir evento
+              </Button>
+            </section>
+          )}
+
+          {/* Modal de confirmação */}
+          {showDeleteConfirm && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+              onClick={() => setShowDeleteConfirm(false)}
+            >
+              <div
+                className="max-w-md rounded-2xl border border-foreground/10 bg-background p-6 shadow-xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3 className="font-brand text-xl">Excluir evento?</h3>
+                <p className="mt-3 text-foreground/80">
+                  Tem certeza que deseja excluir <strong>{event.name}</strong>?
+                  Todos os participantes e dados serão removidos permanentemente.
+                </p>
+                <div className="mt-6 flex gap-3">
+                  <Button
+                    type="button"
+                    styleType="secondary"
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="flex-1"
+                  >
+                    Cancelar
+                  </Button>
+                  <Form
+                    method="post"
+                    className="flex-1"
+                    onSubmit={() => setShowDeleteConfirm(false)}
+                  >
+                    <input type="hidden" name="intent" value="delete" />
+                    <Button
+                      type="submit"
+                      className="w-full bg-red-600 text-white hover:bg-red-700"
+                    >
+                      Sim, excluir
+                    </Button>
+                  </Form>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </Center>
     </>
@@ -218,25 +305,52 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
+  if (!context.currentUser) {
+    return data({ error: 'Não autorizado' })
+  }
+
   const event = await context.prisma.event.findUniqueOrThrow({
     where: { id: Number(params.eventId) },
-    select: { status: true },
+    select: { status: true, tournamentId: true },
   })
 
+  const formData = await request.formData()
+  const intent = formData.get('intent') as string | null
+
+  if (intent === 'delete') {
+    if (context.currentUser.role !== Role.ADMIN) {
+      return data({ error: 'Apenas administradores podem excluir eventos' })
+    }
+    const eventId = Number(params.eventId)
+    const tournamentId = event.tournamentId
+    await context.prisma.event.delete({
+      where: { id: eventId },
+    })
+    if (tournamentId) {
+      await context.prisma.tournament.delete({
+        where: { id: tournamentId },
+      })
+    }
+    return redirect('/events')
+  }
+
   const canEdit =
-    context.currentUser?.role === Role.ADMIN ||
+    context.currentUser.role === Role.ADMIN ||
     (context.currentUser?.role === Role.STAFF &&
       event.status === EventStatus.ABERTO)
 
   if (!canEdit) {
     return data({ error: 'Sem permissão para editar este evento' })
   }
-
-  const formData = await request.formData()
   const name = formData.get('name') as string
   const description = (formData.get('description') as string) || null
   const dateRaw = formData.get('date') as string
-  const badgeFile = (formData.get('badgeFile') as string) || null
+  const badgeUpload = formData.get('badgeUpload')
+  let badgeFile: string | null =
+    (formData.get('badgeFile') as string)?.trim() || null
+  if (badgeUpload instanceof File && badgeUpload.size > 0) {
+    badgeFile = await saveUploadedFile(badgeUpload, 'badges')
+  }
 
   const statusRaw = formData.get('status') as string
   const validStatuses = [

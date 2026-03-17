@@ -109,7 +109,7 @@ export default function Route({ loaderData }: Route.ComponentProps) {
           viewTransition
           className="text-sm font-medium text-primary underline-offset-2 hover:underline"
         >
-          Ver torneio
+          Ir para tabela e mesas
         </Link>
       )
     }
