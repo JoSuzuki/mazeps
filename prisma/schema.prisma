@@ -29,6 +29,10 @@ model User {
   googleId String?
   role Role @default(USER)
   isWriter Boolean @default(false)
+  instagram String?
+  birthday DateTime?
+  favoriteGame String?
+  favoriteEvent String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   tournamentPlayers TournamentPlayer[]

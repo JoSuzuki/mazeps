@@ -45,7 +45,7 @@ const TEAM = [
     name: 'Jonathan Suzuki',
     role: 'CTM — Chief Technology Meeple',
     photo: '/team/jonathan-suzuki.jpeg',
-    photoPosition: 'object-top',
+    photoPosition: 'object-[50%_35%]',
     gridClass: 'sm:col-start-2',
     bio: '',
   },

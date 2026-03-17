@@ -5,7 +5,8 @@ interface TextInputProps {
   type: React.HTMLInputTypeAttribute
   required: boolean
   defaultValue?: string | null
-  autoComplete?: 'current-password'
+  placeholder?: string
+  autoComplete?: 'current-password' | 'new-password'
 }
 
 const TextInput = ({
@@ -16,6 +17,7 @@ const TextInput = ({
   required,
   autoComplete,
   defaultValue,
+  placeholder,
 }: TextInputProps): React.ReactElement => {
   return (
     <>
@@ -30,6 +32,7 @@ const TextInput = ({
         required={required}
         autoComplete={autoComplete}
         defaultValue={defaultValue ?? undefined}
+        placeholder={placeholder}
       />
     </>
   )

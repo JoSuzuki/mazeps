@@ -9,16 +9,34 @@ import LinkButton from '~/components/link-button/link-button.component'
 export async function loader({ context }: Route.LoaderArgs) {
   if (!context.currentUser) return redirect('/login')
 
-  const eventParticipants = await context.prisma.eventParticipant.findMany({
-    where: { userId: context.currentUser.id },
-    include: {
-      event: { select: { id: true, name: true, date: true, badgeFile: true } },
-    },
-    orderBy: { checkedInAt: 'desc' },
-  })
+  const [user, eventParticipants] = await Promise.all([
+    context.prisma.user.findUnique({
+      where: { id: context.currentUser.id },
+      select: {
+        id: true,
+        name: true,
+        nickname: true,
+        email: true,
+        role: true,
+        instagram: true,
+        birthday: true,
+        favoriteGame: true,
+        favoriteEvent: true,
+      },
+    }),
+    context.prisma.eventParticipant.findMany({
+      where: { userId: context.currentUser.id },
+      include: {
+        event: { select: { id: true, name: true, date: true, badgeFile: true } },
+      },
+      orderBy: { checkedInAt: 'desc' },
+    }),
+  ])
+
+  if (!user) return redirect('/login')
 
   return {
-    currentUser: context.currentUser,
+    currentUser: user,
     eventParticipants,
   }
 }
@@ -68,6 +86,47 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                 <dt className="text-foreground/50">Email</dt>
                 <dd className="mt-0.5 text-base">{loaderData.currentUser.email}</dd>
               </div>
+              {loaderData.currentUser.instagram && (
+                <div>
+                  <dt className="text-foreground/50">Instagram</dt>
+                  <dd className="mt-0.5 text-base">
+                    <a
+                      href={`https://instagram.com/${loaderData.currentUser.instagram.replace(/^@/, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                    >
+                      {loaderData.currentUser.instagram.startsWith('@')
+                        ? loaderData.currentUser.instagram
+                        : `@${loaderData.currentUser.instagram}`}
+                    </a>
+                  </dd>
+                </div>
+              )}
+              {loaderData.currentUser.birthday && (
+                <div>
+                  <dt className="text-foreground/50">Aniversário</dt>
+                  <dd className="mt-0.5 text-base">
+                    {new Date(loaderData.currentUser.birthday).toLocaleDateString('pt-BR', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                    })}
+                  </dd>
+                </div>
+              )}
+              {loaderData.currentUser.favoriteGame && (
+                <div>
+                  <dt className="text-foreground/50">Jogo favorito</dt>
+                  <dd className="mt-0.5 text-base">{loaderData.currentUser.favoriteGame}</dd>
+                </div>
+              )}
+              {loaderData.currentUser.favoriteEvent && (
+                <div>
+                  <dt className="text-foreground/50">Evento favorito</dt>
+                  <dd className="mt-0.5 text-base">{loaderData.currentUser.favoriteEvent}</dd>
+                </div>
+              )}
             </dl>
           </section>
 
