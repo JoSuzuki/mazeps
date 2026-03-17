@@ -4,7 +4,10 @@ import { Role } from '~/generated/prisma/enums'
 
 export async function action({ request, context, params }: Route.ActionArgs) {
   if (!context.currentUser) return redirect('/login')
-  if (context.currentUser.role !== Role.ADMIN)
+  const canReport =
+    context.currentUser.role === Role.ADMIN ||
+    context.currentUser.role === Role.STAFF
+  if (!canReport)
     return redirect(
       `/tournaments/${params.tournamentId}/matches/${params.matchId}`,
     )
@@ -15,6 +18,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 
   for (const [playerIdRaw, pointsRaw] of formData.entries()) {
     const playerId = Number(playerIdRaw)
+    if (!Number.isInteger(playerId) || playerId <= 0) continue
     const points = Number(pointsRaw)
 
     await context.prisma.matchResult.upsert({

@@ -31,6 +31,7 @@ model User {
   isWriter Boolean @default(false)
   instagram String?
   avatarUrl String?
+  ludopediaUrl String?
   birthday DateTime?
   favoriteGame String?
   favoriteEvent String?

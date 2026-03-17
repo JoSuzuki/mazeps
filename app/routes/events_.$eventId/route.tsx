@@ -339,10 +339,10 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
               <Link
                 to={`/tournaments/${event.tournament.id}`}
                 viewTransition
-                className="flex items-center justify-center gap-2 rounded-xl border border-foreground/10 bg-background/60 px-6 py-4 transition-colors hover:bg-foreground/5 sm:justify-start"
+                className="flex items-center justify-center gap-3 rounded-2xl border-2 border-primary bg-primary/10 px-8 py-5 text-lg font-semibold text-primary transition-colors hover:bg-primary/20 sm:justify-center"
               >
-                <span className="font-medium">Ver torneio</span>
-                <span className="text-foreground/50">→</span>
+                <span>Ir para tabela e mesas</span>
+                <span className="text-primary/80">→</span>
               </Link>
             </section>
           )}

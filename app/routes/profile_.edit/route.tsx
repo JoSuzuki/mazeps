@@ -23,6 +23,7 @@ export async function loader({ context }: Route.LoaderArgs) {
       password: true,
       instagram: true,
       avatarUrl: true,
+      ludopediaUrl: true,
       birthday: true,
       favoriteGame: true,
       favoriteEvent: true,
@@ -143,6 +144,15 @@ export default function Route({ loaderData, actionData }: Route.ComponentProps) 
                     placeholder="@usuario"
                   />
                   <TextInput
+                    id="ludopediaUrl"
+                    name="ludopediaUrl"
+                    label="Perfil Ludopedia"
+                    type="url"
+                    required={false}
+                    defaultValue={currentUser.ludopediaUrl ?? ''}
+                    placeholder="https://ludopedia.com.br/usuario/seu-perfil"
+                  />
+                  <TextInput
                     id="birthday"
                     name="birthday"
                     label="Data de aniversário"
@@ -162,14 +172,25 @@ export default function Route({ loaderData, actionData }: Route.ComponentProps) 
                     required={false}
                     defaultValue={currentUser.favoriteGame ?? ''}
                   />
-                  <TextInput
-                    id="favoriteEvent"
-                    name="favoriteEvent"
-                    label="Evento favorito"
-                    type="text"
-                    required={false}
-                    defaultValue={currentUser.favoriteEvent ?? ''}
-                  />
+                  <div>
+                    <label className="block" htmlFor="favoriteEvent">
+                      Evento favorito
+                    </label>
+                    <select
+                      id="favoriteEvent"
+                      name="favoriteEvent"
+                      className="w-full rounded-md border-1 p-1"
+                      defaultValue={currentUser.favoriteEvent ?? ''}
+                    >
+                      <option value="">Nenhum</option>
+                      <option value="CMBG">CMBG</option>
+                      <option value="QUIZ NIGHT">QUIZ NIGHT</option>
+                      <option value="LENDA MAZEPS">LENDA MAZEPS</option>
+                      <option value="ENIGMA FEST">ENIGMA FEST</option>
+                      <option value="CMBG TACTICS">CMBG TACTICS</option>
+                      <option value="CMBG PARTY">CMBG PARTY</option>
+                    </select>
+                  </div>
                 </div>
               </section>
 
@@ -248,6 +269,7 @@ export async function action({ context, request }: Route.ActionArgs) {
   const nickname = formData.get('nickname') as string
   const instagram = (formData.get('instagram') as string)?.trim() || null
   const avatarUrl = (formData.get('avatarUrl') as string)?.trim() || null
+  const ludopediaUrl = (formData.get('ludopediaUrl') as string)?.trim() || null
   const birthdayStr = (formData.get('birthday') as string)?.trim() || null
   const favoriteGame = (formData.get('favoriteGame') as string)?.trim() || null
   const favoriteEvent = (formData.get('favoriteEvent') as string)?.trim() || null
@@ -263,6 +285,7 @@ export async function action({ context, request }: Route.ActionArgs) {
     nickname,
     instagram,
     avatarUrl,
+    ludopediaUrl,
     birthday,
     favoriteGame,
     favoriteEvent,
@@ -272,6 +295,7 @@ export async function action({ context, request }: Route.ActionArgs) {
     nickname: string
     instagram: string | null
     avatarUrl: string | null
+    ludopediaUrl: string | null
     birthday: Date | null
     favoriteGame: string | null
     favoriteEvent: string | null

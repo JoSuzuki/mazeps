@@ -22,6 +22,7 @@ export async function loader({ context }: Route.LoaderArgs) {
         role: true,
         instagram: true,
         avatarUrl: true,
+        ludopediaUrl: true,
         birthday: true,
         favoriteGame: true,
         favoriteEvent: true,
@@ -51,6 +52,19 @@ function getInitials(name: string) {
     .slice(0, 2)
     .join('')
     .toUpperCase()
+}
+
+/** Formata data de aniversário sem deslocamento de timezone. */
+function formatBirthday(date: Date | string): string {
+  const d =
+    date instanceof Date
+      ? new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
+      : new Date(date + 'T12:00:00')
+  return d.toLocaleDateString('pt-BR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
 }
 
 export default function Route({ loaderData }: Route.ComponentProps) {
@@ -118,15 +132,26 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                   </dd>
                 </div>
               )}
+              {loaderData.currentUser.ludopediaUrl && (
+                <div>
+                  <dt className="text-foreground/50">Perfil Ludopedia</dt>
+                  <dd className="mt-0.5 text-base">
+                    <a
+                      href={loaderData.currentUser.ludopediaUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                    >
+                      Ver perfil na Ludopedia
+                    </a>
+                  </dd>
+                </div>
+              )}
               {loaderData.currentUser.birthday && (
                 <div>
                   <dt className="text-foreground/50">Aniversário</dt>
                   <dd className="mt-0.5 text-base">
-                    {new Date(loaderData.currentUser.birthday).toLocaleDateString('pt-BR', {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric',
-                    })}
+                    {formatBirthday(loaderData.currentUser.birthday)}
                   </dd>
                 </div>
               )}

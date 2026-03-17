@@ -9,6 +9,7 @@ import TextInput from '~/components/text-input/text-input.component'
 import { EventStatus } from '~/lib/event-status'
 import { EventType, Role } from '~/generated/prisma/enums'
 import { AVAILABLE_BADGES } from '~/lib/badges'
+import { saveUploadedFile } from '~/lib/upload'
 
 export async function loader({ context }: Route.LoaderArgs) {
   if (!context.currentUser) return redirect('/login')
@@ -33,7 +34,7 @@ export default function Route() {
             </p>
           </header>
 
-          <Form method="post" className="space-y-8">
+          <Form method="post" encType="multipart/form-data" className="space-y-8">
             {/* Tipo */}
             <section className="rounded-2xl border border-foreground/10 bg-background/60 p-6 shadow-sm">
               <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/60">
@@ -161,6 +162,21 @@ export default function Route() {
                   </label>
                 ))}
               </div>
+              <div className="mt-4">
+                <label
+                  className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-primary bg-primary/10 px-4 py-3 text-center text-sm font-medium text-primary transition-colors hover:bg-primary/20"
+                  htmlFor="badgeUpload"
+                >
+                  <input
+                    id="badgeUpload"
+                    name="badgeUpload"
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                  />
+                  Enviar imagem personalizada
+                </label>
+              </div>
             </section>
 
             {/* Tamanho da mesa (torneio) */}
@@ -244,7 +260,12 @@ export async function action({ request, context }: Route.ActionArgs) {
   const name = formData.get('name') as string
   const description = (formData.get('description') as string) || null
   const dateRaw = formData.get('date') as string
-  const badgeFile = (formData.get('badgeFile') as string) || null
+  const badgeUpload = formData.get('badgeUpload')
+  let badgeFile: string | null =
+    (formData.get('badgeFile') as string)?.trim() || null
+  if (badgeUpload instanceof File && badgeUpload.size > 0) {
+    badgeFile = await saveUploadedFile(badgeUpload, 'badges')
+  }
 
   const statusRaw = formData.get('status') as string
   const validStatuses = [
