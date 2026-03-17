@@ -8,6 +8,7 @@ import Link from '~/components/link/link.component'
 import LinkButton from '~/components/link-button/link-button.component'
 import { EventStatus } from '~/lib/event-status'
 import { EventType, Role } from '~/generated/prisma/enums'
+import { getAvatarUrl } from '~/lib/avatar'
 
 export async function loader({ context, params }: Route.LoaderArgs) {
   const eventId = Number(params.eventId)
@@ -21,7 +22,11 @@ export async function loader({ context, params }: Route.LoaderArgs) {
     include: {
       tournament: { select: { id: true } },
       participants: {
-        include: { user: { select: { id: true, name: true, nickname: true } } },
+        include: {
+          user: {
+            select: { id: true, name: true, nickname: true, email: true, avatarUrl: true },
+          },
+        },
       },
     },
   })
@@ -50,8 +55,19 @@ export async function loader({ context, params }: Route.LoaderArgs) {
     (context.currentUser?.role === Role.STAFF &&
       event.status === EventStatus.ABERTO)
 
+  const eventWithAvatars = {
+    ...event,
+    participants: event.participants.map((p) => ({
+      ...p,
+      user: {
+        ...p.user,
+        avatarUrl: getAvatarUrl(p.user.avatarUrl, p.user.email, 40),
+      },
+    })),
+  }
+
   return {
-    event,
+    event: eventWithAvatars,
     currentParticipant,
     currentUser: context.currentUser,
     isAdmin,
@@ -148,6 +164,72 @@ const STATUS_STYLES = {
   [EventStatus.ABERTO]: 'bg-green-100 text-green-800 border-green-200',
   [EventStatus.ENCERRADO]: 'bg-red-100 text-red-800 border-red-200',
 } as const
+
+function getInitials(name: string) {
+  return name
+    .split(' ')
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
+}
+
+function ParticipantRow({
+  participant,
+  canAddParticipants,
+  fetcher,
+}: {
+  participant: {
+    id: number
+    user: { name: string; avatarUrl?: string | null }
+    userId: number
+  }
+  canAddParticipants: boolean
+  fetcher: ReturnType<typeof useFetcher>
+}) {
+  const [avatarError, setAvatarError] = useState(false)
+  const avatarUrl = participant.user.avatarUrl
+  const showImg = avatarUrl && !avatarError
+
+  return (
+    <li className="flex items-center justify-between gap-3 rounded-lg px-4 py-3 transition-colors hover:bg-foreground/5">
+      <div className="flex min-w-0 items-center gap-3">
+        {showImg ? (
+          <img
+            src={avatarUrl}
+            alt=""
+            width={32}
+            height={32}
+            className="h-8 w-8 shrink-0 rounded-full object-cover"
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            onError={() => setAvatarError(true)}
+          />
+        ) : (
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-xs font-semibold">
+            {getInitials(participant.user.name)}
+          </div>
+        )}
+        <span className="truncate font-medium">{participant.user.name}</span>
+      </div>
+      {canAddParticipants && (
+        <fetcher.Form method="post" className="shrink-0">
+          <input type="hidden" name="intent" value="remove-participant" />
+          <input type="hidden" name="participantId" value={participant.id} />
+          <button
+            type="submit"
+            className="text-sm text-red-600 transition-colors hover:text-red-700 hover:underline"
+            onClick={(e) => {
+              if (!confirm(`Remover ${participant.user.name}?`)) e.preventDefault()
+            }}
+          >
+            Remover
+          </button>
+        </fetcher.Form>
+      )}
+    </li>
+  )
+}
 
 export default function Route({ loaderData, params }: Route.ComponentProps) {
   const fetcher = useFetcher()
@@ -329,27 +411,12 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
             ) : (
               <ul className="space-y-2">
                 {event.participants.map((p) => (
-                  <li
+                  <ParticipantRow
                     key={p.id}
-                    className="flex items-center justify-between rounded-lg px-4 py-3 transition-colors hover:bg-foreground/5"
-                  >
-                    <span className="font-medium">{p.user.name}</span>
-                    {canAddParticipants && (
-                      <fetcher.Form method="post">
-                        <input type="hidden" name="intent" value="remove-participant" />
-                        <input type="hidden" name="participantId" value={p.id} />
-                        <button
-                          type="submit"
-                          className="text-sm text-red-600 transition-colors hover:text-red-700 hover:underline"
-                          onClick={(e) => {
-                            if (!confirm(`Remover ${p.user.name}?`)) e.preventDefault()
-                          }}
-                        >
-                          Remover
-                        </button>
-                      </fetcher.Form>
-                    )}
-                  </li>
+                    participant={p}
+                    canAddParticipants={canAddParticipants}
+                    fetcher={fetcher}
+                  />
                 ))}
               </ul>
             )}

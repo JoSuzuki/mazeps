@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Form, redirect } from 'react-router'
 import type { Route } from './+types/route'
 import Center from '~/components/center/center.component'
@@ -5,6 +6,7 @@ import Link from '~/components/link/link.component'
 import LinkButton from '~/components/link-button/link-button.component'
 import Pagination from '~/components/pagination/pagination.component'
 import { Role } from '~/generated/prisma/enums'
+import { getAvatarUrl } from '~/lib/avatar'
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   if (!context.currentUser) return redirect('/login')
@@ -38,8 +40,13 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 
   const totalPages = Math.ceil(totalCount / limit)
 
+  const usersWithAvatar = users.map((u) => ({
+    ...u,
+    avatarUrl: getAvatarUrl(u.avatarUrl, u.email, 48),
+  }))
+
   return {
-    users,
+    users: usersWithAvatar,
     search,
     pagination: { currentPage: page, totalPages, totalCount },
   }
@@ -71,6 +78,38 @@ function SearchIcon({ className }: { className?: string }) {
       <circle cx="11" cy="11" r="8" />
       <path d="m21 21-4.3-4.3" />
     </svg>
+  )
+}
+
+function UserAvatar({
+  user,
+  size = 'md',
+}: {
+  user: { name: string; avatarUrl: string }
+  size?: 'sm' | 'md'
+}) {
+  const [error, setError] = useState(false)
+  const sizeClass = size === 'sm' ? 'h-10 w-10' : 'h-12 w-12'
+
+  if (error) {
+    return (
+      <div
+        className={`${sizeClass} flex shrink-0 items-center justify-center rounded-full bg-foreground/10 text-sm font-semibold`}
+      >
+        {getInitials(user.name)}
+      </div>
+    )
+  }
+
+  return (
+    <img
+      src={user.avatarUrl}
+      alt=""
+      className={`${sizeClass} shrink-0 rounded-full object-cover`}
+      loading="lazy"
+      referrerPolicy="no-referrer"
+      onError={() => setError(true)}
+    />
   )
 }
 
@@ -203,9 +242,7 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                             viewTransition
                             className="flex items-center gap-3"
                           >
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-sm font-semibold">
-                              {getInitials(user.name)}
-                            </div>
+                            <UserAvatar user={user} size="sm" />
                             <div>
                               <span className="font-medium hover:underline">
                                 {user.name}
@@ -251,9 +288,7 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                       viewTransition
                       className="flex min-w-0 flex-1 items-center gap-3"
                     >
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-base font-semibold">
-                        {getInitials(user.name)}
-                      </div>
+                      <UserAvatar user={user} size="md" />
                       <div className="min-w-0">
                         <p className="truncate font-medium">{user.name}</p>
                         <p className="text-foreground/50 truncate text-sm">

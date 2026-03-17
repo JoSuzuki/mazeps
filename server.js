@@ -98,7 +98,7 @@ if (DEVELOPMENT) {
           styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
           fontSrc: ["'self'", "https://fonts.gstatic.com"],
           connectSrc: ["'self'"],
-          imgSrc: ["'self'", "data:", "blob:", "https:"],
+          imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
           frameSrc: [
             "https://www.youtube.com",
             "https://www.youtube-nocookie.com",
