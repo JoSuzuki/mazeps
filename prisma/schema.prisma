@@ -40,8 +40,20 @@ model User {
   santoriniRoomPlayers SantoriniRoomPlayer[]
   eventParticipants EventParticipant[]
   blogPosts BlogPost[]
+  passwordResetTokens PasswordResetToken[]
 
   @@index([email])
+}
+
+model PasswordResetToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+
+  @@index([token])
+  @@index([userId])
 }
 
 model BlogPost {
