@@ -11,6 +11,12 @@ export async function sendPasswordResetEmail(
   resetUrl: string,
 ): Promise<{ success: boolean; error?: string }> {
   if (!resend) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('\n📧 [DEV] Link de redefinição (email não configurado):')
+      console.log(`   Para: ${to}`)
+      console.log(`   Link: ${resetUrl}\n`)
+      return { success: true }
+    }
     return {
       success: false,
       error: 'Email não configurado. Configure RESEND_API_KEY no servidor.',
