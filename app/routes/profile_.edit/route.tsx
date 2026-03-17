@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt'
+import { useState } from 'react'
 import { data, Form, redirect } from 'react-router'
 import type { Route } from './+types/route'
 import BackButtonPortal from '~/components/back-button-portal/back-button-portal.component'
@@ -6,6 +7,7 @@ import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
 import LinkButton from '~/components/link-button/link-button.component'
 import TextInput from '~/components/text-input/text-input.component'
+import { getAvatarUrl } from '~/lib/avatar'
 import { cookieUserFields, setSession } from '~/services/session'
 
 export async function loader({ context }: Route.LoaderArgs) {
@@ -20,6 +22,7 @@ export async function loader({ context }: Route.LoaderArgs) {
       email: true,
       password: true,
       instagram: true,
+      avatarUrl: true,
       birthday: true,
       favoriteGame: true,
       favoriteEvent: true,
@@ -32,6 +35,7 @@ export async function loader({ context }: Route.LoaderArgs) {
 
   return {
     currentUser: userWithoutPassword,
+    avatarDisplayUrl: getAvatarUrl(user.avatarUrl, user.email),
     hasPassword,
   }
 }
@@ -46,7 +50,8 @@ function getInitials(name: string) {
 }
 
 export default function Route({ loaderData, actionData }: Route.ComponentProps) {
-  const { currentUser, hasPassword } = loaderData
+  const { currentUser, hasPassword, avatarDisplayUrl } = loaderData
+  const [avatarError, setAvatarError] = useState(false)
 
   return (
     <>
@@ -70,9 +75,19 @@ export default function Route({ loaderData, actionData }: Route.ComponentProps) 
               {/* Dados */}
               <section className="rounded-2xl border border-foreground/10 bg-background/60 p-6 shadow-sm">
                 <div className="flex items-center gap-4 pb-5">
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 border-foreground/20 bg-foreground/5 text-xl font-semibold">
-                    {getInitials(currentUser.name)}
-                  </div>
+                  {avatarError ? (
+                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 border-foreground/20 bg-foreground/5 text-xl font-semibold">
+                      {getInitials(currentUser.name)}
+                    </div>
+                  ) : (
+                    <img
+                      src={avatarDisplayUrl}
+                      alt={`Avatar de ${currentUser.name}`}
+                      className="h-16 w-16 shrink-0 rounded-full border-2 border-foreground/20 object-cover"
+                      referrerPolicy="no-referrer"
+                      onError={() => setAvatarError(true)}
+                    />
+                  )}
                   <div>
                     <p className="font-medium">{currentUser.name}</p>
                     <p className="text-sm text-foreground/50">@{currentUser.nickname}</p>
@@ -106,6 +121,18 @@ export default function Route({ loaderData, actionData }: Route.ComponentProps) 
                     required={true}
                     defaultValue={currentUser.nickname}
                   />
+                  <TextInput
+                    id="avatarUrl"
+                    name="avatarUrl"
+                    label="Foto de perfil (URL)"
+                    type="url"
+                    required={false}
+                    defaultValue={currentUser.avatarUrl ?? ''}
+                    placeholder="https://exemplo.com/sua-foto.jpg"
+                  />
+                  <p className="text-sm text-foreground/50">
+                    Cole o link <strong>direto</strong> da imagem (ex: Imgur use i.imgur.com/xxx.jpg). Deixe em branco para Gravatar.
+                  </p>
                   <TextInput
                     id="instagram"
                     name="instagram"
@@ -220,6 +247,7 @@ export async function action({ context, request }: Route.ActionArgs) {
   const email = formData.get('email') as string
   const nickname = formData.get('nickname') as string
   const instagram = (formData.get('instagram') as string)?.trim() || null
+  const avatarUrl = (formData.get('avatarUrl') as string)?.trim() || null
   const birthdayStr = (formData.get('birthday') as string)?.trim() || null
   const favoriteGame = (formData.get('favoriteGame') as string)?.trim() || null
   const favoriteEvent = (formData.get('favoriteEvent') as string)?.trim() || null
@@ -234,6 +262,7 @@ export async function action({ context, request }: Route.ActionArgs) {
     email,
     nickname,
     instagram,
+    avatarUrl,
     birthday,
     favoriteGame,
     favoriteEvent,
@@ -242,6 +271,7 @@ export async function action({ context, request }: Route.ActionArgs) {
     email: string
     nickname: string
     instagram: string | null
+    avatarUrl: string | null
     birthday: Date | null
     favoriteGame: string | null
     favoriteEvent: string | null

@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { Form, redirect } from 'react-router'
 import type { Route } from './+types/route'
 import BackButtonPortal from '~/components/back-button-portal/back-button-portal.component'
+import { getAvatarUrl } from '~/lib/avatar'
 import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
 import Link from '~/components/link/link.component'
@@ -19,6 +21,7 @@ export async function loader({ context }: Route.LoaderArgs) {
         email: true,
         role: true,
         instagram: true,
+        avatarUrl: true,
         birthday: true,
         favoriteGame: true,
         favoriteEvent: true,
@@ -36,7 +39,7 @@ export async function loader({ context }: Route.LoaderArgs) {
   if (!user) return redirect('/login')
 
   return {
-    currentUser: user,
+    currentUser: { ...user, avatarUrl: getAvatarUrl(user.avatarUrl, user.email) },
     eventParticipants,
   }
 }
@@ -51,6 +54,8 @@ function getInitials(name: string) {
 }
 
 export default function Route({ loaderData }: Route.ComponentProps) {
+  const [avatarError, setAvatarError] = useState(false)
+  const avatarUrl = loaderData.currentUser.avatarUrl
   const badges = loaderData.eventParticipants.filter(
     (ep) => ep.event.badgeFile,
   )
@@ -62,9 +67,19 @@ export default function Route({ loaderData }: Route.ComponentProps) {
         <div className="mx-auto max-w-xl px-6 py-10">
           {/* Header com avatar e nome */}
           <header className="mb-10 flex items-center gap-6">
-            <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-full border-2 border-foreground/20 bg-foreground/5 text-4xl font-semibold">
-              {getInitials(loaderData.currentUser.name)}
-            </div>
+            {avatarError ? (
+              <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-full border-2 border-foreground/20 bg-foreground/5 text-4xl font-semibold">
+                {getInitials(loaderData.currentUser.name)}
+              </div>
+            ) : (
+              <img
+                src={avatarUrl}
+                alt={`Avatar de ${loaderData.currentUser.name}`}
+                className="h-28 w-28 shrink-0 rounded-full border-2 border-foreground/20 object-cover"
+                referrerPolicy="no-referrer"
+                onError={() => setAvatarError(true)}
+              />
+            )}
             <div className="min-w-0 flex-1">
               <h1 className="font-brand mb-1 text-3xl tracking-wide">
                 {loaderData.currentUser.nickname}

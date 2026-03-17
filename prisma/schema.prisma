@@ -30,6 +30,7 @@ model User {
   role Role @default(USER)
   isWriter Boolean @default(false)
   instagram String?
+  avatarUrl String?
   birthday DateTime?
   favoriteGame String?
   favoriteEvent String?
