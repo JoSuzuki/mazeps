@@ -91,7 +91,7 @@ export default function Route({ loaderData }: Route.ComponentProps) {
           {badges.length > 0 && (
             <section className="mb-10">
               <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/60">
-                Badges
+                Participações
               </h2>
               <div className="flex flex-wrap justify-center gap-6">
                 {badges.map((ep) => (
@@ -105,9 +105,9 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                       src={ep.event.badgeFile!}
                       alt={`Badge de ${ep.event.name}`}
                       title={ep.event.name}
-                      className="h-36 w-36 rounded-xl border border-foreground/10 object-contain shadow-md transition-transform group-hover:scale-105"
+                      className="h-44 w-44 object-contain transition-transform group-hover:scale-105"
                     />
-                    <p className="mt-2 text-center text-sm font-medium text-foreground/70">
+                    <p className="mt-2 text-center text-base font-medium text-foreground/70">
                       {ep.event.name}
                     </p>
                   </Link>
@@ -115,37 +115,6 @@ export default function Route({ loaderData }: Route.ComponentProps) {
               </div>
             </section>
           )}
-
-          {/* Badges de Eventos */}
-          <section className="mb-8 rounded-2xl border border-foreground/10 bg-background/60 p-6 shadow-sm">
-            <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/60">
-              Badges de Eventos
-            </h2>
-            {loaderData.eventParticipants.length === 0 ? (
-              <p className="text-foreground/50 text-sm">
-                Nenhum evento ainda.
-              </p>
-            ) : (
-              <ul className="space-y-2">
-                {loaderData.eventParticipants.map((ep) => (
-                  <li key={ep.id}>
-                    <Link
-                      to={`/events/${ep.event.id}`}
-                      viewTransition
-                      className="block rounded-lg px-4 py-3 text-base transition-colors hover:bg-foreground/5"
-                    >
-                      <span>{ep.event.name}</span>
-                      {ep.event.date && (
-                        <span className="ml-2 text-foreground/50">
-                          — {new Date(ep.event.date).toLocaleDateString('pt-BR')}
-                        </span>
-                      )}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
 
           {/* Prateleira de Troféus */}
           <section className="rounded-2xl border border-foreground/10 bg-background/60 p-6 shadow-sm">

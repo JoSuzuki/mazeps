@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { data, Form, redirect } from 'react-router'
 import type { Route } from './+types/route'
+import BackButtonPortal from '~/components/back-button-portal/back-button-portal.component'
 import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
-import Spacer from '~/components/spacer/spacer.component'
+import LinkButton from '~/components/link-button/link-button.component'
 import TextInput from '~/components/text-input/text-input.component'
+import { EventStatus } from '~/lib/event-status'
 import { EventType, Role } from '~/generated/prisma/enums'
 import { AVAILABLE_BADGES } from '~/lib/badges'
 
@@ -17,132 +19,218 @@ export async function loader({ context }: Route.LoaderArgs) {
 export default function Route() {
   const [type, setType] = useState<EventType>(EventType.GENERAL)
   const [selectedBadge, setSelectedBadge] = useState<string | null>(null)
+  const [selectedStatus, setSelectedStatus] = useState<string>(EventStatus.ABERTO)
 
   return (
-    <Center>
-      <h1>Criar evento</h1>
-      <Spacer size="md" />
-      <Form method="post">
-        <fieldset>
-          <legend>Tipo</legend>
-          <div>
-            <input
-              type="radio"
-              id="type-general"
-              name="type"
-              value={EventType.GENERAL}
-              defaultChecked
-              onChange={() => setType(EventType.GENERAL)}
-            />
-            <label htmlFor="type-general"> Evento</label>
-          </div>
-          <div>
-            <input
-              type="radio"
-              id="type-tournament"
-              name="type"
-              value={EventType.TOURNAMENT}
-              onChange={() => setType(EventType.TOURNAMENT)}
-            />
-            <label htmlFor="type-tournament"> Torneio</label>
-          </div>
-        </fieldset>
-        <Spacer size="md" />
-        <TextInput
-          id="name"
-          name="name"
-          label="Nome"
-          type="text"
-          required={true}
-        />
-        <Spacer size="md" />
-        <label className="block" htmlFor="description">
-          Descrição
-        </label>
-        <textarea
-          id="description"
-          name="description"
-          className="w-full rounded-md border-1 p-1"
-          rows={4}
-        />
-        <Spacer size="md" />
-        <TextInput
-          id="date"
-          name="date"
-          label="Data"
-          type="date"
-          required={false}
-        />
-        <Spacer size="md" />
-        <label className="block">Badge</label>
-        <Spacer size="sm" />
-        <div className="flex flex-wrap gap-3">
-          {AVAILABLE_BADGES.map((badge) => (
-            <label
-              key={badge.path}
-              className={`cursor-pointer rounded-md border-2 p-1 transition-colors ${
-                selectedBadge === badge.path
-                  ? 'border-black'
-                  : 'border-transparent'
-              }`}
-            >
-              <input
-                type="radio"
-                name="badgeFile"
-                value={badge.path}
-                className="sr-only"
-                onChange={() => setSelectedBadge(badge.path)}
-              />
-              <img
-                src={badge.path}
-                alt={badge.label}
-                title={badge.label}
-                className="h-16 w-16 object-contain"
-              />
-            </label>
-          ))}
+    <>
+      <BackButtonPortal to="/events" />
+      <Center>
+        <div className="mx-auto max-w-xl px-6 py-10">
+          <header className="mb-10">
+            <h1 className="font-brand text-3xl tracking-wide">Criar evento</h1>
+            <p className="mt-2 text-foreground/70">
+              Preencha os dados para cadastrar um novo evento ou torneio.
+            </p>
+          </header>
+
+          <Form method="post" className="space-y-8">
+            {/* Tipo */}
+            <section className="rounded-2xl border border-foreground/10 bg-background/60 p-6 shadow-sm">
+              <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/60">
+                Tipo
+              </h2>
+              <div className="flex gap-4">
+                <label
+                  className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border-2 px-4 py-4 transition-all ${
+                    type === EventType.GENERAL
+                      ? 'border-primary bg-primary/10'
+                      : 'border-foreground/10 hover:border-foreground/20'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="type"
+                    value={EventType.GENERAL}
+                    className="sr-only"
+                    checked={type === EventType.GENERAL}
+                    onChange={() => setType(EventType.GENERAL)}
+                  />
+                  <span className="font-medium">Evento</span>
+                </label>
+                <label
+                  className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border-2 px-4 py-4 transition-all ${
+                    type === EventType.TOURNAMENT
+                      ? 'border-primary bg-primary/10'
+                      : 'border-foreground/10 hover:border-foreground/20'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="type"
+                    value={EventType.TOURNAMENT}
+                    className="sr-only"
+                    checked={type === EventType.TOURNAMENT}
+                    onChange={() => setType(EventType.TOURNAMENT)}
+                  />
+                  <span className="font-medium">Torneio</span>
+                </label>
+              </div>
+            </section>
+
+            {/* Dados básicos */}
+            <section className="rounded-2xl border border-foreground/10 bg-background/60 p-6 shadow-sm">
+              <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/60">
+                Dados básicos
+              </h2>
+              <div className="space-y-5">
+                <TextInput
+                  id="name"
+                  name="name"
+                  label="Nome"
+                  type="text"
+                  required={true}
+                />
+                <div>
+                  <label className="block" htmlFor="description">
+                    Descrição
+                  </label>
+                  <textarea
+                    id="description"
+                    name="description"
+                    className="mt-1 w-full rounded-xl border border-foreground/20 bg-background px-4 py-3 text-base transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    rows={4}
+                    placeholder="Descreva o evento..."
+                  />
+                </div>
+                <TextInput
+                  id="date"
+                  name="date"
+                  label="Data"
+                  type="date"
+                  required={false}
+                />
+              </div>
+            </section>
+
+            {/* Badge */}
+            <section className="rounded-2xl border border-foreground/10 bg-background/60 p-6 shadow-sm">
+              <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/60">
+                Badge
+              </h2>
+              <div className="flex flex-wrap gap-4">
+                <label
+                  className={`flex h-20 w-20 cursor-pointer flex-col items-center justify-center rounded-xl border-2 transition-all ${
+                    selectedBadge === null
+                      ? 'border-primary bg-primary/10'
+                      : 'border-foreground/10 hover:border-foreground/20'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="badgeFile"
+                    value=""
+                    className="sr-only"
+                    checked={selectedBadge === null}
+                    onChange={() => setSelectedBadge(null)}
+                  />
+                  <span className="text-xs text-foreground/50">Nenhum</span>
+                </label>
+                {AVAILABLE_BADGES.map((badge) => (
+                  <label
+                    key={badge.path}
+                    className={`flex h-20 w-20 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border-2 transition-all ${
+                      selectedBadge === badge.path
+                        ? 'border-primary bg-primary/10 ring-2 ring-primary/30'
+                        : 'border-foreground/10 hover:border-foreground/20'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="badgeFile"
+                      value={badge.path}
+                      className="sr-only"
+                      checked={selectedBadge === badge.path}
+                      onChange={() => setSelectedBadge(badge.path)}
+                    />
+                    <img
+                      src={badge.path}
+                      alt={badge.label}
+                      title={badge.label}
+                      className="h-full w-full object-contain p-1"
+                    />
+                  </label>
+                ))}
+              </div>
+            </section>
+
+            {/* Tamanho da mesa (torneio) */}
+            {type === EventType.TOURNAMENT && (
+              <section className="rounded-2xl border border-foreground/10 bg-background/60 p-6 shadow-sm">
+                <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/60">
+                  Configuração do torneio
+                </h2>
+                <TextInput
+                  id="desiredTableSize"
+                  name="desiredTableSize"
+                  label="Tamanho da mesa"
+                  type="number"
+                  required={true}
+                />
+              </section>
+            )}
+
+            {/* Status */}
+            <section className="rounded-2xl border border-foreground/10 bg-background/60 p-6 shadow-sm">
+              <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/60">
+                Status
+              </h2>
+              <div className="flex flex-wrap gap-3">
+                {[
+                  { value: EventStatus.SECRETO, label: 'Secreto', desc: 'Só admins veem' },
+                  { value: EventStatus.ABERTO, label: 'Aberto', desc: 'Inscrições abertas' },
+                  { value: EventStatus.ENCERRADO, label: 'Encerrado', desc: 'Inscrições fechadas' },
+                ].map((opt) => (
+                  <label
+                    key={opt.value}
+                    className={`flex flex-1 min-w-[100px] cursor-pointer flex-col rounded-xl border-2 px-4 py-3 transition-all ${
+                      selectedStatus === opt.value
+                        ? 'border-primary bg-primary/10'
+                        : 'border-foreground/10 hover:border-foreground/20'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="status"
+                      value={opt.value}
+                      className="sr-only"
+                      checked={selectedStatus === opt.value}
+                      onChange={() => setSelectedStatus(opt.value)}
+                    />
+                    <span className="font-medium">{opt.label}</span>
+                    <span className="mt-0.5 text-xs text-foreground/50">{opt.desc}</span>
+                  </label>
+                ))}
+              </div>
+            </section>
+
+            {/* Ações */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <LinkButton
+                to="/events"
+                styleType="secondary"
+                className="order-2 sm:order-1"
+                viewTransition
+              >
+                Cancelar
+              </LinkButton>
+              <Button type="submit" className="order-1 sm:order-2">
+                Criar evento
+              </Button>
+            </div>
+          </Form>
         </div>
-
-        {type === EventType.TOURNAMENT && (
-          <>
-            <Spacer size="md" />
-            <TextInput
-              id="desiredTableSize"
-              name="desiredTableSize"
-              label="Tamanho da mesa"
-              type="number"
-              required={true}
-            />
-          </>
-        )}
-
-        <Spacer size="md" />
-        <fieldset>
-          <legend>Status</legend>
-          <div>
-            <input
-              type="radio"
-              id="status-open"
-              name="isOpen"
-              value="true"
-              defaultChecked
-            />
-            <label htmlFor="status-open"> Aberto</label>
-          </div>
-          <div>
-            <input
-              type="radio"
-              id="status-closed"
-              name="isOpen"
-              value="false"
-            />
-            <label htmlFor="status-closed"> Encerrado</label>
-          </div>
-        </fieldset>
-        <Spacer size="md" />
-        <Button type="submit">Criar</Button>
-      </Form>
-    </Center>
+      </Center>
+    </>
   )
 }
 
@@ -158,14 +246,20 @@ export async function action({ request, context }: Route.ActionArgs) {
   const dateRaw = formData.get('date') as string
   const badgeFile = (formData.get('badgeFile') as string) || null
 
-  const isOpen = formData.get('isOpen') !== 'false'
+  const statusRaw = formData.get('status') as string
+  const validStatuses = [
+    EventStatus.SECRETO,
+    EventStatus.ABERTO,
+    EventStatus.ENCERRADO,
+  ]
+  const status = validStatuses.includes(statusRaw) ? statusRaw : EventStatus.ABERTO
 
   const eventData = {
     name,
     description,
     date: dateRaw ? new Date(dateRaw) : null,
     badgeFile,
-    isOpen,
+    status,
     type,
   }
 
