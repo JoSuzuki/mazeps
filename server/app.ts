@@ -5,11 +5,7 @@ import type { ExtendedError, Server } from 'socket.io'
 import { registerSantoriniHandlers } from './santorini/socket-handler'
 import type { PrismaClient } from '~/generated/prisma/client'
 import prisma from '~/lib/prisma'
-import {
-  cookieUserFields,
-  mapPrismaToCurrentUser,
-  sessionStorage,
-} from '~/services/session'
+import { sessionStorage } from '~/services/session'
 import type { CurrentUser } from '~/services/session'
 
 declare module 'react-router' {
@@ -53,28 +49,13 @@ app.use(
   createRequestHandler({
     build: () => import('virtual:react-router/server-build'),
     async getLoadContext(request, response) {
-      let session = await sessionStorage.getSession(request.headers.cookie)
-      let currentUser = session.get('user') as unknown as CurrentUser
+      const session = await sessionStorage.getSession(request.headers.cookie)
+      const currentUser = session.get('user') as unknown as CurrentUser
 
+      // Usa dados da sessão diretamente - evita query ao banco em toda requisição.
+      // A sessão é atualizada no login e ao editar perfil.
       if (currentUser) {
         currentUser.id = Number(currentUser.id)
-        const user = await prisma.user.findUnique({
-          where: { id: currentUser.id },
-          select: cookieUserFields,
-        })
-        if (user && currentUser.updatedAt !== user.updatedAt.toISOString()) {
-          session.set('user', mapPrismaToCurrentUser(user))
-          response.setHeader(
-            'Set-Cookie',
-            await sessionStorage.commitSession(session),
-          )
-          return {
-            currentUser: user as unknown as CurrentUser,
-            prisma,
-            io: response.locals.io,
-            cspNonce: response.locals.cspNonce,
-          }
-        }
       }
 
       return {

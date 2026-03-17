@@ -1,14 +1,18 @@
 import { data, useFetcher, redirect } from 'react-router'
 import type { Route } from './+types/route'
+import BackButtonPortal from '~/components/back-button-portal/back-button-portal.component'
 import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
 import Link from '~/components/link/link.component'
 import LinkButton from '~/components/link-button/link-button.component'
-import Spacer from '~/components/spacer/spacer.component'
+import { EventStatus } from '~/lib/event-status'
 import { EventType, Role } from '~/generated/prisma/enums'
 
 export async function loader({ context, params }: Route.LoaderArgs) {
   const eventId = Number(params.eventId)
+  const canSeeSecretEvents =
+    context.currentUser?.role === Role.ADMIN ||
+    context.currentUser?.role === Role.STAFF
   const isAdmin = context.currentUser?.role === Role.ADMIN
 
   const event = await context.prisma.event.findUniqueOrThrow({
@@ -16,10 +20,15 @@ export async function loader({ context, params }: Route.LoaderArgs) {
     include: {
       tournament: { select: { id: true } },
       participants: {
-        include: { user: { select: { id: true, nickname: true } } },
+        include: { user: { select: { id: true, name: true, nickname: true } } },
       },
     },
   })
+
+  // SECRETO: só ADMIN e STAFF podem ver
+  if (event.status === EventStatus.SECRETO && !canSeeSecretEvents) {
+    return redirect('/events')
+  }
 
   // Non-admin users are redirected to the tournament page for tournament events
   if (
@@ -34,8 +43,14 @@ export async function loader({ context, params }: Route.LoaderArgs) {
     ? event.participants.find((p) => p.userId === context.currentUser!.id)
     : null
 
+  // ADMIN pode adicionar em qualquer evento; STAFF só em eventos abertos
+  const canAddParticipants =
+    isAdmin ||
+    (context.currentUser?.role === Role.STAFF &&
+      event.status === EventStatus.ABERTO)
+
   const participantUserIds = new Set(event.participants.map((p) => p.userId))
-  const eligibleUsers = isAdmin
+  const eligibleUsers = canAddParticipants
     ? await context.prisma.user.findMany({
         where: { id: { notIn: [...participantUserIds] } },
         select: { id: true, nickname: true },
@@ -43,25 +58,36 @@ export async function loader({ context, params }: Route.LoaderArgs) {
       })
     : []
 
-  return { event, currentParticipant, currentUser: context.currentUser, isAdmin, eligibleUsers }
+  return {
+    event,
+    currentParticipant,
+    currentUser: context.currentUser,
+    isAdmin,
+    canAddParticipants,
+    eligibleUsers,
+  }
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
-  if (context.currentUser?.role !== Role.ADMIN) {
-    return data({ error: 'Não autorizado' })
-  }
-
   const formData = await request.formData()
   const intent = formData.get('intent') as string
 
   if (intent === 'add-participant') {
-    const userId = Number(formData.get('userId'))
     const eventId = Number(params.eventId)
-
     const event = await context.prisma.event.findUniqueOrThrow({
       where: { id: eventId },
-      select: { type: true, tournament: { select: { id: true } } },
+      select: { type: true, status: true, tournament: { select: { id: true } } },
     })
+
+    const canAdd =
+      context.currentUser?.role === Role.ADMIN ||
+      (context.currentUser?.role === Role.STAFF &&
+        event.status === EventStatus.ABERTO)
+    if (!canAdd) {
+      return data({ error: 'Não autorizado' })
+    }
+
+    const userId = Number(formData.get('userId'))
 
     await context.prisma.eventParticipant.upsert({
       where: { eventId_userId: { eventId, userId } },
@@ -86,8 +112,25 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 
     const participant = await context.prisma.eventParticipant.findUniqueOrThrow({
       where: { id: participantId },
-      select: { userId: true, event: { select: { type: true, tournament: { select: { id: true } } } } },
+      select: {
+        userId: true,
+        event: {
+          select: {
+            type: true,
+            status: true,
+            tournament: { select: { id: true } },
+          },
+        },
+      },
     })
+
+    const canRemove =
+      context.currentUser?.role === Role.ADMIN ||
+      (context.currentUser?.role === Role.STAFF &&
+        participant.event.status === EventStatus.ABERTO)
+    if (!canRemove) {
+      return data({ error: 'Não autorizado' })
+    }
 
     await context.prisma.eventParticipant.delete({ where: { id: participantId } })
 
@@ -109,9 +152,22 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   return data({ error: 'Ação inválida' })
 }
 
+const STATUS_STYLES = {
+  [EventStatus.SECRETO]: 'bg-amber-100 text-amber-800 border-amber-200',
+  [EventStatus.ABERTO]: 'bg-green-100 text-green-800 border-green-200',
+  [EventStatus.ENCERRADO]: 'bg-red-100 text-red-800 border-red-200',
+} as const
+
 export default function Route({ loaderData, params }: Route.ComponentProps) {
   const fetcher = useFetcher()
-  const { event, currentParticipant, currentUser, isAdmin, eligibleUsers } = loaderData
+  const {
+    event,
+    currentParticipant,
+    currentUser,
+    isAdmin,
+    canAddParticipants,
+    eligibleUsers,
+  } = loaderData
 
   const checkedIn =
     !!currentParticipant ||
@@ -119,146 +175,190 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
 
   return (
     <>
-      <div className="flex items-center justify-between px-6 py-2">
-        <Link to="/events" viewTransition>
-          ← Voltar
-        </Link>
-        {currentUser?.role === Role.ADMIN && (
-          <LinkButton styleType="secondary" to={`/events/${params.eventId}/edit`}>
-            Editar
-          </LinkButton>
-        )}
-      </div>
+      <BackButtonPortal to="/events" />
       <Center>
-        {event.badgeFile && (
-          <>
-            <div className="flex justify-center">
+        <div className="mx-auto max-w-xl px-6 py-10">
+          {/* Header: badge + nome + ações */}
+          <header className="mb-10 flex flex-col items-center gap-6 sm:flex-row sm:items-start sm:gap-8">
+            {event.badgeFile && (
               <img
                 src={event.badgeFile}
                 alt={`Badge de ${event.name}`}
-                className="h-24 w-24 object-contain"
+                className="h-32 w-32 shrink-0 rounded-2xl border border-foreground/10 object-contain shadow-md"
               />
-            </div>
-            <Spacer size="sm" />
-          </>
-        )}
-        <h1 className="flex justify-center text-lg">{event.name}</h1>
-        <Spacer size="sm" />
-        <div className="flex justify-center">
-          <span className={`rounded-full px-3 py-0.5 text-xs font-medium ${event.isOpen ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-            {event.isOpen ? 'Aberto' : 'Encerrado'}
-          </span>
-        </div>
-        <Spacer size="md" />
-
-        {event.type === EventType.TOURNAMENT && event.tournament && (
-          <>
-            <Link to={`/tournaments/${event.tournament.id}`} viewTransition>
-              Ver torneio →
-            </Link>
-            <Spacer size="md" />
-          </>
-        )}
-
-        {event.date && (
-          <>
-            <p className="text-sm opacity-60">
-              {new Date(event.date).toLocaleDateString('pt-BR', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </p>
-            <Spacer size="md" />
-          </>
-        )}
-
-        {event.description && (
-          <>
-            <p className="leading-relaxed whitespace-pre-wrap">
-              {event.description}
-            </p>
-            <Spacer size="md" />
-          </>
-        )}
-
-        {currentUser && !isAdmin && (
-          <>
-            {checkedIn ? (
-              <p className="font-medium">Voce esta participando deste evento.</p>
-            ) : event.isOpen ? (
-              <fetcher.Form
-                method="post"
-                action={`/events/${params.eventId}/check-in`}
-              >
-                <Button type="submit">Check-in</Button>
-              </fetcher.Form>
-            ) : (
-              <p className="text-sm opacity-60">As inscrições para este evento estão encerradas.</p>
             )}
-            <Spacer size="lg" />
-          </>
-        )}
-
-        <h2 className="text-base font-semibold">
-          Participantes ({event.participants.length})
-        </h2>
-        <Spacer size="sm" />
-        {event.participants.length === 0 ? (
-          <p className="text-sm opacity-60">Nenhum participante ainda.</p>
-        ) : (
-          <ul className="flex flex-col gap-1 text-sm">
-            {event.participants.map((p) => (
-              <li key={p.id} className="flex items-center justify-between">
-                <span>{p.user.nickname}</span>
-                {isAdmin && (
-                  <fetcher.Form method="post">
-                    <input type="hidden" name="intent" value="remove-participant" />
-                    <input type="hidden" name="participantId" value={p.id} />
-                    <button
-                      type="submit"
-                      className="cursor-pointer text-red-500 text-xs hover:underline"
-                      onClick={(e) => {
-                        if (!confirm(`Remover ${p.user.nickname}?`)) e.preventDefault()
-                      }}
-                    >
-                      Remover
-                    </button>
-                  </fetcher.Form>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {isAdmin && (
-          <>
-            <Spacer size="lg" />
-            <h2 className="text-base font-semibold">Adicionar participante</h2>
-            <Spacer size="sm" />
-            {eligibleUsers.length === 0 ? (
-              <p className="text-sm opacity-60">Todos os usuários já estão participando.</p>
-            ) : (
-              <fetcher.Form method="post" className="flex gap-2">
-                <input type="hidden" name="intent" value="add-participant" />
-                <select
-                  name="userId"
-                  required
-                  className="flex-1 rounded-md border-1 p-1 text-sm"
+            <div className="min-w-0 flex-1 text-center sm:text-left">
+              <h1 className="font-brand text-3xl tracking-wide">{event.name}</h1>
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-3 sm:justify-start">
+                <span
+                  className={`rounded-full border px-4 py-1.5 text-sm font-medium ${
+                    STATUS_STYLES[event.status] ?? STATUS_STYLES[EventStatus.ABERTO]
+                  }`}
                 >
-                  <option value="">Selecionar usuário...</option>
-                  {eligibleUsers.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.nickname}
-                    </option>
-                  ))}
-                </select>
-                <Button type="submit">Adicionar</Button>
-              </fetcher.Form>
+                  {event.status === EventStatus.SECRETO
+                    ? 'Secreto'
+                    : event.status === EventStatus.ABERTO
+                      ? 'Aberto'
+                      : 'Encerrado'}
+                </span>
+                {event.type === EventType.TOURNAMENT && (
+                  <span className="rounded-full border border-foreground/20 bg-foreground/5 px-4 py-1.5 text-sm font-medium uppercase tracking-wider">
+                    Torneio
+                  </span>
+                )}
+              </div>
+              {((currentUser?.role === Role.ADMIN) ||
+                (currentUser?.role === Role.STAFF && event.status === EventStatus.ABERTO)) && (
+                <div className="mt-4">
+                  <LinkButton
+                    styleType="secondary"
+                    to={`/events/${params.eventId}/edit`}
+                    viewTransition
+                  >
+                    Editar evento
+                  </LinkButton>
+                </div>
+              )}
+            </div>
+          </header>
+
+          {/* Link para torneio */}
+          {event.type === EventType.TOURNAMENT && event.tournament && (
+            <section className="mb-8">
+              <Link
+                to={`/tournaments/${event.tournament.id}`}
+                viewTransition
+                className="flex items-center justify-center gap-2 rounded-xl border border-foreground/10 bg-background/60 px-6 py-4 transition-colors hover:bg-foreground/5 sm:justify-start"
+              >
+                <span className="font-medium">Ver torneio</span>
+                <span className="text-foreground/50">→</span>
+              </Link>
+            </section>
+          )}
+
+          {/* Data */}
+          {event.date && (
+            <section className="mb-8 rounded-2xl border border-foreground/10 bg-background/60 p-6 shadow-sm">
+              <h2 className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/60">
+                Data
+              </h2>
+              <p className="text-lg">
+                {new Date(event.date).toLocaleDateString('pt-BR', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </p>
+            </section>
+          )}
+
+          {/* Descrição */}
+          {event.description && (
+            <section className="mb-8 rounded-2xl border border-foreground/10 bg-background/60 p-6 shadow-sm">
+              <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/60">
+                Descrição
+              </h2>
+              <p className="whitespace-pre-wrap leading-relaxed text-foreground/90">
+                {event.description}
+              </p>
+            </section>
+          )}
+
+          {/* Participação (check-in) */}
+          {currentUser && !isAdmin && (
+            <section className="mb-8 rounded-2xl border border-foreground/10 bg-background/60 p-6 shadow-sm">
+              <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/60">
+                Participação
+              </h2>
+              {checkedIn ? (
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-700">
+                    ✓
+                  </span>
+                  <p className="font-medium">Você está participando deste evento.</p>
+                </div>
+              ) : event.status === EventStatus.ABERTO ? (
+                <fetcher.Form method="post" action={`/events/${params.eventId}/check-in`}>
+                  <Button type="submit">Fazer check-in</Button>
+                </fetcher.Form>
+              ) : (
+                <p className="text-foreground/60">
+                  As inscrições para este evento estão encerradas.
+                </p>
+              )}
+            </section>
+          )}
+
+          {/* Lista de participantes */}
+          <section className="mb-8 rounded-2xl border border-foreground/10 bg-background/60 p-6 shadow-sm">
+            <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/60">
+              Participantes ({event.participants.length})
+            </h2>
+            {event.participants.length === 0 ? (
+              <p className="text-foreground/50">Nenhum participante ainda.</p>
+            ) : (
+              <ul className="space-y-2">
+                {event.participants.map((p) => (
+                  <li
+                    key={p.id}
+                    className="flex items-center justify-between rounded-lg px-4 py-3 transition-colors hover:bg-foreground/5"
+                  >
+                    <span className="font-medium">{p.user.name}</span>
+                    {canAddParticipants && (
+                      <fetcher.Form method="post">
+                        <input type="hidden" name="intent" value="remove-participant" />
+                        <input type="hidden" name="participantId" value={p.id} />
+                        <button
+                          type="submit"
+                          className="text-sm text-red-600 transition-colors hover:text-red-700 hover:underline"
+                          onClick={(e) => {
+                            if (!confirm(`Remover ${p.user.name}?`)) e.preventDefault()
+                          }}
+                        >
+                          Remover
+                        </button>
+                      </fetcher.Form>
+                    )}
+                  </li>
+                ))}
+              </ul>
             )}
-          </>
-        )}
+          </section>
+
+          {/* Adicionar participante (ADMIN em qualquer evento, STAFF em eventos abertos) */}
+          {canAddParticipants && (
+            <section className="rounded-2xl border border-foreground/10 bg-background/60 p-6 shadow-sm">
+              <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/60">
+                Adicionar participante
+              </h2>
+              {eligibleUsers.length === 0 ? (
+                <p className="text-foreground/50">
+                  Todos os usuários já estão participando.
+                </p>
+              ) : (
+                <fetcher.Form method="post" className="flex flex-col gap-3 sm:flex-row">
+                  <input type="hidden" name="intent" value="add-participant" />
+                  <select
+                    name="userId"
+                    required
+                    className="flex-1 rounded-xl border border-foreground/20 bg-background px-4 py-3 text-base transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  >
+                    <option value="">Selecionar usuário...</option>
+                    {eligibleUsers.map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.nickname}
+                      </option>
+                    ))}
+                  </select>
+                  <Button type="submit" className="shrink-0">
+                    Adicionar
+                  </Button>
+                </fetcher.Form>
+              )}
+            </section>
+          )}
+        </div>
       </Center>
     </>
   )

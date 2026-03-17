@@ -58,6 +58,7 @@ model BlogPost {
 
 enum Role {
   USER
+  STAFF
   ADMIN
 }
 
@@ -74,18 +75,24 @@ model Tournament {
 }
 
 model Event {
-  id           Int       @id @default(autoincrement())
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id           Int          @id @default(autoincrement())
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
   name         String
   description  String?
   date         DateTime?
   badgeFile    String?
-  isOpen       Boolean   @default(true)
-  type         EventType @default(GENERAL)
+  status       EventStatus  @default(ABERTO)
+  type         EventType    @default(GENERAL)
   tournament   Tournament? @relation(fields: [tournamentId], references: [id])
-  tournamentId Int?      @unique
+  tournamentId Int?         @unique
   participants EventParticipant[]
+}
+
+enum EventStatus {
+  SECRETO   // Só ADMIN vê e edita
+  ABERTO    // Inscrições abertas
+  ENCERRADO // Inscrições encerradas
 }
 
 enum EventType {

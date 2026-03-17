@@ -294,3 +294,25 @@ export default function Route({ loaderData }: Route.ComponentProps) {
     </Center>
   )
 }
+
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  const message =
+    error && error instanceof Error ? error.message : 'Erro ao carregar usuários'
+  const stack = error && error instanceof Error ? error.stack : undefined
+
+  return (
+    <div className="mx-auto max-w-xl p-8">
+      <h1 className="mb-4 text-xl font-semibold">Erro na página de Usuários</h1>
+      <p className="mb-4 text-red-600">{message}</p>
+      {import.meta.env.DEV && stack && (
+        <pre className="overflow-x-auto rounded bg-gray-100 p-4 text-xs">
+          <code>{stack}</code>
+        </pre>
+      )}
+      <p className="mt-4 text-sm text-gray-600">
+        Se o erro mencionar &quot;column does not exist&quot; ou &quot;isWriter&quot;, execute:{' '}
+        <code className="rounded bg-gray-100 px-1">npx prisma migrate dev</code>
+      </p>
+    </div>
+  )
+}
