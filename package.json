@@ -17,10 +17,6 @@
     "prettier": "prettier . --write"
   },
   "dependencies": {
-    "@tiptap/extension-link": "^2.10.0",
-    "@tiptap/pm": "^2.10.0",
-    "@tiptap/react": "^2.10.0",
-    "@tiptap/starter-kit": "^2.10.0",
     "@prisma/adapter-pg": "^6.15.0",
     "@prisma/client": "^6.15.0",
     "@react-router/express": "^7.6.1",
@@ -29,6 +25,10 @@
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.4.2",
     "@react-three/postprocessing": "^3.0.4",
+    "@tiptap/extension-link": "^2.10.0",
+    "@tiptap/pm": "^2.10.0",
+    "@tiptap/react": "^2.10.0",
+    "@tiptap/starter-kit": "^2.10.0",
     "@types/three": "^0.181.0",
     "bcrypt": "^6.0.0",
     "compression": "^1.7.5",
@@ -43,6 +43,7 @@
     "remix-auth": "^4.2.0",
     "remix-auth-form": "^3.0.0",
     "remix-auth-oauth2": "^3.4.1",
+    "resend": "^6.9.4",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.3",
     "three": "^0.181.2"

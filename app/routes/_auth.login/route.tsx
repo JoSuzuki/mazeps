@@ -10,17 +10,21 @@ import Spacer from '~/components/spacer/spacer.component'
 import TextInput from '~/components/text-input/text-input.component'
 import { authenticator, setSession } from '~/services/session'
 
-export async function loader({ context }: Route.LoaderArgs) {
+export async function loader({ context, request }: Route.LoaderArgs) {
   if (context.currentUser) return redirect('/')
 
-  return data(null)
+  const url = new URL(request.url)
+  const resetSuccess = url.searchParams.get('reset') === '1'
+  const expired = url.searchParams.get('expired') === '1'
+
+  return data({ resetSuccess, expired })
 }
 
 export const meta = ({}: Route.MetaArgs) => {
   return [{ title: 'Mazeps - Login' }]
 }
 
-export default function Route({ actionData }: Route.ComponentProps) {
+export default function Route({ loaderData, actionData }: Route.ComponentProps) {
   return (
     <>
       <BackButtonPortal to="/" />
@@ -49,6 +53,22 @@ export default function Route({ actionData }: Route.ComponentProps) {
             </Link>
           </div>
 
+          {loaderData?.resetSuccess ? (
+            <>
+              <Spacer size="sm" />
+              <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+                Senha redefinida com sucesso! Faça login com sua nova senha.
+              </div>
+            </>
+          ) : null}
+          {loaderData?.expired ? (
+            <>
+              <Spacer size="sm" />
+              <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                O link de redefinição expirou. Solicite um novo.
+              </div>
+            </>
+          ) : null}
           {actionData?.error ? (
             <>
               <Spacer size="sm" />

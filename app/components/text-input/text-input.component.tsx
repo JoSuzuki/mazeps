@@ -7,6 +7,7 @@ interface TextInputProps {
   defaultValue?: string | null
   placeholder?: string
   autoComplete?: 'current-password' | 'new-password'
+  inputClassName?: string
 }
 
 const TextInput = ({
@@ -18,6 +19,7 @@ const TextInput = ({
   autoComplete,
   defaultValue,
   placeholder,
+  inputClassName,
 }: TextInputProps): React.ReactElement => {
   return (
     <>
@@ -25,7 +27,7 @@ const TextInput = ({
         {label}
       </label>
       <input
-        className="w-full rounded-md border-1 p-1"
+        className={`w-full rounded-md border-1 p-1 ${inputClassName ?? ''}`}
         id={id}
         type={type}
         name={name}
