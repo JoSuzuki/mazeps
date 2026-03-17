@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { data, useFetcher, redirect } from 'react-router'
 import type { Route } from './+types/route'
 import BackButtonPortal from '~/components/back-button-portal/back-button-portal.component'
@@ -49,22 +50,12 @@ export async function loader({ context, params }: Route.LoaderArgs) {
     (context.currentUser?.role === Role.STAFF &&
       event.status === EventStatus.ABERTO)
 
-  const participantUserIds = new Set(event.participants.map((p) => p.userId))
-  const eligibleUsers = canAddParticipants
-    ? await context.prisma.user.findMany({
-        where: { id: { notIn: [...participantUserIds] } },
-        select: { id: true, nickname: true },
-        orderBy: { nickname: 'asc' },
-      })
-    : []
-
   return {
     event,
     currentParticipant,
     currentUser: context.currentUser,
     isAdmin,
     canAddParticipants,
-    eligibleUsers,
   }
 }
 
@@ -160,14 +151,52 @@ const STATUS_STYLES = {
 
 export default function Route({ loaderData, params }: Route.ComponentProps) {
   const fetcher = useFetcher()
+  const addParticipantFetcher = useFetcher()
   const {
     event,
     currentParticipant,
     currentUser,
     isAdmin,
     canAddParticipants,
-    eligibleUsers,
   } = loaderData
+
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showResults, setShowResults] = useState(false)
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
+  const searchFetcher = useFetcher()
+  const searchResults =
+    (searchFetcher.data as { users?: Array<{ id: number; name: string; nickname: string; email: string }> } | undefined)
+      ?.users ?? []
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (searchQuery.length < 2) return
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
+    searchTimeoutRef.current = setTimeout(() => {
+      searchFetcher.load(`/events/${params.eventId}/search-users?q=${encodeURIComponent(searchQuery)}`)
+    }, 300)
+    return () => {
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
+    }
+  }, [searchQuery, params.eventId])
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setShowResults(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  useEffect(() => {
+    const data = addParticipantFetcher.data as { success?: boolean } | undefined
+    if (data?.success) {
+      setSearchQuery('')
+      setShowResults(false)
+    }
+  }, [addParticipantFetcher.data])
 
   const checkedIn =
     !!currentParticipant ||
@@ -332,30 +361,52 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
               <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/60">
                 Adicionar participante
               </h2>
-              {eligibleUsers.length === 0 ? (
-                <p className="text-foreground/50">
-                  Todos os usuários já estão participando.
-                </p>
-              ) : (
-                <fetcher.Form method="post" className="flex flex-col gap-3 sm:flex-row">
-                  <input type="hidden" name="intent" value="add-participant" />
-                  <select
-                    name="userId"
-                    required
-                    className="flex-1 rounded-xl border border-foreground/20 bg-background px-4 py-3 text-base transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  >
-                    <option value="">Selecionar usuário...</option>
-                    {eligibleUsers.map((user) => (
-                      <option key={user.id} value={user.id}>
-                        {user.nickname}
-                      </option>
-                    ))}
-                  </select>
-                  <Button type="submit" className="shrink-0">
-                    Adicionar
-                  </Button>
-                </fetcher.Form>
-              )}
+              <p className="mb-3 text-sm text-foreground/60">
+                Pesquise por nome, email ou apelido para adicionar.
+              </p>
+              <div ref={containerRef} className="relative">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value)
+                    setShowResults(true)
+                  }}
+                  onFocus={() => searchQuery.length >= 2 && setShowResults(true)}
+                  placeholder="Digite para buscar..."
+                  className="w-full rounded-xl border border-foreground/20 bg-background px-4 py-3 text-base transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+                {showResults && searchQuery.length >= 2 && (
+                  <ul className="absolute top-full left-0 right-0 z-10 mt-1 max-h-60 overflow-auto rounded-xl border border-foreground/10 bg-background shadow-lg">
+                    {searchFetcher.state === 'loading' ? (
+                      <li className="px-4 py-3 text-foreground/50">Buscando...</li>
+                    ) : searchResults.length === 0 ? (
+                      <li className="px-4 py-3 text-foreground/50">
+                        Nenhum usuário encontrado.
+                      </li>
+                    ) : (
+                      searchResults.map((user) => (
+                        <li key={user.id}>
+                          <addParticipantFetcher.Form method="post">
+                            <input type="hidden" name="intent" value="add-participant" />
+                            <input type="hidden" name="userId" value={user.id} />
+                            <button
+                              type="submit"
+                              className="flex w-full items-center gap-2 px-4 py-3 text-left transition-colors hover:bg-foreground/5"
+                            >
+                              <span className="font-medium">{user.name}</span>
+                              <span className="text-foreground/50">@{user.nickname}</span>
+                              <span className="ml-auto truncate text-sm text-foreground/40">
+                                {user.email}
+                              </span>
+                            </button>
+                          </addParticipantFetcher.Form>
+                        </li>
+                      ))
+                    )}
+                  </ul>
+                )}
+              </div>
             </section>
           )}
         </div>
