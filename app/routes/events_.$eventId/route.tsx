@@ -6,6 +6,7 @@ import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
 import Link from '~/components/link/link.component'
 import LinkButton from '~/components/link-button/link-button.component'
+import { formatEventDateLong } from '~/lib/date'
 import { EventStatus } from '~/lib/event-status'
 import { EventType, Role } from '~/generated/prisma/enums'
 import { getAvatarUrl } from '~/lib/avatar'
@@ -339,10 +340,10 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
               <Link
                 to={`/tournaments/${event.tournament.id}`}
                 viewTransition
-                className="flex items-center justify-center gap-3 rounded-2xl border-2 border-primary bg-primary/10 px-8 py-5 text-lg font-semibold text-primary transition-colors hover:bg-primary/20 sm:justify-center"
+                className="flex items-center justify-center gap-3 rounded-2xl border-2 border-primary bg-primary/10 px-4 py-4 text-base font-semibold text-primary transition-colors hover:bg-primary/20 sm:px-8 sm:py-5 sm:text-lg sm:justify-center"
               >
-                <span>Ir para tabela e mesas</span>
-                <span className="text-primary/80">→</span>
+                <span className="text-center">Ir para tabela e mesas</span>
+                <span className="shrink-0 text-primary/80">→</span>
               </Link>
             </section>
           )}
@@ -354,12 +355,7 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
                 Data
               </h2>
               <p className="text-lg">
-                {new Date(event.date).toLocaleDateString('pt-BR', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
+                {formatEventDateLong(event.date)}
               </p>
             </section>
           )}

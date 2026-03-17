@@ -6,6 +6,7 @@ import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
 import LinkButton from '~/components/link-button/link-button.component'
 import TextInput from '~/components/text-input/text-input.component'
+import { parseEventDate } from '~/lib/date'
 import { EventStatus } from '~/lib/event-status'
 import { EventType, Role } from '~/generated/prisma/enums'
 import { AVAILABLE_BADGES } from '~/lib/badges'
@@ -278,7 +279,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   const eventData = {
     name,
     description,
-    date: dateRaw ? new Date(dateRaw) : null,
+    date: dateRaw ? parseEventDate(dateRaw) : null,
     badgeFile,
     status,
     type,

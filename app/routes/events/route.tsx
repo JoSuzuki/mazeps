@@ -5,47 +5,54 @@ import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
 import Link from '~/components/link/link.component'
 import LinkButton from '~/components/link-button/link-button.component'
-import Pagination from '~/components/pagination/pagination.component'
+import { formatEventDate } from '~/lib/date'
 import { EventStatus } from '~/lib/event-status'
 import { EventType, Role } from '~/generated/prisma/enums'
 
-export async function loader({ context, request }: Route.LoaderArgs) {
-  const url = new URL(request.url)
-  const page = Number(url.searchParams.get('page') || 1)
-  const limit = 10
-  const skip = (page - 1) * limit
-  // SECRETO: só STAFF e ADMIN veem todos; usuários comuns veem apenas ABERTO e ENCERRADO
+const eventInclude = (currentUser: { id: string } | null) => ({
+  tournament: { select: { id: true, status: true } },
+  ...(currentUser && {
+    participants: {
+      where: { userId: currentUser.id },
+    },
+  }),
+})
+
+export async function loader({ context }: Route.LoaderArgs) {
   const canSeeSecretEvents =
     context.currentUser?.role === Role.ADMIN ||
     context.currentUser?.role === Role.STAFF
-  const statusFilter = canSeeSecretEvents
-    ? undefined
-    : { status: { in: [EventStatus.ABERTO, EventStatus.ENCERRADO] as const } }
 
-  const [events, totalCount] = await Promise.all([
+  const closedStatusFilter = canSeeSecretEvents
+    ? { status: { in: [EventStatus.ENCERRADO, EventStatus.SECRETO] as const } }
+    : { status: EventStatus.ENCERRADO }
+
+  const [openEvents, closedEvents] = await Promise.all([
     context.prisma.event.findMany({
-      skip,
-      take: limit,
-      where: statusFilter,
-      orderBy: { date: 'asc' },
-      include: {
-        tournament: { select: { id: true, status: true } },
-        ...(context.currentUser && {
-          participants: {
-            where: { userId: context.currentUser.id },
-          },
-        }),
-      },
+      where: { status: EventStatus.ABERTO },
+      orderBy: { date: 'desc' },
+      include: eventInclude(context.currentUser),
     }),
-    context.prisma.event.count({ where: statusFilter }),
+    context.prisma.event.findMany({
+      where: closedStatusFilter,
+      orderBy: { date: 'desc' },
+      include: eventInclude(context.currentUser),
+    }),
   ])
 
-  const totalPages = Math.ceil(totalCount / limit)
+  // Garantir mais recentes primeiro; eventos sem data vão para o final
+  const sortByDateDesc = <T extends { date: Date | null }>(a: T, b: T) => {
+    const timeA = a.date ? new Date(a.date).getTime() : 0
+    const timeB = b.date ? new Date(b.date).getTime() : 0
+    return timeB - timeA
+  }
+  openEvents.sort(sortByDateDesc)
+  closedEvents.sort(sortByDateDesc)
 
   return {
-    events,
+    openEvents,
+    closedEvents,
     currentUser: context.currentUser,
-    pagination: { currentPage: page, totalPages, totalCount },
     canSeeSecretEvents,
   }
 }
@@ -86,7 +93,8 @@ function CalendarIcon({ className }: { className?: string }) {
 export default function Route({ loaderData }: Route.ComponentProps) {
   const fetcher = useFetcher()
 
-  const getEventLink = (event: (typeof loaderData.events)[0]) => {
+  type EventItem = (typeof loaderData.openEvents)[0]
+  const getEventLink = (event: EventItem) => {
     if (
       event.type === EventType.TOURNAMENT &&
       event.tournament &&
@@ -97,7 +105,7 @@ export default function Route({ loaderData }: Route.ComponentProps) {
     return `/events/${event.id}`
   }
 
-  const renderAction = (event: (typeof loaderData.events)[0]) => {
+  const renderAction = (event: EventItem) => {
     if (event.type === EventType.TOURNAMENT) {
       const alreadyEnrolled =
         loaderData.currentUser && (event.participants?.length ?? 0) > 0
@@ -158,32 +166,28 @@ export default function Route({ loaderData }: Route.ComponentProps) {
             )}
           </header>
 
-          {/* Lista de eventos */}
-          <section className="overflow-hidden rounded-2xl border border-foreground/10 bg-background/60 shadow-sm">
+          {/* Caixa 1: Eventos e torneios abertos */}
+          <section className="mb-8 overflow-hidden rounded-2xl border border-foreground/10 bg-background/60 shadow-sm">
             <div className="flex items-center justify-between border-b border-foreground/10 bg-foreground/5 px-6 py-4">
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-foreground/80">
+                Abertos
+              </h2>
               <p className="text-sm text-foreground/60">
                 <span className="font-semibold text-foreground/80">
-                  {loaderData.pagination.totalCount}
+                  {loaderData.openEvents.length}
                 </span>{' '}
-                {loaderData.pagination.totalCount === 1 ? 'evento' : 'eventos'}
+                {loaderData.openEvents.length === 1 ? 'evento' : 'eventos'}
               </p>
             </div>
 
-            {loaderData.events.length === 0 ? (
-              <div className="flex flex-col items-center justify-center px-6 py-20 text-center">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-foreground/10">
-                  <CalendarIcon className="text-foreground/40" />
-                </div>
-                <p className="mb-1 text-base font-medium text-foreground/60">
-                  Nenhum evento cadastrado
-                </p>
+            {loaderData.openEvents.length === 0 ? (
+              <div className="flex flex-col items-center justify-center px-6 py-12 text-center">
                 <p className="text-sm text-foreground/50">
-                  Os eventos aparecerão aqui quando forem criados.
+                  Nenhum evento ou torneio aberto no momento.
                 </p>
               </div>
             ) : (
               <>
-                {/* Tabela desktop */}
                 <div className="hidden md:block">
                   <table className="w-full">
                     <thead>
@@ -208,7 +212,7 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-foreground/10">
-                      {loaderData.events.map((event) => (
+                      {loaderData.openEvents.map((event) => (
                         <tr
                           key={event.id}
                           className="transition-colors hover:bg-foreground/5"
@@ -242,7 +246,7 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                           </td>
                           <td className="px-6 py-4 text-sm text-foreground/80">
                             {event.date
-                              ? new Date(event.date).toLocaleDateString('pt-BR')
+                              ? formatEventDate(event.date)
                               : '—'}
                           </td>
                           {loaderData.canSeeSecretEvents && (
@@ -270,38 +274,158 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                   </table>
                 </div>
 
-                {/* Cards mobile */}
                 <div className="divide-y divide-foreground/10 md:hidden">
-                  {loaderData.events.map((event) => (
-                    <div
-                      key={event.id}
-                      className="flex items-start gap-4 px-6 py-4 transition-colors hover:bg-foreground/5"
-                    >
-                      <Link
-                        to={getEventLink(event)}
-                        viewTransition
-                        className="flex min-w-0 flex-1 items-start gap-4"
+                  {loaderData.openEvents.map((event) => {
+                    const action = renderAction(event)
+                    return (
+                      <div
+                        key={event.id}
+                        className="flex flex-col gap-3 px-6 py-4 transition-colors hover:bg-foreground/5"
                       >
-                        {event.badgeFile ? (
-                          <img
-                            src={event.badgeFile}
-                            alt={`Badge de ${event.name}`}
-                            className="h-24 w-24 shrink-0 object-contain"
-                          />
-                        ) : (
-                          <div className="flex h-24 w-24 shrink-0 items-center justify-center bg-foreground/5">
-                            <CalendarIcon className="text-foreground/30" />
+                        <Link
+                          to={getEventLink(event)}
+                          viewTransition
+                          className="flex min-w-0 items-start gap-4"
+                        >
+                          {event.badgeFile ? (
+                            <img
+                              src={event.badgeFile}
+                              alt={`Badge de ${event.name}`}
+                              className="h-24 w-24 shrink-0 object-contain"
+                            />
+                          ) : (
+                            <div className="flex h-24 w-24 shrink-0 items-center justify-center bg-foreground/5">
+                              <CalendarIcon className="text-foreground/30" />
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium">{event.name}</p>
+                            <div className="mt-1 flex flex-wrap items-center gap-2">
+                              <span className="rounded-full border border-foreground/20 bg-foreground/5 px-2 py-0.5 text-xs font-medium uppercase">
+                                {EVENT_TYPE_LABEL[event.type]}
+                              </span>
+                              {loaderData.canSeeSecretEvents && (
+                                <span
+                                  className={`rounded-full border px-2 py-0.5 text-xs font-medium ${
+                                    STATUS_STYLES[event.status] ??
+                                    STATUS_STYLES[EventStatus.ABERTO]
+                                  }`}
+                                >
+                                  {event.status === EventStatus.SECRETO
+                                    ? 'Secreto'
+                                    : event.status === EventStatus.ABERTO
+                                      ? 'Aberto'
+                                      : 'Encerrado'}
+                                </span>
+                              )}
+                              {event.date && (
+                                <span className="text-xs text-foreground/50">
+                                  {formatEventDate(event.date)}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </Link>
+                        {action && (
+                          <div className="flex justify-end border-t border-foreground/5 pt-3">
+                            {action}
                           </div>
                         )}
-                        <div className="min-w-0 flex-1">
-                          <p className="font-medium">{event.name}</p>
-                          <div className="mt-1 flex flex-wrap items-center gap-2">
-                            <span className="rounded-full border border-foreground/20 bg-foreground/5 px-2 py-0.5 text-xs font-medium uppercase">
+                      </div>
+                    )
+                  })}
+                </div>
+              </>
+            )}
+          </section>
+
+          {/* Caixa 2: Eventos encerrados e secretos */}
+          <section className="overflow-hidden rounded-2xl border border-foreground/10 bg-background/60 shadow-sm">
+            <div className="flex items-center justify-between border-b border-foreground/10 bg-foreground/5 px-6 py-4">
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-foreground/80">
+                Encerrados e secretos
+              </h2>
+              <p className="text-sm text-foreground/60">
+                <span className="font-semibold text-foreground/80">
+                  {loaderData.closedEvents.length}
+                </span>{' '}
+                {loaderData.closedEvents.length === 1 ? 'evento' : 'eventos'}
+              </p>
+            </div>
+
+            {loaderData.closedEvents.length === 0 ? (
+              <div className="flex flex-col items-center justify-center px-6 py-12 text-center">
+                <p className="text-sm text-foreground/50">
+                  Nenhum evento encerrado ou secreto.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="hidden md:block">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-foreground/10 bg-foreground/5">
+                        <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-foreground/60">
+                          Evento
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-foreground/60">
+                          Tipo
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-foreground/60">
+                          Data
+                        </th>
+                        {loaderData.canSeeSecretEvents && (
+                          <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-foreground/60">
+                            Status
+                          </th>
+                        )}
+                        <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-foreground/60">
+                          Ações
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-foreground/10">
+                      {loaderData.closedEvents.map((event) => (
+                        <tr
+                          key={event.id}
+                          className="transition-colors hover:bg-foreground/5"
+                        >
+                          <td className="px-6 py-4">
+                            <Link
+                              to={getEventLink(event)}
+                              viewTransition
+                              className="flex items-center gap-4"
+                            >
+                              {event.badgeFile ? (
+                                <img
+                                  src={event.badgeFile}
+                                  alt={`Badge de ${event.name}`}
+                                  className="h-20 w-20 shrink-0 object-contain"
+                                />
+                              ) : (
+                                <div className="flex h-20 w-20 shrink-0 items-center justify-center bg-foreground/5">
+                                  <CalendarIcon className="text-foreground/30" />
+                                </div>
+                              )}
+                              <span className="font-medium hover:underline">
+                                {event.name}
+                              </span>
+                            </Link>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="rounded-full border border-foreground/20 bg-foreground/5 px-2.5 py-1 text-xs font-medium uppercase tracking-wider">
                               {EVENT_TYPE_LABEL[event.type]}
                             </span>
-                            {loaderData.canSeeSecretEvents && (
+                          </td>
+                          <td className="px-6 py-4 text-sm text-foreground/80">
+                            {event.date
+                              ? formatEventDate(event.date)
+                              : '—'}
+                          </td>
+                          {loaderData.canSeeSecretEvents && (
+                            <td className="px-6 py-4">
                               <span
-                                className={`rounded-full border px-2 py-0.5 text-xs font-medium ${
+                                className={`rounded-full border px-2.5 py-1 text-xs font-medium ${
                                   STATUS_STYLES[event.status] ??
                                   STATUS_STYLES[EventStatus.ABERTO]
                                 }`}
@@ -312,33 +436,81 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                                     ? 'Aberto'
                                     : 'Encerrado'}
                               </span>
-                            )}
-                            {event.date && (
-                              <span className="text-xs text-foreground/50">
-                                {new Date(event.date).toLocaleDateString('pt-BR')}
+                            </td>
+                          )}
+                          <td className="px-6 py-4 text-right">
+                            {renderAction(event)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="divide-y divide-foreground/10 md:hidden">
+                  {loaderData.closedEvents.map((event) => {
+                    const action = renderAction(event)
+                    return (
+                      <div
+                        key={event.id}
+                        className="flex flex-col gap-3 px-6 py-4 transition-colors hover:bg-foreground/5"
+                      >
+                        <Link
+                          to={getEventLink(event)}
+                          viewTransition
+                          className="flex min-w-0 items-start gap-4"
+                        >
+                          {event.badgeFile ? (
+                            <img
+                              src={event.badgeFile}
+                              alt={`Badge de ${event.name}`}
+                              className="h-24 w-24 shrink-0 object-contain"
+                            />
+                          ) : (
+                            <div className="flex h-24 w-24 shrink-0 items-center justify-center bg-foreground/5">
+                              <CalendarIcon className="text-foreground/30" />
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium">{event.name}</p>
+                            <div className="mt-1 flex flex-wrap items-center gap-2">
+                              <span className="rounded-full border border-foreground/20 bg-foreground/5 px-2 py-0.5 text-xs font-medium uppercase">
+                                {EVENT_TYPE_LABEL[event.type]}
                               </span>
-                            )}
+                              {loaderData.canSeeSecretEvents && (
+                                <span
+                                  className={`rounded-full border px-2 py-0.5 text-xs font-medium ${
+                                    STATUS_STYLES[event.status] ??
+                                    STATUS_STYLES[EventStatus.ABERTO]
+                                  }`}
+                                >
+                                  {event.status === EventStatus.SECRETO
+                                    ? 'Secreto'
+                                    : event.status === EventStatus.ABERTO
+                                      ? 'Aberto'
+                                      : 'Encerrado'}
+                                </span>
+                              )}
+                              {event.date && (
+                                <span className="text-xs text-foreground/50">
+                                  {formatEventDate(event.date)}
+                                </span>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      </Link>
-                      <div className="shrink-0">{renderAction(event)}</div>
-                    </div>
-                  ))}
+                        </Link>
+                        {action && (
+                          <div className="flex justify-end border-t border-foreground/5 pt-3">
+                            {action}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               </>
             )}
           </section>
-
-          {/* Paginação */}
-          {loaderData.pagination.totalPages > 1 && (
-            <div className="mt-8 flex justify-center">
-              <Pagination
-                currentPage={loaderData.pagination.currentPage}
-                totalPages={loaderData.pagination.totalPages}
-                baseUrl="/events"
-              />
-            </div>
-          )}
         </div>
       </Center>
     </>

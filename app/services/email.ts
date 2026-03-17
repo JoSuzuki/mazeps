@@ -39,8 +39,19 @@ export async function sendPasswordResetEmail(
   if (error) {
     if (process.env.NODE_ENV === 'development') {
       console.error('Resend error:', error)
+      console.log('\n📧 [DEV] Link de redefinição (Resend falhou):')
+      console.log(`   Para: ${to}`)
+      console.log(`   Link: ${resetUrl}\n`)
+      return { success: true }
     }
-    return { success: false, error: 'Falha ao enviar email. Tente novamente.' }
+    const errMsg = String(
+      (error as { message?: string })?.message ?? (error as { error?: string })?.error ?? '',
+    )
+    const msg =
+      /domain|verified|recipient|sandbox/i.test(errMsg)
+        ? 'Domínio de email não verificado. Adicione e verifique seu domínio no Resend (resend.com/domains) para enviar a qualquer destinatário.'
+        : 'Falha ao enviar email. Tente novamente.'
+    return { success: false, error: msg }
   }
 
   return { success: true }
