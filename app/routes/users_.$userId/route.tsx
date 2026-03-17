@@ -1,5 +1,6 @@
 import { redirect } from 'react-router'
 import type { Route } from './+types/route'
+import { formatEventDate } from '~/lib/date'
 import BackButtonPortal from '~/components/back-button-portal/back-button-portal.component'
 import Center from '~/components/center/center.component'
 import Link from '~/components/link/link.component'
@@ -148,9 +149,7 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                         <span className="font-medium">{ep.event.name}</span>
                         {ep.event.date && (
                           <span className="ml-2 text-foreground/50">
-                            {new Date(ep.event.date).toLocaleDateString(
-                              'pt-BR',
-                            )}
+                            {formatEventDate(ep.event.date)}
                           </span>
                         )}
                       </Link>

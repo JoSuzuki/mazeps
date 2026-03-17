@@ -6,6 +6,7 @@ import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
 import LinkButton from '~/components/link-button/link-button.component'
 import TextInput from '~/components/text-input/text-input.component'
+import { parseEventDate, toEventDateInputValue } from '~/lib/date'
 import { EventStatus } from '~/lib/event-status'
 import { Role } from '~/generated/prisma/enums'
 import { AVAILABLE_BADGES } from '~/lib/badges'
@@ -94,11 +95,7 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
                   label="Data"
                   type="date"
                   required={false}
-                  defaultValue={
-                    event.date
-                      ? new Date(event.date).toISOString().slice(0, 10)
-                      : ''
-                  }
+                  defaultValue={toEventDateInputValue(event.date)}
                 />
               </div>
             </section>
@@ -365,7 +362,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     data: {
       name,
       description,
-      date: dateRaw ? new Date(dateRaw) : null,
+      date: dateRaw ? parseEventDate(dateRaw) : null,
       badgeFile,
       status,
     },
