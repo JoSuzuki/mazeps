@@ -1,16 +1,19 @@
-import { type RefObject, useEffect } from 'react'
+import { type RefObject, useEffect, useRef } from 'react'
 
 const useOutsideClick = <T extends Element>(
   ref: RefObject<T | null>,
   callback: () => void,
   isActive: boolean = true
 ) => {
+  const callbackRef = useRef(callback)
+  callbackRef.current = callback
+
   useEffect(() => {
     if (!isActive) return
 
     const handleClickOutside = (event: MouseEvent) => {
       if (ref.current && !ref.current.contains(event.target as Node)) {
-        callback()
+        callbackRef.current()
       }
     }
 
@@ -18,7 +21,7 @@ const useOutsideClick = <T extends Element>(
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [callback, isActive])
+  }, [ref, isActive])
 }
 
 export default useOutsideClick

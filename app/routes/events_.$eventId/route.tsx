@@ -194,7 +194,7 @@ function ParticipantRow({
 
   return (
     <li className="flex items-center justify-between gap-3 rounded-lg px-4 py-3 transition-colors hover:bg-foreground/5">
-      <div className="flex min-w-0 items-center gap-3">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
         {showImg ? (
           <img
             src={avatarUrl}
@@ -211,7 +211,9 @@ function ParticipantRow({
             {getInitials(participant.user.name)}
           </div>
         )}
-        <span className="truncate font-medium">{participant.user.name}</span>
+        <span className="min-w-0 line-clamp-2 font-medium" title={participant.user.name}>
+          {participant.user.name}
+        </span>
       </div>
       {canAddParticipants && (
         <fetcher.Form method="post" className="shrink-0">
@@ -455,11 +457,15 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
                             <input type="hidden" name="userId" value={user.id} />
                             <button
                               type="submit"
-                              className="flex w-full items-center gap-2 px-4 py-3 text-left transition-colors hover:bg-foreground/5"
+                              className="flex w-full min-w-0 flex-col gap-0.5 px-4 py-3 text-left transition-colors hover:bg-foreground/5 sm:flex-row sm:items-center sm:gap-2"
                             >
-                              <span className="font-medium">{user.name}</span>
-                              <span className="text-foreground/50">@{user.nickname}</span>
-                              <span className="ml-auto truncate text-sm text-foreground/40">
+                              <span className="min-w-0 line-clamp-2 font-medium" title={user.name}>
+                                {user.name}
+                              </span>
+                              <span className="min-w-0 truncate text-sm text-foreground/50" title={`@${user.nickname}`}>
+                                @{user.nickname}
+                              </span>
+                              <span className="min-w-0 truncate text-sm text-foreground/40 sm:ml-auto" title={user.email}>
                                 {user.email}
                               </span>
                             </button>

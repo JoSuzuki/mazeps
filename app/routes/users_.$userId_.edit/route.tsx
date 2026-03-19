@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { data, Form, redirect } from 'react-router'
 import type { Route } from './+types/route'
 import BackButtonPortal from '~/components/back-button-portal/back-button-portal.component'
@@ -6,6 +7,8 @@ import Center from '~/components/center/center.component'
 import LinkButton from '~/components/link-button/link-button.component'
 import TextInput from '~/components/text-input/text-input.component'
 import { Role } from '~/generated/prisma/enums'
+
+const CONFIRM_DELETE_TEXT = 'EXCLUIR'
 
 export async function loader({ context, params }: Route.LoaderArgs) {
   if (!context.currentUser) return redirect('/login')
@@ -35,6 +38,9 @@ function getInitials(name: string) {
 export default function Route({ loaderData }: Route.ComponentProps) {
   const { user, currentUser } = loaderData
   const isAdmin = currentUser.role === Role.ADMIN
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const canDeleteUser = isAdmin && currentUser.id !== user.id
 
   return (
     <>
@@ -144,6 +150,28 @@ export default function Route({ loaderData }: Route.ComponentProps) {
               </section>
             )}
 
+            {/* Excluir usuário (apenas ADMIN, não pode excluir a si mesmo) */}
+            {canDeleteUser && (
+              <section className="rounded-2xl border border-red-200 bg-red-50/50 p-6 shadow-sm dark:border-red-900/50 dark:bg-red-950/20">
+                <h2 className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-red-700 dark:text-red-400">
+                  Zona de perigo
+                </h2>
+                <p className="mb-4 text-sm text-red-600 dark:text-red-300">
+                  Excluir este usuário é irreversível. Todos os dados associados serão removidos.
+                </p>
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setShowDeleteModal(true)
+                    setDeleteConfirmText('')
+                  }}
+                  className="border-red-300 bg-red-600 text-white hover:bg-red-700 dark:border-red-800 dark:bg-red-700 dark:hover:bg-red-800"
+                >
+                  Excluir usuário
+                </Button>
+              </section>
+            )}
+
             {/* Ações */}
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
               <LinkButton
@@ -159,6 +187,58 @@ export default function Route({ loaderData }: Route.ComponentProps) {
               </Button>
             </div>
           </Form>
+
+          {/* Modal de confirmação de exclusão */}
+          {showDeleteModal && canDeleteUser && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+              onClick={() => setShowDeleteModal(false)}
+            >
+              <div
+                className="max-w-md rounded-2xl border border-foreground/10 bg-background p-6 shadow-xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3 className="font-brand text-xl text-red-600 dark:text-red-400">
+                  Excluir usuário?
+                </h3>
+                <p className="mt-3 text-foreground/80">
+                  Esta ação é irreversível. Para confirmar, digite{' '}
+                  <strong className="font-mono">{CONFIRM_DELETE_TEXT}</strong>{' '}
+                  abaixo:
+                </p>
+                <Form method="post" className="mt-4 space-y-4">
+                  <input type="hidden" name="intent" value="delete-user" />
+                  <input
+                    type="text"
+                    name="confirmDelete"
+                    value={deleteConfirmText}
+                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                    placeholder={CONFIRM_DELETE_TEXT}
+                    className="w-full rounded-xl border border-foreground/20 bg-background px-4 py-3 font-mono uppercase placeholder:normal-case placeholder:text-foreground/40 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                    autoComplete="off"
+                  />
+                  <div className="flex gap-3">
+                    <Button
+                      type="button"
+                      styleType="secondary"
+                      onClick={() => setShowDeleteModal(false)}
+                      className="flex-1"
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={deleteConfirmText !== CONFIRM_DELETE_TEXT}
+                      className="flex-1 bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:hover:bg-red-600"
+                      onClick={() => setShowDeleteModal(false)}
+                    >
+                      Excluir
+                    </Button>
+                  </div>
+                </Form>
+              </div>
+            </div>
+          )}
         </div>
       </Center>
     </>
@@ -173,6 +253,42 @@ export async function action({ context, request, params }: Route.ActionArgs) {
   }
 
   const formData = await request.formData()
+  const intent = formData.get('intent') as string | null
+
+  if (intent === 'delete-user') {
+    if (context.currentUser.role !== Role.ADMIN) {
+      return data({ error: 'Apenas administradores podem excluir usuários' })
+    }
+    const userId = Number(params.userId)
+    if (context.currentUser.id === userId) {
+      return data({ error: 'Você não pode excluir sua própria conta' })
+    }
+    const confirmDelete = (formData.get('confirmDelete') as string)?.trim()
+    if (confirmDelete !== CONFIRM_DELETE_TEXT) {
+      return data({
+        error: `Digite ${CONFIRM_DELETE_TEXT} para confirmar a exclusão`,
+      })
+    }
+
+    await context.prisma.$transaction(async (tx) => {
+      const tournamentPlayerIds = (
+        await tx.tournamentPlayer.findMany({
+          where: { userId },
+          select: { id: true },
+        })
+      ).map((p) => p.id)
+      if (tournamentPlayerIds.length > 0) {
+        await tx.matchResult.deleteMany({
+          where: { playerId: { in: tournamentPlayerIds } },
+        })
+      }
+      await tx.tournamentPlayer.deleteMany({ where: { userId } })
+      await tx.eventParticipant.deleteMany({ where: { userId } })
+      await tx.user.delete({ where: { id: userId } })
+    })
+
+    return redirect('/users')
+  }
 
   const user = await context.prisma.user.update({
     where: { id: Number(params.userId) },

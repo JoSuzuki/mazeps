@@ -1,5 +1,41 @@
 import Center from '~/components/center/center.component'
 
+const ICON_CLASS = 'h-8 w-8 shrink-0 text-foreground/60'
+
+function HistoryIcon() {
+  return (
+    <svg className={ICON_CLASS} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+      <path d="M8 7h8" />
+      <path d="M8 11h8" />
+    </svg>
+  )
+}
+
+function UsersIcon() {
+  return (
+    <svg className={ICON_CLASS} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  )
+}
+
+function ShareIcon() {
+  return (
+    <svg className={ICON_CLASS} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="18" cy="5" r="3" />
+      <circle cx="6" cy="12" r="3" />
+      <circle cx="18" cy="19" r="3" />
+      <line x1="8.59" x2="15.42" y1="13.51" y2="17.49" />
+      <line x1="15.41" x2="8.59" y1="6.51" y2="10.49" />
+    </svg>
+  )
+}
+
 const TEAM = [
   {
     name: 'Pietro Coelho',
@@ -121,7 +157,8 @@ export default function Route() {
 
       {/* Nossa Historia */}
       <section className="mb-12">
-        <h2 className="font-brand mb-6 text-3xl tracking-wide">
+        <h2 className="font-brand mb-6 flex items-center gap-3 text-3xl tracking-wide">
+          <HistoryIcon />
           Nossa História Desde 2020
         </h2>
         <div className="border-foreground/10 space-y-4 border-l-2 pl-5">
@@ -153,7 +190,10 @@ export default function Route() {
 
       {/* A Equipe */}
       <section className="mb-12">
-        <h2 className="font-brand mb-6 text-3xl tracking-wide">A Equipe</h2>
+        <h2 className="font-brand mb-6 flex items-center gap-3 text-3xl tracking-wide">
+          <UsersIcon />
+          A Equipe
+        </h2>
         <ul className="flex flex-col gap-10 md:grid md:grid-cols-2 md:gap-8 lg:grid-cols-3">
           {TEAM.map((member) => (
             <li
@@ -203,7 +243,8 @@ export default function Route() {
 
       {/* Redes Sociais */}
       <section>
-        <h2 className="font-brand mb-6 text-3xl tracking-wide">
+        <h2 className="font-brand mb-6 flex items-center gap-3 text-3xl tracking-wide">
+          <ShareIcon />
           Redes Sociais
         </h2>
         <div className="flex flex-wrap gap-3">
