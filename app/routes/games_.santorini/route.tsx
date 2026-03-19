@@ -24,14 +24,15 @@ export default function Route({}: Route.ComponentProps) {
 
     socket.on('connect', () => {
       console.log('Connected to server')
+      setError(null)
     })
 
-    socket.on('connect_error', (error) => {
-      setError(error.message)
+    socket.on('connect_error', (err) => {
+      setError(err.message)
     })
 
-    socket.on('disconnect', (reason, description) => {
-      console.log('Disconnected from server', reason, description)
+    socket.on('disconnect', (reason) => {
+      console.log('Disconnected from server', reason)
     })
 
     return () => {

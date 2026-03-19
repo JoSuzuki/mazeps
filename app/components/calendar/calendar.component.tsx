@@ -29,11 +29,11 @@ function MonthCard({ year, month, today }: { year: number; month: number; today:
   const cells = [...blanks, ...days]
 
   return (
-    <div className="bg-background border-foreground/10 w-64 rounded-2xl border p-4 shadow-lg">
+    <div className="bg-background border-foreground/10 flex min-h-[280px] w-64 flex-col rounded-2xl border p-4 shadow-lg">
       <p className="font-brand mb-3 text-center text-lg tracking-wide">
         {MONTHS_PT[month]} {year}
       </p>
-      <div className="grid grid-cols-7 gap-y-1 text-center">
+      <div className="grid min-h-[200px] flex-1 grid-cols-7 content-start gap-y-1 text-center">
         {DAYS_PT.map((d) => (
           <span key={d} className="text-foreground/40 pb-1 text-xs font-medium">
             {d}
@@ -87,49 +87,44 @@ const Calendar = () => {
   const currentMonthRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
-    // No mobile, garantimos que Março (mês atual) apareça primeiro no viewport
+    // No mobile, centraliza o mês atual no slider
     currentMonthRef.current?.scrollIntoView({
       behavior: 'auto',
-      inline: 'start',
+      inline: 'center',
       block: 'nearest',
     })
   }, [])
 
   return (
-    <div className="mx-auto mt-10 max-w-2xl px-4 sm:px-6">
+    <div className="mx-auto mt-10 max-w-5xl px-4 sm:px-6">
       <h2 className="font-brand mb-4 text-center text-2xl tracking-wide sm:mb-6 sm:text-3xl">
         Próximos Eventos
       </h2>
 
-      {/* Mobile: carrossel horizontal com os três meses lado a lado */}
+      {/* Mobile: carrossel horizontal com o mês atual centralizado */}
       <div className="sm:hidden">
-        <div className="flex gap-4 overflow-x-auto pb-2">
-          <div className="shrink-0 scale-95">
+        <div className="flex gap-4 overflow-x-auto pb-2 scroll-smooth">
+          <div className="shrink-0">
             <MonthCard year={prev.year} month={prev.month} today={today} />
           </div>
           <div ref={currentMonthRef} className="shrink-0">
             <MonthCard year={year} month={month} today={today} />
           </div>
-          <div className="shrink-0 scale-95">
+          <div className="shrink-0">
             <MonthCard year={next.year} month={next.month} today={today} />
           </div>
         </div>
       </div>
 
-      {/* Tablet/Desktop: layout original com meses sobrepostos */}
-      <div className="relative hidden h-80 items-center justify-center sm:flex">
-        {/* Previous month */}
-        <div className="absolute left-4 z-0 -translate-y-2 scale-90 origin-left opacity-40">
+      {/* Tablet/Desktop: três meses na mesma linha, mesmo tamanho */}
+      <div className="hidden sm:flex sm:flex-wrap sm:items-stretch sm:justify-center sm:gap-6">
+        <div className="flex shrink-0 flex-col">
           <MonthCard year={prev.year} month={prev.month} today={today} />
         </div>
-
-        {/* Current month */}
-        <div className="relative z-10">
+        <div className="flex shrink-0 flex-col">
           <MonthCard year={year} month={month} today={today} />
         </div>
-
-        {/* Next month */}
-        <div className="absolute right-4 z-0 translate-y-2 scale-90 origin-right opacity-40">
+        <div className="flex shrink-0 flex-col">
           <MonthCard year={next.year} month={next.month} today={today} />
         </div>
       </div>

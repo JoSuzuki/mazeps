@@ -281,32 +281,36 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                 {loaderData.users.map((user) => (
                   <div
                     key={user.id}
-                    className="hover:bg-foreground/5 flex items-center justify-between gap-4 px-6 py-4 transition-colors"
+                    className="hover:bg-foreground/5 flex gap-3 px-6 py-4 transition-colors"
                   >
-                    <Link
-                      to={`/users/${user.id}`}
-                      viewTransition
-                      className="flex min-w-0 flex-1 items-center gap-3"
-                    >
-                      <UserAvatar user={user} size="md" />
-                      <div className="min-w-0">
-                        <p className="truncate font-medium">{user.name}</p>
-                        <p className="text-foreground/50 truncate text-sm">
-                          @{user.nickname}
-                        </p>
-                      </div>
-                    </Link>
-                    <div className="flex shrink-0 items-center gap-2">
+                    <div className="flex flex-col items-center gap-2">
+                      <Link to={`/users/${user.id}`} viewTransition>
+                        <UserAvatar user={user} size="md" />
+                      </Link>
                       <span className="rounded-full border border-foreground/20 bg-foreground/5 px-2 py-0.5 text-xs font-medium uppercase">
                         {user.role}
                       </span>
-                      <LinkButton
-                        styleType="secondary"
-                        to={`/users/${user.id}/edit`}
-                        className="text-xs"
+                    </div>
+                    <div className="flex min-w-0 flex-1 flex-col justify-between gap-2">
+                      <Link
+                        to={`/users/${user.id}`}
+                        viewTransition
+                        className="min-w-0"
                       >
-                        Editar
-                      </LinkButton>
+                        <p className="line-clamp-2 font-medium">{user.name}</p>
+                        <p className="text-foreground/50 line-clamp-1 text-sm">
+                          @{user.nickname}
+                        </p>
+                      </Link>
+                      <div className="flex justify-end">
+                        <LinkButton
+                          styleType="secondary"
+                          to={`/users/${user.id}/edit`}
+                          className="shrink-0 text-xs"
+                        >
+                          Editar
+                        </LinkButton>
+                      </div>
                     </div>
                   </div>
                 ))}
