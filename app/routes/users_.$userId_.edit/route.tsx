@@ -206,7 +206,11 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                   <strong className="font-mono">{CONFIRM_DELETE_TEXT}</strong>{' '}
                   abaixo:
                 </p>
-                <Form method="post" className="mt-4 space-y-4">
+                <Form
+                  method="post"
+                  action={`/users/${user.id}/edit`}
+                  className="mt-4 space-y-4"
+                >
                   <input type="hidden" name="intent" value="delete-user" />
                   <input
                     type="text"
@@ -230,7 +234,6 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                       type="submit"
                       disabled={deleteConfirmText !== CONFIRM_DELETE_TEXT}
                       className="flex-1 bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:hover:bg-red-600"
-                      onClick={() => setShowDeleteModal(false)}
                     >
                       Excluir
                     </Button>
@@ -263,7 +266,7 @@ export async function action({ context, request, params }: Route.ActionArgs) {
     if (context.currentUser.id === userId) {
       return data({ error: 'Você não pode excluir sua própria conta' })
     }
-    const confirmDelete = (formData.get('confirmDelete') as string)?.trim()
+    const confirmDelete = (formData.get('confirmDelete') as string)?.trim().toUpperCase()
     if (confirmDelete !== CONFIRM_DELETE_TEXT) {
       return data({
         error: `Digite ${CONFIRM_DELETE_TEXT} para confirmar a exclusão`,
