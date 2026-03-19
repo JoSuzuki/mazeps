@@ -1,12 +1,33 @@
 import { data, Form, redirect } from 'react-router'
 import type { Route } from './+types/route'
+import BackButtonPortal from '~/components/back-button-portal/back-button-portal.component'
 import Center from '~/components/center/center.component'
 import EnigmaPhaseForm from '~/components/enigma-phase-form/enigma-phase-form.component'
-import Link from '~/components/link/link.component'
-import Spacer from '~/components/spacer/spacer.component'
 import { saveUploadedFile } from '~/lib/upload'
 import { toYouTubeEmbedUrl } from '~/lib/youtube'
 import { Role } from '~/generated/prisma/enums'
+
+const ICON_CLASS = 'h-5 w-5 shrink-0 text-foreground/50'
+
+function PencilIcon() {
+  return (
+    <svg className={ICON_CLASS} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+    </svg>
+  )
+}
+
+function TrashIcon() {
+  return (
+    <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 6h18" />
+      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+      <line x1="10" x2="10" y1="11" y2="17" />
+      <line x1="14" x2="14" y1="11" y2="17" />
+    </svg>
+  )
+}
 
 export async function loader({ context, params }: Route.LoaderArgs) {
   if (!context.currentUser) return redirect('/login')
@@ -39,6 +60,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 
   const order = Number(formData.get('order'))
   const title = formData.get('title') as string
+  const pageTitle = (formData.get('pageTitle') as string) || null
   const mediaType = formData.get('mediaType') as string
   const uploadedFile = formData.get('mediaFile')
   const rawMediaUrl = (formData.get('mediaUrl') as string) || null
@@ -69,6 +91,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     data: {
       order,
       title,
+      pageTitle,
       mediaType: mediaType as any,
       mediaUrl,
       imageFile,
@@ -88,46 +111,62 @@ export default function Route({ loaderData }: Route.ComponentProps) {
 
   return (
     <>
-      <div className="px-6 py-2">
-        <Link to={`/enigmas/${phase.enigma.slug}/edit`} viewTransition>
-          ← Voltar
-        </Link>
-      </div>
+      <BackButtonPortal to={`/enigmas/${phase.enigma.slug}/edit`} />
       <Center>
-        <h1 className="flex justify-center text-lg">
-          Editar fase {phase.order} — {phase.enigma.name}
-        </h1>
-        <Spacer size="md" />
-        <Form method="post" encType="multipart/form-data">
-          <input type="hidden" name="intent" value="update" />
-          <EnigmaPhaseForm
-            defaultValues={{
-              order: phase.order,
-              title: phase.title,
-              mediaType: phase.mediaType,
-              mediaUrl: phase.mediaUrl,
-              imageFile: phase.imageFile,
-              imageAlt: phase.imageAlt,
-              phrase: phase.phrase,
-              answer: phase.answer,
-              tipPhrase: phase.tipPhrase,
-            }}
-            submitLabel="Salvar"
-          />
-        </Form>
-        <Spacer size="lg" />
-        <Form method="post">
-          <input type="hidden" name="intent" value="delete" />
-          <button
-            type="submit"
-            className="cursor-pointer text-red-500 hover:underline"
-            onClick={(e) => {
-              if (!confirm('Remover esta fase permanentemente?')) e.preventDefault()
-            }}
-          >
-            Remover fase
-          </button>
-        </Form>
+        <div className="mx-auto max-w-2xl px-6 py-10">
+          <header className="mb-8">
+            <h1 className="font-brand flex items-center gap-2 text-2xl tracking-wide">
+              <PencilIcon />
+              Editar fase {phase.order}
+            </h1>
+            <p className="mt-1 text-sm uppercase tracking-[0.2em] text-foreground/50">
+              {phase.enigma.name}
+            </p>
+          </header>
+
+          <section className="mb-8 overflow-hidden rounded-2xl border border-foreground/10 bg-background/60 p-6 shadow-sm">
+            <Form method="post" encType="multipart/form-data">
+              <input type="hidden" name="intent" value="update" />
+              <EnigmaPhaseForm
+                defaultValues={{
+                  order: phase.order,
+                  title: phase.title,
+                  pageTitle: phase.pageTitle,
+                  mediaType: phase.mediaType,
+                  mediaUrl: phase.mediaUrl,
+                  imageFile: phase.imageFile,
+                  imageAlt: phase.imageAlt,
+                  phrase: phase.phrase,
+                  answer: phase.answer,
+                  tipPhrase: phase.tipPhrase,
+                }}
+                submitLabel="Salvar alterações"
+              />
+            </Form>
+          </section>
+
+          <section className="rounded-2xl border border-red-200 bg-red-50/50 p-6 shadow-sm dark:border-red-900/50 dark:bg-red-950/20">
+            <h2 className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-red-700 dark:text-red-400">
+              Zona de perigo
+            </h2>
+            <p className="mb-4 text-sm text-red-600 dark:text-red-300">
+              Remover esta fase é irreversível.
+            </p>
+            <Form method="post">
+              <input type="hidden" name="intent" value="delete" />
+              <button
+                type="submit"
+                className="flex items-center gap-2 rounded-lg border border-red-300 bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 dark:border-red-800 dark:bg-red-700 dark:hover:bg-red-800"
+                onClick={(e) => {
+                  if (!confirm('Remover esta fase permanentemente?')) e.preventDefault()
+                }}
+              >
+                <TrashIcon />
+                Remover fase
+              </button>
+            </Form>
+          </section>
+        </div>
       </Center>
     </>
   )

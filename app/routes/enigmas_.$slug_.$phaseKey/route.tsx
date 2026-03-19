@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { data, redirect, useFetcher } from 'react-router'
 import type { Route } from './+types/route'
-import Center from '~/components/center/center.component'
 import Link from '~/components/link/link.component'
-import Spacer from '~/components/spacer/spacer.component'
+import ParabensCelebration from '~/components/parabens-celebration/parabens-celebration.component'
 import { MediaType, Role } from '~/generated/prisma/enums'
 
 function normalize(str: string) {
@@ -19,6 +18,11 @@ export async function loader({ context, params }: Route.LoaderArgs) {
   })
 
   if (!enigma) throw new Response('Not Found', { status: 404 })
+
+  const isAdmin = context.currentUser?.role === Role.ADMIN
+  if (!isAdmin && !enigma.published) {
+    throw new Response('Not Found', { status: 404 })
+  }
 
   // Congratulations screen
   if (phaseKey === 'parabens') {
@@ -50,6 +54,15 @@ export async function loader({ context, params }: Route.LoaderArgs) {
   }
 }
 
+export function meta({ data }: Route.MetaArgs) {
+  if (!data) return [{ title: 'Mazeps' }]
+  if (data.isFinished) {
+    return [{ title: `Parabéns - ${data.enigma.name} | Mazeps` }]
+  }
+  const title = data.phase?.pageTitle ?? data.phase?.title ?? data.enigma.name
+  return [{ title: `${title} | Mazeps` }]
+}
+
 export async function action({ request, context, params }: Route.ActionArgs) {
   const { slug, phaseKey } = params
 
@@ -59,6 +72,11 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   })
 
   if (!enigma) throw new Response('Not Found', { status: 404 })
+
+  const isAdmin = context.currentUser?.role === Role.ADMIN
+  if (!isAdmin && !enigma.published) {
+    throw new Response('Not Found', { status: 404 })
+  }
 
   let phase = null
   if (phaseKey === 'comecar') {
@@ -107,21 +125,16 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
     }
   }, [fetcher.data])
 
+  // Limpar caixa de resposta ao mudar de fase
+  useEffect(() => {
+    if (answerRef.current) {
+      answerRef.current.value = ''
+      setInputLength(0)
+    }
+  }, [loaderData.phase?.id])
+
   if (loaderData.isFinished) {
-    return (
-      <Center>
-        <Spacer size="lg" />
-        <h1 className="flex justify-center text-2xl font-bold">Parabéns! 🎉</h1>
-        <Spacer size="md" />
-        <p className="text-center opacity-70">
-          Você completou o enigma <strong>{loaderData.enigma.name}</strong>!
-        </p>
-        <Spacer size="lg" />
-        <Link to="/enigmas" viewTransition>
-          ← Ver todos os enigmas
-        </Link>
-      </Center>
-    )
+    return <ParabensCelebration enigmaName={loaderData.enigma.name} />
   }
 
   const { phase } = loaderData

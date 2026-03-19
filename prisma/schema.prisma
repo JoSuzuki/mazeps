@@ -196,6 +196,7 @@ model Enigma {
   updatedAt DateTime      @updatedAt
   name      String
   slug      String        @unique
+  published Boolean       @default(false)
   phases    EnigmaPhase[]
 }
 
@@ -207,6 +208,7 @@ model EnigmaPhase {
   enigmaId  Int
   order     Int
   title     String
+  pageTitle String?
   mediaType MediaType @default(NONE)
   mediaUrl  String?
   imageFile String?
