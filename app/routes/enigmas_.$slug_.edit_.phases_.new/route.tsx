@@ -1,12 +1,22 @@
 import { data, Form, redirect } from 'react-router'
 import type { Route } from './+types/route'
+import BackButtonPortal from '~/components/back-button-portal/back-button-portal.component'
 import Center from '~/components/center/center.component'
 import EnigmaPhaseForm from '~/components/enigma-phase-form/enigma-phase-form.component'
-import Link from '~/components/link/link.component'
-import Spacer from '~/components/spacer/spacer.component'
 import { saveUploadedFile } from '~/lib/upload'
 import { toYouTubeEmbedUrl } from '~/lib/youtube'
 import { Role } from '~/generated/prisma/enums'
+
+const ICON_CLASS = 'h-5 w-5 shrink-0 text-foreground/50'
+
+function PlusIcon() {
+  return (
+    <svg className={ICON_CLASS} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 12h14" />
+      <path d="M12 5v14" />
+    </svg>
+  )
+}
 
 export async function loader({ context, params }: Route.LoaderArgs) {
   if (!context.currentUser) return redirect('/login')
@@ -32,6 +42,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   const formData = await request.formData()
   const order = Number(formData.get('order'))
   const title = formData.get('title') as string
+  const pageTitle = (formData.get('pageTitle') as string) || null
   const mediaType = formData.get('mediaType') as string
   const uploadedFile = formData.get('mediaFile')
   const rawMediaUrl = (formData.get('mediaUrl') as string) || null
@@ -54,6 +65,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       enigmaId: enigma.id,
       order,
       title,
+      pageTitle,
       mediaType: mediaType as any,
       mediaUrl,
       imageFile,
@@ -72,22 +84,28 @@ export default function Route({ loaderData }: Route.ComponentProps) {
 
   return (
     <>
-      <div className="px-6 py-2">
-        <Link to={`/enigmas/${loaderData.enigma.slug}/edit`} viewTransition>
-          ← Voltar
-        </Link>
-      </div>
+      <BackButtonPortal to={`/enigmas/${loaderData.enigma.slug}/edit`} />
       <Center>
-        <h1 className="flex justify-center text-lg">
-          Nova fase — {loaderData.enigma.name}
-        </h1>
-        <Spacer size="md" />
-        <Form method="post" encType="multipart/form-data">
-          <EnigmaPhaseForm
-            defaultValues={{ order: nextOrder }}
-            submitLabel="Criar fase"
-          />
-        </Form>
+        <div className="mx-auto max-w-2xl px-6 py-10">
+          <header className="mb-8">
+            <h1 className="font-brand flex items-center gap-2 text-2xl tracking-wide">
+              <PlusIcon />
+              Nova fase
+            </h1>
+            <p className="mt-1 text-sm uppercase tracking-[0.2em] text-foreground/50">
+              {loaderData.enigma.name}
+            </p>
+          </header>
+
+          <section className="overflow-hidden rounded-2xl border border-foreground/10 bg-background/60 p-6 shadow-sm">
+            <Form method="post" encType="multipart/form-data">
+              <EnigmaPhaseForm
+                defaultValues={{ order: nextOrder }}
+                submitLabel="Criar fase"
+              />
+            </Form>
+          </section>
+        </div>
       </Center>
     </>
   )

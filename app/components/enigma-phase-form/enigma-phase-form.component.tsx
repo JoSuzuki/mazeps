@@ -10,6 +10,7 @@ interface EnigmaPhaseFormProps {
   defaultValues?: {
     order?: number
     title?: string
+    pageTitle?: string | null
     mediaType?: MediaType
     mediaUrl?: string | null
     imageFile?: string | null
@@ -62,6 +63,16 @@ export default function EnigmaPhaseForm({
         type="text"
         required={true}
         defaultValue={defaultValues?.title}
+      />
+      <Spacer size="sm" />
+
+      <TextInput
+        id="pageTitle"
+        name="pageTitle"
+        label="Aba do Navegador"
+        type="text"
+        required={false}
+        defaultValue={defaultValues?.pageTitle ?? ''}
       />
       <Spacer size="sm" />
 
@@ -169,7 +180,7 @@ export default function EnigmaPhaseForm({
       )}
 
       <label className="block" htmlFor="phrase">
-        Frase abaixo da mídia
+        Dica Principal
       </label>
       <textarea
         id="phrase"
@@ -184,7 +195,7 @@ export default function EnigmaPhaseForm({
       <TextInput
         id="answer"
         name="answer"
-        label="Resposta correta"
+        label="Resposta"
         type="text"
         required={true}
         defaultValue={defaultValues?.answer}
@@ -192,7 +203,7 @@ export default function EnigmaPhaseForm({
       <Spacer size="sm" />
 
       <label className="block" htmlFor="tipPhrase">
-        Frase de dica (opcional)
+        Dica Extra (opcional)
       </label>
       <textarea
         id="tipPhrase"

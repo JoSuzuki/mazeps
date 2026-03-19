@@ -1,12 +1,79 @@
 import { data, Form, redirect, useFetcher } from 'react-router'
 import type { Route } from './+types/route'
+import BackButtonPortal from '~/components/back-button-portal/back-button-portal.component'
 import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
 import Link from '~/components/link/link.component'
 import LinkButton from '~/components/link-button/link-button.component'
-import Spacer from '~/components/spacer/spacer.component'
 import TextInput from '~/components/text-input/text-input.component'
 import { Role } from '~/generated/prisma/enums'
+
+const ICON_CLASS = 'h-5 w-5 shrink-0 text-foreground/50'
+
+function InfoIcon() {
+  return (
+    <svg className={ICON_CLASS} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 16v-4" />
+      <path d="M12 8h.01" />
+    </svg>
+  )
+}
+
+function LayersIcon() {
+  return (
+    <svg className={ICON_CLASS} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z" />
+      <path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65" />
+      <path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65" />
+    </svg>
+  )
+}
+
+function PencilIcon() {
+  return (
+    <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+    </svg>
+  )
+}
+
+function PlusIcon() {
+  return (
+    <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 12h14" />
+      <path d="M12 5v14" />
+    </svg>
+  )
+}
+
+function TrashIcon() {
+  return (
+    <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 6h18" />
+      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+      <line x1="10" x2="10" y1="11" y2="17" />
+      <line x1="14" x2="14" y1="11" y2="17" />
+    </svg>
+  )
+}
+
+function PlayIcon() {
+  return (
+    <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="5 3 19 12 5 21 5 3" />
+    </svg>
+  )
+}
+
+function ChevronRightIcon() {
+  return (
+    <svg className="h-4 w-4 text-foreground/40" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m9 18 6-6-6-6" />
+    </svg>
+  )
+}
 
 export async function loader({ context, params }: Route.LoaderArgs) {
   if (!context.currentUser) return redirect('/login')
@@ -31,9 +98,10 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   if (intent === 'update') {
     const name = formData.get('name') as string
     const slug = (formData.get('slug') as string).toLowerCase().trim()
+    const published = formData.get('published') === 'on'
     await context.prisma.enigma.update({
       where: { slug: params.slug },
-      data: { name, slug },
+      data: { name, slug, published },
     })
     return redirect(`/enigmas/${slug}/edit`)
   }
@@ -54,117 +122,174 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 
 export default function Route({ loaderData }: Route.ComponentProps) {
   const fetcher = useFetcher()
+  const { enigma } = loaderData
 
   return (
     <>
-      <div className="px-6 py-2">
-        <Link to="/enigmas" viewTransition>
-          ← Voltar
-        </Link>
-      </div>
+      <BackButtonPortal to="/enigmas" />
       <Center>
-        <h1 className="flex justify-center text-lg">
-          Gerenciar: {loaderData.enigma.name}
-        </h1>
-        <Spacer size="lg" />
+        <div className="mx-auto max-w-2xl px-6 py-10">
+          {/* Header */}
+          <header className="mb-8">
+            <h1 className="font-brand text-2xl tracking-wide">
+              Gerenciar enigma
+            </h1>
+            <p className="mt-1 text-sm uppercase tracking-[0.2em] text-foreground/50">
+              {enigma.name}
+            </p>
+          </header>
 
-        <h2 className="font-semibold">Informações</h2>
-        <Spacer size="sm" />
-        <Form method="post">
-          <input type="hidden" name="intent" value="update" />
-          <TextInput
-            id="name"
-            name="name"
-            label="Nome"
-            type="text"
-            required={true}
-            defaultValue={loaderData.enigma.name}
-          />
-          <Spacer size="sm" />
-          <TextInput
-            id="slug"
-            name="slug"
-            label="Slug"
-            type="text"
-            required={true}
-            defaultValue={loaderData.enigma.slug}
-          />
-          <Spacer size="sm" />
-          <Button type="submit">Salvar</Button>
-        </Form>
-
-        <Spacer size="lg" />
-        <div className="flex items-center justify-between">
-          <h2 className="font-semibold">Fases</h2>
-          <LinkButton
-            styleType="secondary"
-            to={`/enigmas/${loaderData.enigma.slug}/edit/phases/new`}
-          >
-            + Adicionar fase
-          </LinkButton>
-        </div>
-        <Spacer size="sm" />
-
-        {loaderData.enigma.phases.length === 0 ? (
-          <p className="text-sm opacity-60">Nenhuma fase ainda.</p>
-        ) : (
-          <ul className="flex flex-col gap-3">
-            {loaderData.enigma.phases.map((phase, index) => (
-              <li
-                key={phase.id}
-                className="flex items-center justify-between gap-4 rounded-md border-1 p-3"
-              >
-                <div>
-                  <span className="text-sm opacity-60">
-                    Fase {phase.order}
-                    {index === 0 ? ' (entrada: comecar)' : ''}
+          {/* Informações */}
+          <section className="mb-8 rounded-2xl border border-foreground/10 bg-background/60 p-6 shadow-sm">
+            <h2 className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/60">
+              <InfoIcon />
+              Informações
+            </h2>
+            <Form method="post">
+              <input type="hidden" name="intent" value="update" />
+              <div className="space-y-5">
+                <TextInput
+                  id="name"
+                  name="name"
+                  label="Nome"
+                  type="text"
+                  required={true}
+                  defaultValue={enigma.name}
+                />
+                <TextInput
+                  id="slug"
+                  name="slug"
+                  label="Slug"
+                  type="text"
+                  required={true}
+                  defaultValue={enigma.slug}
+                />
+                <label className="flex cursor-pointer items-center gap-4 rounded-xl border-2 border-foreground/20 p-6 transition-colors hover:border-foreground/30 has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                  <input
+                    type="checkbox"
+                    name="published"
+                    defaultChecked={enigma.published}
+                    className="h-6 w-6 shrink-0 rounded border-2 border-foreground/30 accent-primary"
+                  />
+                  <span className="text-lg font-semibold uppercase tracking-wide">
+                    PUBLICADO
                   </span>
-                  <p className="font-medium">{phase.title}</p>
+                </label>
+                <div className="flex justify-end">
+                  <Button type="submit">Salvar alterações</Button>
                 </div>
-                <div className="flex gap-2">
-                  <Link
-                    to={`/enigmas/${loaderData.enigma.slug}/edit/phases/${phase.id}`}
-                    viewTransition
-                  >
-                    Editar
-                  </Link>
-                  <fetcher.Form method="post">
-                    <input type="hidden" name="intent" value="delete-phase" />
-                    <input type="hidden" name="phaseId" value={phase.id} />
-                    <button
-                      type="submit"
-                      className="cursor-pointer text-red-500 hover:underline"
-                      onClick={(e) => {
-                        if (!confirm('Remover esta fase?')) e.preventDefault()
-                      }}
-                    >
-                      Remover
-                    </button>
-                  </fetcher.Form>
+              </div>
+            </Form>
+          </section>
+
+          {/* Fases */}
+          <section className="mb-8 overflow-hidden rounded-2xl border border-foreground/10 bg-background/60 shadow-sm">
+            <div className="flex items-center justify-between border-b border-foreground/10 bg-foreground/5 px-6 py-4">
+              <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/60">
+                <LayersIcon />
+                Fases ({enigma.phases.length})
+              </h2>
+              <LinkButton
+                styleType="primary"
+                to={`/enigmas/${enigma.slug}/edit/phases/new`}
+                viewTransition
+                className="flex items-center gap-2"
+              >
+                <PlusIcon />
+                Adicionar fase
+              </LinkButton>
+            </div>
+            <div>
+              {enigma.phases.length === 0 ? (
+                <div className="px-6 py-12 text-center">
+                  <LayersIcon className="mx-auto mb-3 opacity-40" />
+                  <p className="text-sm text-foreground/50">
+                    Nenhuma fase ainda.
+                  </p>
+                  <p className="mt-1 text-sm text-foreground/40">
+                    Adicione a primeira fase acima.
+                  </p>
                 </div>
-              </li>
-            ))}
-          </ul>
-        )}
+              ) : (
+                <ul className="divide-y divide-foreground/10">
+                  {enigma.phases.map((phase, index) => (
+                    <li key={phase.id}>
+                      <div className="flex items-center justify-between gap-4 px-6 py-4 transition-colors hover:bg-foreground/5">
+                        <div className="min-w-0 flex-1">
+                          <span className="text-xs font-medium text-foreground/50">
+                            Fase {phase.order}
+                            {index === 0 ? ' (entrada)' : ''}
+                          </span>
+                          <p className="font-medium">{phase.title}</p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                          <Link
+                            to={`/enigmas/${enigma.slug}/edit/phases/${phase.id}`}
+                            viewTransition
+                            className="flex items-center gap-1.5 rounded-lg border border-foreground/20 px-3 py-2 text-sm font-medium transition-colors hover:bg-foreground/5"
+                          >
+                            <PencilIcon />
+                            Editar
+                          </Link>
+                          <fetcher.Form method="post">
+                            <input type="hidden" name="intent" value="delete-phase" />
+                            <input type="hidden" name="phaseId" value={phase.id} />
+                            <button
+                              type="submit"
+                              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                              onClick={(e) => {
+                                if (!confirm('Remover esta fase?')) e.preventDefault()
+                              }}
+                            >
+                              <TrashIcon />
+                              Remover
+                            </button>
+                          </fetcher.Form>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </section>
 
-        <Spacer size="lg" />
-        <Link to={`/enigmas/${loaderData.enigma.slug}/comecar`} viewTransition>
-          Testar enigma →
-        </Link>
+          {/* Testar enigma */}
+          <div className="mb-8">
+            <Link
+              to={`/enigmas/${enigma.slug}/comecar`}
+              viewTransition
+              className="flex items-center justify-center gap-2 rounded-xl border-2 border-primary bg-primary/10 px-6 py-4 font-semibold text-primary transition-colors hover:bg-primary/20"
+            >
+              <PlayIcon />
+              Testar enigma
+              <ChevronRightIcon />
+            </Link>
+          </div>
 
-        <Spacer size="lg" />
-        <Form method="post">
-          <input type="hidden" name="intent" value="delete-enigma" />
-          <button
-            type="submit"
-            className="cursor-pointer text-red-500 hover:underline text-sm"
-            onClick={(e) => {
-              if (!confirm(`Deletar o enigma "${loaderData.enigma.name}" permanentemente? Esta ação não pode ser desfeita.`)) e.preventDefault()
-            }}
-          >
-            Deletar enigma
-          </button>
-        </Form>
+          {/* Zona de perigo */}
+          <section className="rounded-2xl border border-red-200 bg-red-50/50 p-6 shadow-sm dark:border-red-900/50 dark:bg-red-950/20">
+            <h2 className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-red-700 dark:text-red-400">
+              Zona de perigo
+            </h2>
+            <p className="mb-4 text-sm text-red-600 dark:text-red-300">
+              Deletar o enigma é irreversível. Todas as fases e dados serão removidos.
+            </p>
+            <Form method="post">
+              <input type="hidden" name="intent" value="delete-enigma" />
+              <button
+                type="submit"
+                className="flex items-center gap-2 rounded-lg border border-red-300 bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 dark:border-red-800 dark:bg-red-700 dark:hover:bg-red-800"
+                onClick={(e) => {
+                  if (!confirm(`Deletar o enigma "${enigma.name}" permanentemente? Esta ação não pode ser desfeita.`)) e.preventDefault()
+                }}
+              >
+                <TrashIcon />
+                Deletar enigma
+              </button>
+            </Form>
+          </section>
+        </div>
       </Center>
     </>
   )
