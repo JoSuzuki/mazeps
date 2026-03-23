@@ -5,6 +5,8 @@ RUN npm ci
 
 FROM node:lts-alpine AS production-dependencies-env
 COPY ./package.json package-lock.json /app/
+# postinstall roda `prisma generate` — o schema precisa existir neste stage
+COPY ./prisma /app/prisma
 WORKDIR /app
 RUN npm ci --omit=dev
 
@@ -18,6 +20,7 @@ RUN npm run build
 FROM node:lts-alpine
 COPY ./package.json package-lock.json server.js /app/
 COPY --from=production-dependencies-env /app/node_modules /app/node_modules
+COPY --from=production-dependencies-env /app/app/generated/prisma /app/app/generated/prisma
 COPY --from=build-env /app/build /app/build
 COPY --from=build-env /app/prisma /app/prisma
 WORKDIR /app
