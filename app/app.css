@@ -291,3 +291,42 @@
   }
 }
 
+/* Apoiador: nome com brilho suave + estrela (SupporterNameDisplay) */
+@keyframes supporter-name-shine {
+  0%,
+  100% {
+    filter: brightness(1);
+    text-shadow:
+      0 0 10px color-mix(in srgb, currentColor 30%, transparent),
+      0 0 20px color-mix(in srgb, rgb(16 185 129) 22%, transparent);
+  }
+  50% {
+    filter: brightness(1.14);
+    text-shadow:
+      0 0 14px color-mix(in srgb, currentColor 42%, transparent),
+      0 0 26px color-mix(in srgb, rgb(52 211 153) 32%, transparent);
+  }
+}
+
+.supporter-name-glow {
+  text-shadow:
+    0 0 10px color-mix(in srgb, currentColor 32%, transparent),
+    0 0 18px color-mix(in srgb, rgb(16 185 129) 20%, transparent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .supporter-name-glow {
+    animation: supporter-name-shine 3.5s ease-in-out infinite;
+  }
+}
+
+.supporter-star-icon {
+  color: rgb(16 185 129);
+  filter: drop-shadow(0 0 5px rgb(52 211 153 / 0.55));
+}
+
+.dark .supporter-star-icon {
+  color: rgb(52 211 153);
+  filter: drop-shadow(0 0 6px rgb(16 185 129 / 0.45));
+}
+

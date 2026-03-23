@@ -219,6 +219,11 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                       Escritor
                     </span>
                   )}
+                  {user.isSupporter && (
+                    <span className="rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                      Apoiador
+                    </span>
+                  )}
                   <span className="text-foreground/40">#{user.id}</span>
                 </div>
               </div>

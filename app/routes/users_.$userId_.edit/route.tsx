@@ -146,6 +146,18 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                       Escritor (pode publicar no blog)
                     </span>
                   </label>
+                  <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-foreground/10 px-4 py-3 transition-colors hover:bg-foreground/5">
+                    <input
+                      type="checkbox"
+                      name="isSupporter"
+                      value="on"
+                      defaultChecked={user.isSupporter}
+                      className="h-4 w-4 rounded border-foreground/30"
+                    />
+                    <span className="text-sm">
+                      Apoiador (tag pública; sem funções extras por enquanto)
+                    </span>
+                  </label>
                 </div>
               </section>
             )}
@@ -302,6 +314,7 @@ export async function action({ context, request, params }: Route.ActionArgs) {
       ...(context.currentUser.role === Role.ADMIN && {
         role: formData.get('role') as Role,
         isWriter: formData.get('isWriter') === 'on',
+        isSupporter: formData.get('isSupporter') === 'on',
       }),
     },
   })

@@ -77,15 +77,24 @@ export default function Route({ loaderData, matches }: Route.ComponentProps) {
             Usuários
           </Link>
         )}
+        {loaderData.currentUser && (
+          <Link
+            to="/profile"
+            className="[view-transition-name:nav-profile] max-sm:hidden"
+            viewTransition
+          >
+            Meu Perfil
+          </Link>
+        )}
         {loaderData.currentUser ? (
-          <div className="ml-auto">
+          <div className="ml-auto text-sm text-foreground/90">
             Bem vindo,{' '}
             <Link to="/profile" styleType="solid" viewTransition>
               {loaderData.currentUser.nickname}
             </Link>
           </div>
         ) : (
-            <LinkButton className="ml-auto" to="/login" viewTransition>
+          <LinkButton className="ml-auto" to="/login" viewTransition>
             Login
           </LinkButton>
         )}
@@ -149,7 +158,7 @@ export default function Route({ loaderData, matches }: Route.ComponentProps) {
                   onClick={closeMenu}
                   viewTransition
                 >
-                  Perfil
+                  Meu Perfil
                 </Link>
               ) : (
                 <Link

@@ -8,11 +8,11 @@ if (!process.env.SESSION_SECRET) {
   throw new Error('SESSION_SECRET is not defined')
 }
 
-export interface PrismaCurrentUser extends Pick<User, 'id' | 'name' | 'nickname' | 'email' | 'updatedAt' | 'role' | 'isWriter'> {
+export interface PrismaCurrentUser extends Pick<User, 'id' | 'name' | 'nickname' | 'email' | 'updatedAt' | 'role' | 'isWriter' | 'isSupporter'> {
   password?: never;
 }
 
-export interface CurrentUser extends Pick<User, 'id' | 'name' | 'nickname' | 'email' | 'role' | 'isWriter'> {
+export interface CurrentUser extends Pick<User, 'id' | 'name' | 'nickname' | 'email' | 'role' | 'isWriter' | 'isSupporter'> {
   updatedAt: string
   password?: never;
 }
@@ -36,6 +36,7 @@ export const cookieUserFields = {
   updatedAt: true,
   role: true,
   isWriter: true,
+  isSupporter: true,
 };
 
 export const mapPrismaToCurrentUser = (user: PrismaCurrentUser): CurrentUser => ({
@@ -46,6 +47,7 @@ export const mapPrismaToCurrentUser = (user: PrismaCurrentUser): CurrentUser => 
   updatedAt: user.updatedAt.toISOString(),
   role: user.role,
   isWriter: user.isWriter,
+  isSupporter: user.isSupporter,
 })
 
 export const setSession = async (request: Request, user: PrismaCurrentUser) => {

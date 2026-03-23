@@ -29,6 +29,8 @@ export const socket = (io: Server) => {
       if (!currentUser) {
         return next(new Error('Não autorizado, por favor faça login'))
       }
+      currentUser.id = Number(currentUser.id)
+      currentUser.isSupporter = Boolean(currentUser.isSupporter)
       socket.data.currentUser = currentUser
       next()
     } catch (error) {
@@ -56,6 +58,7 @@ app.use(
       // A sessão é atualizada no login e ao editar perfil.
       if (currentUser) {
         currentUser.id = Number(currentUser.id)
+        currentUser.isSupporter = Boolean(currentUser.isSupporter)
       }
 
       return {

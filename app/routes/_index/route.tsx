@@ -1,3 +1,4 @@
+import { useEffect, useLayoutEffect } from 'react'
 import type { Route } from './+types/route'
 import Board from '~/components/board/board.component'
 import Calendar from '~/components/calendar/calendar.component'
@@ -5,6 +6,20 @@ import LinkButton from '~/components/link-button/link-button.component'
 import Title from '~/components/title/title.component'
 
 export default function Route({}: Route.ComponentProps) {
+  // Home sempre abre no topo (reload, link, etc.) — evita restaurar scroll no meio da página
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0)
+    document.documentElement.scrollTop = 0
+    document.body.scrollTop = 0
+  }, [])
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      window.scrollTo(0, 0)
+    })
+    return () => cancelAnimationFrame(id)
+  }, [])
+
   return (
     <>
       <div className="mb-4 flex justify-center px-4 sm:mb-6">
