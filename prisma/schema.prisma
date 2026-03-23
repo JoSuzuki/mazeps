@@ -29,6 +29,8 @@ model User {
   googleId String?
   role Role @default(USER)
   isWriter Boolean @default(false)
+  /// Tag “Apoiador” (sem permissões extras por enquanto; só exibição / futuras funções)
+  isSupporter Boolean @default(false)
   instagram String?
   avatarUrl String?
   ludopediaUrl String?
@@ -125,8 +127,13 @@ model EventParticipant {
   user        User     @relation(fields: [userId], references: [id])
   userId      Int
   checkedInAt DateTime @default(now())
+  /// Campeão destacado na página do evento (apenas eventos tipo GENERAL; vários permitidos)
+  isChampion  Boolean  @default(false)
+  /// Pódio do torneio: 1, 2 ou 3 — só eventos tipo TOURNAMENT; uma pessoa por posição por evento
+  tournamentPlace Int?
 
   @@unique([eventId, userId])
+  @@unique([eventId, tournamentPlace])
   @@index([eventId, userId])
 }
 

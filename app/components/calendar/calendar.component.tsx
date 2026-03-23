@@ -84,15 +84,22 @@ const Calendar = () => {
   const prev = { year: month === 0 ? year - 1 : year, month: month === 0 ? 11 : month - 1 }
   const next = { year: month === 11 ? year + 1 : year, month: month === 11 ? 0 : month + 1 }
 
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null)
   const currentMonthRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
-    // No mobile, centraliza o mês atual no slider
-    currentMonthRef.current?.scrollIntoView({
-      behavior: 'auto',
-      inline: 'center',
-      block: 'nearest',
-    })
+    // Centraliza o mês atual só no carrossel horizontal — scrollIntoView rolava a página inteira no mobile
+    const scroller = scrollContainerRef.current
+    const middle = currentMonthRef.current
+    if (!scroller || !middle) return
+
+    const scrollerRect = scroller.getBoundingClientRect()
+    const middleRect = middle.getBoundingClientRect()
+    const delta =
+      middleRect.left +
+      middleRect.width / 2 -
+      (scrollerRect.left + scrollerRect.width / 2)
+    scroller.scrollLeft += delta
   }, [])
 
   return (
@@ -103,7 +110,10 @@ const Calendar = () => {
 
       {/* Mobile: carrossel horizontal com o mês atual centralizado */}
       <div className="sm:hidden">
-        <div className="flex gap-4 overflow-x-auto pb-2 scroll-smooth">
+        <div
+          ref={scrollContainerRef}
+          className="flex gap-4 overflow-x-auto pb-2 scroll-smooth"
+        >
           <div className="shrink-0">
             <MonthCard year={prev.year} month={prev.month} today={today} />
           </div>

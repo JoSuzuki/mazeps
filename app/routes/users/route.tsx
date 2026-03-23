@@ -7,6 +7,7 @@ import LinkButton from '~/components/link-button/link-button.component'
 import Pagination from '~/components/pagination/pagination.component'
 import { Role } from '~/generated/prisma/enums'
 import { getAvatarUrl } from '~/lib/avatar'
+import SupporterNameDisplay from '~/components/supporter-name-display/supporter-name-display.component'
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   if (!context.currentUser) return redirect('/login')
@@ -240,13 +241,15 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                           <Link
                             to={`/users/${user.id}`}
                             viewTransition
-                            className="flex items-center gap-3"
+                            className="group flex items-center gap-3"
                           >
                             <UserAvatar user={user} size="sm" />
                             <div>
-                              <span className="font-medium hover:underline">
-                                {user.name}
-                              </span>
+                              <SupporterNameDisplay
+                                name={user.name}
+                                isSupporter={user.isSupporter}
+                                nameClassName="font-medium group-hover:underline"
+                              />
                               <p className="text-foreground/50 text-xs">
                                 @{user.nickname}
                               </p>
@@ -295,9 +298,14 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                       <Link
                         to={`/users/${user.id}`}
                         viewTransition
-                        className="min-w-0"
+                        className="group flex min-w-0 flex-col gap-0.5"
                       >
-                        <p className="line-clamp-2 font-medium">{user.name}</p>
+                        <SupporterNameDisplay
+                          name={user.name}
+                          isSupporter={user.isSupporter}
+                          className="line-clamp-2"
+                          nameClassName="font-medium group-hover:underline"
+                        />
                         <p className="text-foreground/50 line-clamp-1 text-sm">
                           @{user.nickname}
                         </p>
@@ -349,7 +357,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
         </pre>
       )}
       <p className="mt-4 text-sm text-gray-600">
-        Se o erro mencionar &quot;column does not exist&quot; ou &quot;isWriter&quot;, execute:{' '}
+        Se o erro mencionar &quot;column does not exist&quot;, &quot;isWriter&quot; ou &quot;isSupporter&quot;, execute:{' '}
         <code className="rounded bg-gray-100 px-1">npx prisma migrate dev</code>
       </p>
     </div>

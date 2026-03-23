@@ -17,6 +17,12 @@ const STATUS_LABELS: Record<TournamentStatus, string> = {
   [TournamentStatus.TOURNAMENT_FINISHED]: 'Torneio encerrado',
 }
 
+const PODIUM_LABELS: Record<number, string> = {
+  1: '1º Lugar',
+  2: '2º Lugar',
+  3: '3º Lugar',
+}
+
 const STATUS_STYLES: Record<TournamentStatus, string> = {
   [TournamentStatus.REGISTRATION_OPEN]: 'bg-green-100 text-green-800 border-green-200',
   [TournamentStatus.OPEN_ROUND]: 'bg-blue-100 text-blue-800 border-blue-200',
@@ -200,9 +206,12 @@ export async function loader({ context, params }: Route.LoaderArgs) {
             id: true,
             name: true,
             badgeFile: true,
+            participants: {
+              select: { userId: true, tournamentPlace: true },
+            },
           },
         },
-        players: { include: { user: { select: { nickname: true } } } },
+        players: { include: { user: { select: { id: true, nickname: true } } } },
         rounds: {
           include: {
             matches: {
@@ -272,6 +281,17 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
   )
 
   const event = loaderData.tournament.event
+
+  const podiumByUserId: Record<number, number> = Object.fromEntries(
+    (event?.participants ?? [])
+      .filter(
+        (p) =>
+          p.tournamentPlace != null &&
+          p.tournamentPlace >= 1 &&
+          p.tournamentPlace <= 3,
+      )
+      .map((p) => [p.userId, p.tournamentPlace!]),
+  )
 
   return (
     <>
@@ -434,16 +454,31 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
                             {rank.position}
                           </td>
                           <td className="py-3 pr-4">
-                            <Link
-                              to={`/tournaments/${params.tournamentId}/tournament-players/${rank.id}`}
-                              viewTransition
-                              className="font-medium hover:underline"
-                              style={{
-                                viewTransitionName: `tournament-player-${rank.id}`,
-                              }}
-                            >
-                              {rank.player.user.nickname}
-                            </Link>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <Link
+                                to={`/tournaments/${params.tournamentId}/tournament-players/${rank.id}`}
+                                viewTransition
+                                className="font-medium hover:underline"
+                                style={{
+                                  viewTransitionName: `tournament-player-${rank.id}`,
+                                }}
+                              >
+                                {rank.player.user.nickname}
+                              </Link>
+                              {podiumByUserId[rank.player.userId] != null && (
+                                <span
+                                  className={`inline-flex shrink-0 rounded-full border px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wide ${
+                                    podiumByUserId[rank.player.userId] === 1
+                                      ? 'border-amber-600/50 bg-amber-500/30 text-amber-950 dark:border-amber-400/50 dark:bg-amber-500/35 dark:text-amber-50'
+                                      : podiumByUserId[rank.player.userId] === 2
+                                        ? 'border-slate-500/50 bg-slate-300/45 text-slate-900 dark:border-slate-400/50 dark:bg-slate-600/40 dark:text-slate-100'
+                                        : 'border-orange-800/45 bg-orange-700/35 text-orange-950 dark:border-orange-600/50 dark:bg-orange-900/45 dark:text-orange-100'
+                                  }`}
+                                >
+                                  {PODIUM_LABELS[podiumByUserId[rank.player.userId]]}
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="py-3 pr-4 text-right font-semibold">
                             {rank.points}
