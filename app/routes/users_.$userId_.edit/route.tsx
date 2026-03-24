@@ -185,16 +185,26 @@ export default function Route({ loaderData }: Route.ComponentProps) {
             )}
 
             {/* Ações */}
-            <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-end">
+              {isAdmin && (
+                <LinkButton
+                  to={`/users/${user.id}/profile-preview`}
+                  styleType="secondary"
+                  className="order-3 w-full sm:order-1 sm:mr-auto sm:w-auto"
+                  viewTransition
+                >
+                  Ver perfil como utilizador
+                </LinkButton>
+              )}
               <LinkButton
                 to={`/users/${user.id}`}
                 styleType="secondary"
-                className="order-2 sm:order-1"
+                className="order-2 sm:order-2"
                 viewTransition
               >
                 Cancelar
               </LinkButton>
-              <Button type="submit" className="order-1 sm:order-2">
+              <Button type="submit" className="order-1 sm:order-3">
                 Salvar alterações
               </Button>
             </div>
