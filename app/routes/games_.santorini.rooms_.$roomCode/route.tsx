@@ -3,6 +3,7 @@ import { data, Form, redirect, useNavigate, useRevalidator } from 'react-router'
 import type { Route } from './+types/route'
 import Button from '~/components/button/button.component'
 import Spacer from '~/components/spacer/spacer.component'
+import SupporterNameDisplay from '~/components/supporter-name-display/supporter-name-display.component'
 import Table from '~/components/table/table.component'
 import { SantoriniRoomStatus } from '~/generated/prisma/enums'
 import type { Board } from '~/lib/santorini'
@@ -20,7 +21,9 @@ export const loader = async ({ context, params }: Route.LoaderArgs) => {
       },
     },
     include: {
-      players: { include: { user: { select: { id: true, nickname: true } } } },
+      players: {
+        include: { user: { select: { id: true, nickname: true, isSupporter: true } } },
+      },
     },
   })
 
@@ -88,7 +91,12 @@ export default function Route({
             {
               key: 'nickname',
               title: 'Nickname',
-              value: (player) => player.user.nickname,
+              value: (player) => (
+                <SupporterNameDisplay
+                  name={player.user.nickname}
+                  isSupporter={player.user.isSupporter}
+                />
+              ),
             },
             {
               key: 'actions',

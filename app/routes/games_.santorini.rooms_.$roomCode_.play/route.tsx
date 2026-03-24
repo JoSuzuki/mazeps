@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { redirect, useRevalidator } from 'react-router'
 import type { Route } from './+types/route'
 import Button from '~/components/button/button.component'
+import SupporterNameDisplay from '~/components/supporter-name-display/supporter-name-display.component'
 import Santorini from '~/components/santorini/santorini.component'
 import { SantoriniRoomStatus } from '~/generated/prisma/enums'
 import { applyActionsToGameState, getNextActionType } from '~/lib/santorini'
@@ -18,7 +19,9 @@ export const loader = async ({ context, params }: Route.LoaderArgs) => {
       roomCode: params.roomCode,
     },
     include: {
-      players: { include: { user: { select: { id: true, nickname: true } } } },
+      players: {
+        include: { user: { select: { id: true, nickname: true, isSupporter: true } } },
+      },
     },
   })
 
@@ -104,26 +107,21 @@ export default function Route({ loaderData }: Route.ComponentProps) {
     })
   }
 
-  const mapPlayerIdToNickname = loaderData.room.players.reduce(
-    (acc, player) => {
-      acc[player.id] = player.user.nickname
-      return acc
-    },
-    {} as Record<number, string>,
-  )
-
   const computedGameState = applyActionsToGameState(deepClone(gameState))
+  const winnerPlayer = loaderData.room.players.find((p) => p.winner)
 
   return (
     <div className="flex h-full flex-col">
       {gameFinished && (
         <h2 className="text-2xl font-bold">
           Vencedor:{' '}
-          {
-            mapPlayerIdToNickname[
-              loaderData.room.players.find((player) => player.winner)?.id!
-            ]
-          }
+          {winnerPlayer ? (
+            <SupporterNameDisplay
+              name={winnerPlayer.user.nickname}
+              isSupporter={winnerPlayer.user.isSupporter}
+              nameClassName="font-bold"
+            />
+          ) : null}
         </h2>
       )}
       <div className="flex w-full flex-1 flex-col px-4 pb-4">

@@ -565,7 +565,13 @@ export function ProfilePage({
                     isSupporter={currentUser.isSupporter}
                   />
                 </h1>
-                <p className="mt-1 text-foreground/60">@{currentUser.nickname}</p>
+                <p className="mt-1 text-foreground/60">
+                  <SupporterNameDisplay
+                    name={`@${currentUser.nickname}`}
+                    isSupporter={currentUser.isSupporter}
+                    nameClassName="text-foreground/60"
+                  />
+                </p>
                 <div className="mt-3 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
                   <span className="rounded-full bg-foreground/10 px-2.5 py-0.5 text-xs font-medium uppercase">
                     {currentUser.role}

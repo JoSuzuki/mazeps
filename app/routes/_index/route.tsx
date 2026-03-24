@@ -115,6 +115,36 @@ export default function Route({}: Route.ComponentProps) {
           </div>
         </div>
       </div>
+
+      <div className="mx-auto mt-8 max-w-5xl px-4 py-6 sm:mt-10 md:py-10">
+        <div className="relative">
+          <div className="border-foreground/10 bg-foreground/[0.02] relative z-0 overflow-visible rounded-2xl border px-4 py-3 sm:px-6 md:py-2.5 md:pl-8 md:pr-[11.5rem] lg:pr-[12rem]">
+            <p className="text-center text-lg font-medium leading-snug sm:text-xl md:max-w-xl md:text-left">
+              Gosta do nosso trabalho? Considere nos apoiar!
+            </p>
+          </div>
+          {/* Cobre a borda da caixa na região do círculo (fica atrás do botão, na cor do fundo) */}
+          <div
+            aria-hidden
+            className="bg-background pointer-events-none absolute z-20 hidden rounded-full md:block md:right-4 md:top-1/2 md:h-[10.95rem] md:w-[10.95rem] md:-translate-y-1/2 lg:right-5 lg:h-[11.7rem] lg:w-[11.7rem]"
+          />
+          <a
+            href="https://apoia.se/mazeps"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Apoiar o Mazeps no Apoia.se"
+            className="border-primary/45 from-primary/15 to-accent/10 text-foreground ring-background relative z-30 mx-auto mt-4 flex h-32 w-32 flex-col items-center justify-center gap-0.5 rounded-full border-2 bg-gradient-to-br text-center shadow-lg ring-[5px] ring-offset-0 transition-[transform,box-shadow] hover:scale-[1.03] hover:shadow-xl active:scale-[0.98] sm:mt-5 sm:h-36 sm:w-36 md:absolute md:right-4 md:top-1/2 md:mx-0 md:mt-0 md:h-[10.25rem] md:w-[10.25rem] md:-translate-y-1/2 lg:right-5 lg:h-44 lg:w-44"
+          >
+            <span className="font-brand text-xl tracking-wide sm:text-2xl md:text-[1.5rem] lg:text-[1.65rem]">
+              Apoie
+            </span>
+            <span className="text-foreground/65 text-[0.6rem] font-semibold uppercase tracking-[0.2em] sm:text-[0.65rem]">
+              Apoia.se
+            </span>
+          </a>
+        </div>
+      </div>
+
       <Calendar />
       <div className="mt-8 flex justify-center px-4 sm:mt-10">
         <LinkButton to="/mazeps" className="font-brand w-full max-w-xs py-3 text-xl tracking-wide sm:w-96 sm:text-2xl">

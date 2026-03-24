@@ -506,8 +506,17 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
   const searchFetcher = useFetcher()
   const searchResults =
-    (searchFetcher.data as { users?: Array<{ id: number; name: string; nickname: string; email: string }> } | undefined)
-      ?.users ?? []
+    (searchFetcher.data as
+      | {
+          users?: Array<{
+            id: number
+            name: string
+            nickname: string
+            email: string
+            isSupporter: boolean
+          }>
+        }
+      | undefined)?.users ?? []
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -732,10 +741,18 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
                               className="flex w-full min-w-0 flex-col gap-0.5 px-4 py-3 text-left transition-colors hover:bg-foreground/5 sm:flex-row sm:items-center sm:gap-2"
                             >
                               <span className="min-w-0 line-clamp-2 font-medium" title={user.name}>
-                                {user.name}
+                                <SupporterNameDisplay
+                                  name={user.name}
+                                  isSupporter={user.isSupporter}
+                                  nameClassName="font-medium"
+                                />
                               </span>
                               <span className="min-w-0 truncate text-sm text-foreground/50" title={`@${user.nickname}`}>
-                                @{user.nickname}
+                                <SupporterNameDisplay
+                                  name={`@${user.nickname}`}
+                                  isSupporter={user.isSupporter}
+                                  nameClassName="text-sm text-foreground/50"
+                                />
                               </span>
                               <span className="min-w-0 truncate text-sm text-foreground/40 sm:ml-auto" title={user.email}>
                                 {user.email}

@@ -2,12 +2,15 @@ import { data } from 'react-router'
 import type { Route } from './+types/route'
 import Link from '~/components/link/link.component'
 import LinkButton from '~/components/link-button/link-button.component'
+import SupporterNameDisplay from '~/components/supporter-name-display/supporter-name-display.component'
 import { Role } from '~/generated/prisma/enums'
 
 export async function loader({ context, params }: Route.LoaderArgs) {
   const post = await context.prisma.blogPost.findUnique({
     where: { slug: params.slug },
-    include: { author: { select: { name: true, nickname: true } } },
+    include: {
+      author: { select: { name: true, nickname: true, isSupporter: true } },
+    },
   })
 
   if (!post) throw data(null, { status: 404 })
@@ -40,7 +43,14 @@ export default function Route({ loaderData }: Route.ComponentProps) {
         )}
         <h1 className="font-brand mb-2 text-4xl tracking-wide">{post.title}</h1>
         <p className="text-foreground/60 text-sm">
-          Por {post.author.nickname || post.author.name} ·{' '}
+          Por{' '}
+          <SupporterNameDisplay
+            name={post.author.nickname || post.author.name}
+            isSupporter={post.author.isSupporter}
+            className="inline-flex max-w-full align-baseline"
+            nameClassName="text-foreground/60 text-sm"
+          />{' '}
+          ·{' '}
           {new Date(post.createdAt).toLocaleDateString('pt-BR', {
             day: 'numeric',
             month: 'long',
