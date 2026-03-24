@@ -18,6 +18,7 @@ interface EnigmaPhaseFormProps {
     phrase?: string
     answer?: string
     tipPhrase?: string | null
+    hiddenHint?: string | null
   }
   submitLabel: string
 }
@@ -211,6 +212,23 @@ export default function EnigmaPhaseForm({
         className="w-full rounded-md border-1 p-1"
         rows={2}
         defaultValue={defaultValues?.tipPhrase ?? ''}
+      />
+      <Spacer size="sm" />
+
+      <label className="block" htmlFor="hiddenHint">
+        Dica escondida (opcional)
+      </label>
+      <p className="mb-1 text-xs text-foreground/50">
+        Na jogada, o texto usa a mesma cor do fundo da página (dá para ler ao selecionar ou
+        realçar).
+      </p>
+      <textarea
+        id="hiddenHint"
+        name="hiddenHint"
+        className="w-full rounded-md border-1 p-1"
+        rows={2}
+        defaultValue={defaultValues?.hiddenHint ?? ''}
+        placeholder="Só nesta fase"
       />
       <Spacer size="md" />
 

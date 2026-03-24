@@ -14,7 +14,9 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   if (context.currentUser.role !== Role.ADMIN) return redirect('/')
 
   const url = new URL(request.url)
-  const page = Number(url.searchParams.get('page') || 1)
+  const rawPage = Number(url.searchParams.get('page') || 1)
+  const page =
+    Number.isFinite(rawPage) && rawPage >= 1 ? Math.floor(rawPage) : 1
   const search = (url.searchParams.get('search') || '').trim()
   const limit = 12
   const skip = (page - 1) * limit
@@ -35,6 +37,17 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       skip,
       take: limit,
       orderBy: { name: 'asc' },
+      // Só o necessário para a lista: evita vazar password e reduz risco de falha na
+      // serialização do loader (ex.: datas inválidas em campos não usados na UI).
+      select: {
+        id: true,
+        name: true,
+        nickname: true,
+        email: true,
+        role: true,
+        isSupporter: true,
+        avatarUrl: true,
+      },
     }),
     context.prisma.user.count({ where }),
   ])

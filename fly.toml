@@ -23,3 +23,9 @@ primary_region = 'gru'
   memory = '1gb'
   cpu_kind = 'shared'
   cpus = 1
+
+# Uploads de badges (e outros em app/lib/upload) precisam de disco persistente.
+# Criar o volume antes do deploy: fly volumes create mazeps_uploads --region gru --size 1
+[[mounts]]
+  source = 'mazeps_uploads'
+  destination = '/app/uploads'

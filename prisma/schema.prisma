@@ -223,6 +223,8 @@ model EnigmaPhase {
   phrase    String
   answer    String
   tipPhrase String?
+  /// Na jogada: cor igual ao fundo (visível ao selecionar / realçar)
+  hiddenHint String?
 
   @@unique([enigmaId, order])
 }

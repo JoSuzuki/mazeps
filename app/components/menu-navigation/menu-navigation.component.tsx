@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { type ReactNode, useRef, useState } from 'react'
+import { type ReactNode, useEffect, useRef, useState } from 'react'
 import Button from '~/components/button/button.component'
 import CloseIcon from '~/components/icons/close-icon.component'
 import MenuIcon from '~/components/icons/menu-icon.component'
@@ -27,6 +27,16 @@ export default function MenuNavigation({ children, className }: MenuNavigationPr
 
   useTrapFocus(dialogRef, isMenuOpen)
   useOutsideClick(dialogRef, closeMenu, isMenuOpen)
+
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        setIsMenuOpen(false)
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => document.removeEventListener('visibilitychange', onVisibility)
+  }, [])
 
   return (
     <>

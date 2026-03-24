@@ -6,6 +6,7 @@ import Center from '~/components/center/center.component'
 import Link from '~/components/link/link.component'
 import LinkButton from '~/components/link-button/link-button.component'
 import TextInput from '~/components/text-input/text-input.component'
+import { enigmaRobotsMeta } from '~/lib/enigma-robots-meta'
 import { Role } from '~/generated/prisma/enums'
 
 const ICON_CLASS = 'h-5 w-5 shrink-0 text-foreground/50'
@@ -73,6 +74,12 @@ function ChevronRightIcon() {
       <path d="m9 18 6-6-6-6" />
     </svg>
   )
+}
+
+export function meta({ data }: Route.MetaArgs) {
+  const robots = enigmaRobotsMeta()
+  if (!data?.enigma) return [...robots, { title: 'Editar enigma | Mazeps' }]
+  return [...robots, { title: `Editar: ${data.enigma.name} | Mazeps` }]
 }
 
 export async function loader({ context, params }: Route.LoaderArgs) {
@@ -257,7 +264,7 @@ export default function Route({ loaderData }: Route.ComponentProps) {
           {/* Testar enigma */}
           <div className="mb-8">
             <Link
-              to={`/enigmas/${enigma.slug}/comecar`}
+              to={`/enigmas/${enigma.slug}`}
               viewTransition
               className="flex items-center justify-center gap-2 rounded-xl border-2 border-primary bg-primary/10 px-6 py-4 font-semibold text-primary transition-colors hover:bg-primary/20"
             >

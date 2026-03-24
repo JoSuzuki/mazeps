@@ -24,4 +24,5 @@ COPY --from=production-dependencies-env /app/app/generated/prisma /app/app/gener
 COPY --from=build-env /app/build /app/build
 COPY --from=build-env /app/prisma /app/prisma
 WORKDIR /app
+RUN mkdir -p /app/uploads
 CMD ["npm", "run", "start"]

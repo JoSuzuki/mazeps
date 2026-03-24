@@ -10,7 +10,8 @@ import { parseEventDate, toEventDateInputValue } from '~/lib/date'
 import { EventStatus } from '~/lib/event-status'
 import { Role } from '~/generated/prisma/enums'
 import { AVAILABLE_BADGES } from '~/lib/badges'
-import { saveUploadedFile } from '~/lib/upload'
+import { normalizeImgurBadgeUrl } from '~/lib/imgur-badge-url'
+import { resolveEventBadgeFile } from '~/lib/upload'
 
 export async function loader({ context, params }: Route.LoaderArgs) {
   if (!context.currentUser) return redirect('/login')
@@ -34,7 +35,11 @@ export async function loader({ context, params }: Route.LoaderArgs) {
   return { event, canChangeStatus, isAdmin }
 }
 
-export default function Route({ loaderData, params }: Route.ComponentProps) {
+export default function Route({
+  loaderData,
+  params,
+  actionData,
+}: Route.ComponentProps) {
   const { event, canChangeStatus, isAdmin } = loaderData
   const badgeOptions = [
     ...AVAILABLE_BADGES,
@@ -49,6 +54,11 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
   const [selectedStatus, setSelectedStatus] = useState<string>(event.status)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
+  const badgeImgurDefault =
+    event.badgeFile && normalizeImgurBadgeUrl(event.badgeFile)
+      ? event.badgeFile.trim()
+      : ''
+
   return (
     <>
       <BackButtonPortal to={`/events/${params.eventId}`} />
@@ -62,6 +72,11 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
           </header>
 
           <Form method="post" encType="multipart/form-data" className="space-y-8">
+            {actionData && 'error' in actionData && actionData.error && (
+              <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+                {actionData.error}
+              </p>
+            )}
             {/* Dados básicos */}
             <section className="rounded-2xl border border-foreground/10 bg-background/60 p-6 shadow-sm">
               <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/60">
@@ -163,6 +178,21 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
                   />
                   Enviar imagem personalizada
                 </label>
+              </div>
+              <div className="mt-4 space-y-2">
+                <TextInput
+                  id="badgeImgurUrl"
+                  name="badgeImgurUrl"
+                  label="Ou link da imagem no Imgur"
+                  type="text"
+                  required={false}
+                  defaultValue={badgeImgurDefault}
+                  placeholder="https://i.imgur.com/…"
+                />
+                <p className="text-xs text-foreground/50">
+                  Se preencher, este link tem prioridade sobre a badge selecionada acima (exceto
+                  se enviar ficheiro).
+                </p>
               </div>
             </section>
 
@@ -308,7 +338,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 
   const event = await context.prisma.event.findUniqueOrThrow({
     where: { id: Number(params.eventId) },
-    select: { status: true, tournamentId: true },
+    select: { status: true, tournamentId: true, badgeFile: true },
   })
 
   const formData = await request.formData()
@@ -342,12 +372,13 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   const name = formData.get('name') as string
   const description = (formData.get('description') as string) || null
   const dateRaw = formData.get('date') as string
-  const badgeUpload = formData.get('badgeUpload')
-  let badgeFile: string | null =
-    (formData.get('badgeFile') as string)?.trim() || null
-  if (badgeUpload instanceof File && badgeUpload.size > 0) {
-    badgeFile = await saveUploadedFile(badgeUpload, 'badges')
+  const badgeResult = await resolveEventBadgeFile(formData, {
+    previousBadgeFile: event.badgeFile,
+  })
+  if (!badgeResult.ok) {
+    return data({ error: badgeResult.error })
   }
+  const badgeFile = badgeResult.badgeFile
 
   const statusRaw = formData.get('status') as string
   const validStatuses = [

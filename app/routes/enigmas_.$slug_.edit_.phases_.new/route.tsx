@@ -3,6 +3,7 @@ import type { Route } from './+types/route'
 import BackButtonPortal from '~/components/back-button-portal/back-button-portal.component'
 import Center from '~/components/center/center.component'
 import EnigmaPhaseForm from '~/components/enigma-phase-form/enigma-phase-form.component'
+import { enigmaRobotsMeta } from '~/lib/enigma-robots-meta'
 import { saveUploadedFile } from '~/lib/upload'
 import { toYouTubeEmbedUrl } from '~/lib/youtube'
 import { Role } from '~/generated/prisma/enums'
@@ -28,6 +29,12 @@ export async function loader({ context, params }: Route.LoaderArgs) {
   })
 
   return { enigma }
+}
+
+export function meta({ data }: Route.MetaArgs) {
+  const robots = enigmaRobotsMeta()
+  if (!data?.enigma) return [...robots, { title: 'Nova fase | Mazeps' }]
+  return [...robots, { title: `Nova fase — ${data.enigma.name} | Mazeps` }]
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
@@ -59,6 +66,8 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   const phrase = formData.get('phrase') as string
   const answer = formData.get('answer') as string
   const tipPhrase = (formData.get('tipPhrase') as string) || null
+  const hiddenHintRaw = (formData.get('hiddenHint') as string) ?? ''
+  const hiddenHint = hiddenHintRaw.trim() === '' ? null : hiddenHintRaw.trim()
 
   await context.prisma.enigmaPhase.create({
     data: {
@@ -73,6 +82,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       phrase,
       answer,
       tipPhrase,
+      hiddenHint,
     },
   })
 
