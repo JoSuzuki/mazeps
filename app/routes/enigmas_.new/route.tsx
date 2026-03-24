@@ -5,6 +5,7 @@ import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
 import LinkButton from '~/components/link-button/link-button.component'
 import TextInput from '~/components/text-input/text-input.component'
+import { enigmaRobotsMeta } from '~/lib/enigma-robots-meta'
 import { Role } from '~/generated/prisma/enums'
 
 const ICON_CLASS = 'h-5 w-5 shrink-0 text-foreground/50'
@@ -26,6 +27,10 @@ function InfoIcon() {
       <path d="M12 8h.01" />
     </svg>
   )
+}
+
+export function meta() {
+  return [...enigmaRobotsMeta(), { title: 'Novo enigma | Mazeps' }]
 }
 
 export async function loader({ context }: Route.LoaderArgs) {

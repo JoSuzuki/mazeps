@@ -3,7 +3,12 @@ import BackButtonPortal from '~/components/back-button-portal/back-button-portal
 import Center from '~/components/center/center.component'
 import Link from '~/components/link/link.component'
 import LinkButton from '~/components/link-button/link-button.component'
+import { enigmaRobotsMeta } from '~/lib/enigma-robots-meta'
 import { Role } from '~/generated/prisma/enums'
+
+export function meta() {
+  return [...enigmaRobotsMeta(), { title: 'Enigmas | Mazeps' }]
+}
 
 export async function loader({ context }: Route.LoaderArgs) {
   const isAdmin = context.currentUser?.role === Role.ADMIN
@@ -113,7 +118,7 @@ function EnigmaDoorCard({
 
   return (
     <Link
-      to={isPlayable ? `/enigmas/${enigma.slug}/comecar` : '#'}
+      to={isPlayable ? `/enigmas/${enigma.slug}/entrada` : '#'}
       viewTransition
       className={`group block ${!isPlayable ? 'pointer-events-none opacity-60' : ''}`}
     >

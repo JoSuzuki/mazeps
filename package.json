@@ -15,7 +15,8 @@
     "console": "tsx console.ts",
     "typecheck": "react-router typegen && tsc -b",
     "eslint": "eslint . --fix",
-    "prettier": "prettier . --write"
+    "prettier": "prettier . --write",
+    "fly:volume": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/fly-create-upload-volume.ps1"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^6.15.0",

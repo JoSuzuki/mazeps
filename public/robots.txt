@@ -1,0 +1,3 @@
+# Enigmas: não rastrear nem indexar URLs sob /enigmas
+User-agent: *
+Disallow: /enigmas

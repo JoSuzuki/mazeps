@@ -42,6 +42,15 @@ app.use(generateCspNonce)
 
 app.use(compression())
 
+/** Enigmas: não indexar (reforço além de robots.txt e meta tags). */
+app.use((req, res, next) => {
+  const path = (req.path || '').toLowerCase()
+  if (path === '/enigmas' || path.startsWith('/enigmas/')) {
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow')
+  }
+  next()
+})
+
 app.disable('x-powered-by')
 
 app.use('/uploads', express.static('uploads'))

@@ -3,6 +3,7 @@ import type { Route } from './+types/route'
 import BackButtonPortal from '~/components/back-button-portal/back-button-portal.component'
 import Center from '~/components/center/center.component'
 import EnigmaPhaseForm from '~/components/enigma-phase-form/enigma-phase-form.component'
+import { enigmaRobotsMeta } from '~/lib/enigma-robots-meta'
 import { saveUploadedFile } from '~/lib/upload'
 import { toYouTubeEmbedUrl } from '~/lib/youtube'
 import { Role } from '~/generated/prisma/enums'
@@ -39,6 +40,17 @@ export async function loader({ context, params }: Route.LoaderArgs) {
   })
 
   return { phase }
+}
+
+export function meta({ data }: Route.MetaArgs) {
+  const robots = enigmaRobotsMeta()
+  if (!data?.phase) return [...robots, { title: 'Editar fase | Mazeps' }]
+  return [
+    ...robots,
+    {
+      title: `Editar fase — ${data.phase.enigma.name} | Mazeps`,
+    },
+  ]
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
@@ -85,6 +97,8 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   const phrase = formData.get('phrase') as string
   const answer = formData.get('answer') as string
   const tipPhrase = (formData.get('tipPhrase') as string) || null
+  const hiddenHintRaw = (formData.get('hiddenHint') as string) ?? ''
+  const hiddenHint = hiddenHintRaw.trim() === '' ? null : hiddenHintRaw.trim()
 
   const phase = await context.prisma.enigmaPhase.update({
     where: { id: Number(params.phaseId) },
@@ -99,6 +113,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       phrase,
       answer,
       tipPhrase,
+      hiddenHint,
     },
     include: { enigma: true },
   })
@@ -139,6 +154,7 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                   phrase: phase.phrase,
                   answer: phase.answer,
                   tipPhrase: phase.tipPhrase,
+                  hiddenHint: phase.hiddenHint,
                 }}
                 submitLabel="Salvar alterações"
               />

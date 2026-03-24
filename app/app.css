@@ -66,6 +66,21 @@
     animation: none;
   }
 
+  /*
+   * A árvore de View Transition fica no top layer; em alguns browsers (sobretudo Chrome),
+   * ao voltar para a aba após navegação ou com a aba em segundo plano, essa camada pode
+   * continuar a receber eventos e bloquear cliques até refresh.
+   */
+  ::view-transition {
+    pointer-events: none;
+  }
+  ::view-transition-group(*),
+  ::view-transition-image-pair(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    pointer-events: none;
+  }
+
   :root {
     /* will-change removido: pode causar acúmulo de memória em abas inativas por muito tempo */
     --color-white: #ffffff;

@@ -13,7 +13,7 @@ function normalize(str: string) {
 }
 
 export async function loader({ context, params }: Route.LoaderArgs) {
-  const { slug, phaseKey } = params
+  const { slug } = params
 
   const enigma = await context.prisma.enigma.findUnique({
     where: { slug },
@@ -27,29 +27,7 @@ export async function loader({ context, params }: Route.LoaderArgs) {
     throw new Response('Not Found', { status: 404 })
   }
 
-  if (phaseKey === 'comecar') {
-    return redirect(`/enigmas/${slug}`)
-  }
-
-  if (phaseKey === 'parabens') {
-    return {
-      enigma: toPublicEnigmaPlay(enigma),
-      phase: null,
-      isFinished: true,
-      isAdmin: context.currentUser?.role === Role.ADMIN,
-    }
-  }
-
-  let phase = null
-
-  const keyNorm = normalize(phaseKey!)
-  const prevIndex = enigma.phases.findIndex(
-    (p) => normalize(p.answer) === keyNorm,
-  )
-  if (prevIndex !== -1 && prevIndex + 1 < enigma.phases.length) {
-    phase = enigma.phases[prevIndex + 1]
-  }
-
+  const phase = enigma.phases[0] ?? null
   if (!phase) throw new Response('Not Found', { status: 404 })
 
   return {
@@ -63,15 +41,12 @@ export async function loader({ context, params }: Route.LoaderArgs) {
 export function meta({ data }: Route.MetaArgs) {
   const robots = enigmaRobotsMeta()
   if (!data) return [...robots, { title: 'Mazeps' }]
-  if (data.isFinished) {
-    return [...robots, { title: `Parabéns - ${data.enigma.name} | Mazeps` }]
-  }
   const title = data.phase?.pageTitle ?? data.phase?.title ?? data.enigma.name
   return [...robots, { title: `${title} | Mazeps` }]
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
-  const { slug, phaseKey } = params
+  const { slug } = params
 
   const enigma = await context.prisma.enigma.findUnique({
     where: { slug },
@@ -85,19 +60,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     throw new Response('Not Found', { status: 404 })
   }
 
-  if (phaseKey === 'comecar') {
-    return redirect(`/enigmas/${slug}`, { status: 307 })
-  }
-
-  let phase = null
-  const keyNorm = normalize(phaseKey!)
-  const prevIndex = enigma.phases.findIndex(
-    (p) => normalize(p.answer) === keyNorm,
-  )
-  if (prevIndex !== -1 && prevIndex + 1 < enigma.phases.length) {
-    phase = enigma.phases[prevIndex + 1]
-  }
-
+  const phase = enigma.phases[0] ?? null
   if (!phase) throw new Response('Not Found', { status: 404 })
 
   const formData = await request.formData()
