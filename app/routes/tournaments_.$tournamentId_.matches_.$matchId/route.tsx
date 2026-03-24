@@ -4,6 +4,7 @@ import BackButtonPortal from '~/components/back-button-portal/back-button-portal
 import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
 import LinkButton from '~/components/link-button/link-button.component'
+import SupporterNameDisplay from '~/components/supporter-name-display/supporter-name-display.component'
 import { Role } from '~/generated/prisma/enums'
 
 export async function loader({ context, params }: Route.LoaderArgs) {
@@ -13,7 +14,9 @@ export async function loader({ context, params }: Route.LoaderArgs) {
     where: { id: Number(params.matchId) },
     include: {
       round: { select: { roundNumber: true } },
-      players: { include: { user: { select: { nickname: true } } } },
+      players: {
+        include: { user: { select: { nickname: true, isSupporter: true } } },
+      },
       matchResults: { select: { playerId: true, points: true } },
     },
   })
@@ -97,7 +100,13 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
                       key={player.id}
                       className="flex flex-col gap-2 rounded-xl border border-foreground/10 bg-background/40 px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
                     >
-                      <span className="font-medium">{player.user.nickname}</span>
+                      <span className="font-medium">
+                        <SupporterNameDisplay
+                          name={player.user.nickname}
+                          isSupporter={player.user.isSupporter}
+                          nameClassName="font-medium"
+                        />
+                      </span>
                       {canReportResults ? (
                         <div className="flex items-center gap-2">
                           <input

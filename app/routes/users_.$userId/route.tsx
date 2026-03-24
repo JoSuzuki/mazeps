@@ -8,6 +8,7 @@ import Link from '~/components/link/link.component'
 import LinkButton from '~/components/link-button/link-button.component'
 import { Role } from '~/generated/prisma/enums'
 import { getAvatarUrl } from '~/lib/avatar'
+import SupporterNameDisplay from '~/components/supporter-name-display/supporter-name-display.component'
 
 const ICON_CLASS = 'h-5 w-5 shrink-0 text-foreground/50'
 
@@ -207,9 +208,19 @@ export default function Route({ loaderData }: Route.ComponentProps) {
               )}
               <div className="text-center sm:text-left">
                 <h1 className="text-2xl font-semibold tracking-tight">
-                  {user.name}
+                  <SupporterNameDisplay
+                    name={user.name}
+                    isSupporter={user.isSupporter}
+                    nameClassName="font-semibold tracking-tight"
+                  />
                 </h1>
-                <p className="mt-1 text-foreground/60">@{user.nickname}</p>
+                <p className="mt-1 text-foreground/60">
+                  <SupporterNameDisplay
+                    name={`@${user.nickname}`}
+                    isSupporter={user.isSupporter}
+                    nameClassName="text-foreground/60"
+                  />
+                </p>
                 <div className="mt-3 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
                   <span className="rounded-full bg-foreground/10 px-2.5 py-0.5 text-xs font-medium">
                     {ROLE_LABELS[user.role]}

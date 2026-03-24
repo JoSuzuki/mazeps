@@ -43,7 +43,7 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
         { nickname: { contains: q, mode: 'insensitive' } },
       ],
     },
-    select: { id: true, name: true, nickname: true, email: true },
+    select: { id: true, name: true, nickname: true, email: true, isSupporter: true },
     orderBy: { nickname: 'asc' },
     take: 10,
   })

@@ -264,7 +264,11 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                                 nameClassName="font-medium group-hover:underline"
                               />
                               <p className="text-foreground/50 text-xs">
-                                @{user.nickname}
+                                <SupporterNameDisplay
+                                  name={`@${user.nickname}`}
+                                  isSupporter={user.isSupporter}
+                                  nameClassName="text-foreground/50 text-xs"
+                                />
                               </p>
                             </div>
                           </Link>
@@ -320,7 +324,12 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                           nameClassName="font-medium group-hover:underline"
                         />
                         <p className="text-foreground/50 line-clamp-1 text-sm">
-                          @{user.nickname}
+                          <SupporterNameDisplay
+                            name={`@${user.nickname}`}
+                            isSupporter={user.isSupporter}
+                            className="min-w-0 max-w-full"
+                            nameClassName="text-foreground/50 text-sm"
+                          />
                         </p>
                       </Link>
                       <div className="flex justify-end">

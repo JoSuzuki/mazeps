@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { data, Form, redirect, useFetcher, useRevalidator } from 'react-router'
 import type { Route } from './+types/route'
 import Button from '~/components/button/button.component'
+import SupporterNameDisplay from '~/components/supporter-name-display/supporter-name-display.component'
 import Center from '~/components/center/center.component'
 import { SantoriniRoomStatus } from '~/generated/prisma/enums'
 import { useSocket } from '~/services/socket-context'
@@ -84,7 +85,7 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
       status: SantoriniRoomStatus.WAITING,
     },
     include: {
-      creator: { select: { nickname: true } },
+      creator: { select: { nickname: true, isSupporter: true } },
       players: { select: { id: true } },
     },
   })
@@ -196,7 +197,11 @@ export default function Route({
                         <div className="flex items-center gap-2 pl-7">
                           <UserIcon />
                           <span className="text-sm text-foreground/60">
-                            @{room.creator.nickname}
+                            <SupporterNameDisplay
+                              name={`@${room.creator.nickname}`}
+                              isSupporter={room.creator.isSupporter}
+                              nameClassName="text-sm text-foreground/60"
+                            />
                           </span>
                         </div>
                       </div>

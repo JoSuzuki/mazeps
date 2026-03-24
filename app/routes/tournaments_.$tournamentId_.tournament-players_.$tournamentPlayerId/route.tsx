@@ -5,6 +5,7 @@ import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
 import Link from '~/components/link/link.component'
 import LinkButton from '~/components/link-button/link-button.component'
+import SupporterNameDisplay from '~/components/supporter-name-display/supporter-name-display.component'
 import { Role, TournamentPlayerStatus } from '~/generated/prisma/enums'
 
 const STATUS_LABELS: Record<TournamentPlayerStatus, string> = {
@@ -24,13 +25,17 @@ export async function loader({ context, params }: Route.LoaderArgs) {
     await context.prisma.tournamentPlayer.findUniqueOrThrow({
       where: { id: Number(params.tournamentPlayerId) },
       include: {
-        user: { select: { nickname: true, name: true } },
+        user: { select: { nickname: true, name: true, isSupporter: true } },
         tournament: { select: { name: true } },
         matches: {
           include: {
             round: { select: { roundNumber: true } },
             matchResults: {
-              include: { player: { include: { user: { select: { nickname: true } } } } },
+              include: {
+                player: {
+                  include: { user: { select: { nickname: true, isSupporter: true } } },
+                },
+              },
             },
           },
         },
@@ -76,10 +81,18 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
                     viewTransitionName: `tournament-player-${params.tournamentPlayerId}`,
                   }}
                 >
-                  {tournamentPlayer.user.nickname}
+                  <SupporterNameDisplay
+                    name={tournamentPlayer.user.nickname}
+                    isSupporter={tournamentPlayer.user.isSupporter}
+                    nameClassName="font-brand text-3xl tracking-wide"
+                  />
                 </h1>
                 <p className="mt-1 text-foreground/70">
-                  {tournamentPlayer.user.name}
+                  <SupporterNameDisplay
+                    name={tournamentPlayer.user.name}
+                    isSupporter={tournamentPlayer.user.isSupporter}
+                    nameClassName="text-foreground/70"
+                  />
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <span
@@ -138,7 +151,10 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
                                   : ''
                               }
                             >
-                              {result.player.user.nickname}
+                              <SupporterNameDisplay
+                                name={result.player.user.nickname}
+                                isSupporter={result.player.user.isSupporter}
+                              />
                               {result.playerId === tournamentPlayer.id && (
                                 <span className="ml-2 text-foreground/50">
                                   (você)

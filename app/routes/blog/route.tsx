@@ -2,13 +2,16 @@ import type { Route } from './+types/route'
 import Center from '~/components/center/center.component'
 import Link from '~/components/link/link.component'
 import LinkButton from '~/components/link-button/link-button.component'
+import SupporterNameDisplay from '~/components/supporter-name-display/supporter-name-display.component'
 import { Role } from '~/generated/prisma/enums'
 
 export async function loader({ context }: Route.LoaderArgs) {
   const posts = await context.prisma.blogPost.findMany({
     where: { publishedAt: { not: null } },
     orderBy: { publishedAt: 'desc' },
-    include: { author: { select: { nickname: true, name: true } } },
+    include: {
+      author: { select: { nickname: true, name: true, isSupporter: true } },
+    },
   })
 
   return {
@@ -62,7 +65,13 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                     </p>
                   )}
                   <p className="text-foreground/50 text-xs">
-                    {post.author.nickname || post.author.name} ·{' '}
+                    <SupporterNameDisplay
+                      name={post.author.nickname || post.author.name}
+                      isSupporter={post.author.isSupporter}
+                      className="inline-flex max-w-full align-baseline"
+                      nameClassName="text-foreground/50 text-xs"
+                    />{' '}
+                    ·{' '}
                     {post.publishedAt &&
                       new Date(post.publishedAt).toLocaleDateString('pt-BR', {
                         day: 'numeric',

@@ -7,6 +7,7 @@ import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
 import LinkButton from '~/components/link-button/link-button.component'
 import TextInput from '~/components/text-input/text-input.component'
+import SupporterNameDisplay from '~/components/supporter-name-display/supporter-name-display.component'
 import { getAvatarUrl } from '~/lib/avatar'
 import { cookieUserFields, setSession } from '~/services/session'
 
@@ -27,6 +28,7 @@ export async function loader({ context }: Route.LoaderArgs) {
       birthday: true,
       favoriteGame: true,
       favoriteEvent: true,
+      isSupporter: true,
     },
   })
   if (!user) return redirect('/login')
@@ -90,8 +92,20 @@ export default function Route({ loaderData, actionData }: Route.ComponentProps) 
                     />
                   )}
                   <div>
-                    <p className="font-medium">{currentUser.name}</p>
-                    <p className="text-sm text-foreground/50">@{currentUser.nickname}</p>
+                    <p className="font-medium">
+                      <SupporterNameDisplay
+                        name={currentUser.name}
+                        isSupporter={currentUser.isSupporter}
+                        nameClassName="font-medium"
+                      />
+                    </p>
+                    <p className="text-sm text-foreground/50">
+                      <SupporterNameDisplay
+                        name={`@${currentUser.nickname}`}
+                        isSupporter={currentUser.isSupporter}
+                        nameClassName="text-sm text-foreground/50"
+                      />
+                    </p>
                   </div>
                 </div>
                 <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/60">

@@ -6,6 +6,7 @@ import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
 import Link from '~/components/link/link.component'
 import LinkButton from '~/components/link-button/link-button.component'
+import SupporterNameDisplay from '~/components/supporter-name-display/supporter-name-display.component'
 import type { MatchResult } from '~/generated/prisma/client'
 import { Role, TournamentStatus } from '~/generated/prisma/enums'
 import type { Unpacked } from '~/lib/type-helpers'
@@ -211,12 +212,16 @@ export async function loader({ context, params }: Route.LoaderArgs) {
             },
           },
         },
-        players: { include: { user: { select: { id: true, nickname: true } } } },
+        players: {
+          include: { user: { select: { id: true, nickname: true, isSupporter: true } } },
+        },
         rounds: {
           include: {
             matches: {
               include: {
-                players: { include: { user: { select: { nickname: true } } } },
+                players: {
+                  include: { user: { select: { nickname: true, isSupporter: true } } },
+                },
                 matchResults: true,
               },
             },
@@ -230,7 +235,7 @@ export async function loader({ context, params }: Route.LoaderArgs) {
           userId: context.currentUser.id,
           tournamentId: Number(params.tournamentId),
         },
-        include: { user: { select: { nickname: true } } },
+        include: { user: { select: { nickname: true, isSupporter: true } } },
       }),
   ])
 
@@ -390,7 +395,11 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
                           {index + 1}.
                         </span>
                         <span className="font-medium">
-                          {player.user.nickname}
+                          <SupporterNameDisplay
+                            name={player.user.nickname}
+                            isSupporter={player.user.isSupporter}
+                            nameClassName="font-medium"
+                          />
                         </span>
                       </Link>
                     </li>
@@ -463,7 +472,11 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
                                   viewTransitionName: `tournament-player-${rank.id}`,
                                 }}
                               >
-                                {rank.player.user.nickname}
+                                <SupporterNameDisplay
+                                  name={rank.player.user.nickname}
+                                  isSupporter={rank.player.user.isSupporter}
+                                  nameClassName="font-medium hover:underline"
+                                />
                               </Link>
                               {podiumByUserId[rank.player.userId] != null && (
                                 <span
@@ -534,7 +547,12 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
                       <ul className="space-y-1 text-sm text-foreground/80">
                         {match.players.map((player) => (
                           <li key={player.id} className="flex justify-between">
-                            <span>{player.user.nickname}</span>
+                            <span>
+                              <SupporterNameDisplay
+                                name={player.user.nickname}
+                                isSupporter={player.user.isSupporter}
+                              />
+                            </span>
                             <span className="font-medium">
                               {match.matchResults.find(
                                 (matchResult) =>

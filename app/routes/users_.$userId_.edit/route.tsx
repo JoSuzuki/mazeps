@@ -6,6 +6,7 @@ import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
 import LinkButton from '~/components/link-button/link-button.component'
 import TextInput from '~/components/text-input/text-input.component'
+import SupporterNameDisplay from '~/components/supporter-name-display/supporter-name-display.component'
 import { Role } from '~/generated/prisma/enums'
 
 const CONFIRM_DELETE_TEXT = 'EXCLUIR'
@@ -50,7 +51,13 @@ export default function Route({ loaderData }: Route.ComponentProps) {
           <header className="mb-10">
             <h1 className="font-brand text-3xl tracking-wide">Editar usuário</h1>
             <p className="mt-2 text-foreground/70">
-              Atualize as informações de {user.name}.
+              Atualize as informações de{' '}
+              <SupporterNameDisplay
+                name={user.name}
+                isSupporter={user.isSupporter}
+                className="inline-flex max-w-full align-baseline"
+              />
+              .
             </p>
           </header>
 
@@ -65,8 +72,20 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                   {getInitials(user.name)}
                 </div>
                 <div>
-                  <p className="font-medium">{user.name}</p>
-                  <p className="text-sm text-foreground/50">@{user.nickname}</p>
+                  <p className="font-medium">
+                    <SupporterNameDisplay
+                      name={user.name}
+                      isSupporter={user.isSupporter}
+                      nameClassName="font-medium"
+                    />
+                  </p>
+                  <p className="text-sm text-foreground/50">
+                    <SupporterNameDisplay
+                      name={`@${user.nickname}`}
+                      isSupporter={user.isSupporter}
+                      nameClassName="text-sm text-foreground/50"
+                    />
+                  </p>
                 </div>
               </div>
               <div className="space-y-5">
