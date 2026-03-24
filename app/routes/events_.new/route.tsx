@@ -35,7 +35,7 @@ export default function Route({ actionData }: Route.ComponentProps) {
             </p>
           </header>
 
-          <Form method="post" encType="multipart/form-data" className="space-y-8">
+          <Form method="post" className="space-y-8">
             {actionData && 'error' in actionData && actionData.error && (
               <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
                 {actionData.error}
@@ -168,33 +168,18 @@ export default function Route({ actionData }: Route.ComponentProps) {
                   </label>
                 ))}
               </div>
-              <div className="mt-4">
-                <label
-                  className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-primary bg-primary/10 px-4 py-3 text-center text-sm font-medium text-primary transition-colors hover:bg-primary/20"
-                  htmlFor="badgeUpload"
-                >
-                  <input
-                    id="badgeUpload"
-                    name="badgeUpload"
-                    type="file"
-                    accept="image/*"
-                    className="sr-only"
-                  />
-                  Enviar imagem personalizada
-                </label>
-              </div>
               <div className="mt-4 space-y-2">
                 <TextInput
                   id="badgeImgurUrl"
                   name="badgeImgurUrl"
-                  label="Ou link da imagem no Imgur"
+                  label="Badge personalizada (link Imgur)"
                   type="text"
                   required={false}
                   placeholder="https://i.imgur.com/…"
                 />
                 <p className="text-xs text-foreground/50">
-                  Se preencher, este link tem prioridade sobre a badge selecionada acima (exceto
-                  se enviar ficheiro).
+                  Para uma imagem própria, publique no Imgur e cole aqui um URL https. Tem prioridade
+                  sobre a badge selecionada acima.
                 </p>
               </div>
             </section>

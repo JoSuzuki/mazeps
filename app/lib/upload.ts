@@ -23,8 +23,9 @@ export type ResolveEventBadgeFileResult =
   | { ok: false; error: string }
 
 /**
- * Resolve badge a partir do formulário (multipart).
- * Prioridade: 1) upload 2) URL Imgur (https + domínio imgur) 3) radios / preservar em edição.
+ * Resolve badge a partir do formulário.
+ * Prioridade: 1) URL Imgur (https + domínio imgur) 2) radios / preservar em edição.
+ * Badge personalizada no servidor não é guardada em disco (use Imgur).
  */
 export async function resolveEventBadgeFile(
   formData: FormData,
@@ -32,8 +33,11 @@ export async function resolveEventBadgeFile(
 ): Promise<ResolveEventBadgeFileResult> {
   const badgeUpload = formData.get('badgeUpload')
   if (badgeUpload instanceof File && badgeUpload.size > 0) {
-    const path = await saveUploadedFile(badgeUpload, 'badges')
-    return { ok: true, badgeFile: path }
+    return {
+      ok: false,
+      error:
+        'O envio de ficheiro para a badge não está disponível. Carregue a imagem no Imgur e cole o link https (ex.: https://i.imgur.com/….png).',
+    }
   }
 
   const imgurRaw = String(formData.get('badgeImgurUrl') ?? '').trim()
