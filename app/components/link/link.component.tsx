@@ -1,4 +1,4 @@
-import { motion } from 'motion/react'
+import { forwardRef } from 'react'
 import { Link as ReactRouterLink } from 'react-router'
 import type { LinkProps as ReactRouterLinkProps } from 'react-router'
 
@@ -11,16 +11,18 @@ const MAP_CLASSES = {
   solid: 'bg-primary text-on-primary rounded-md p-0.5',
 }
 
-const BaseLink = (props: LinkProps): React.ReactElement => {
-  const { styleType = 'default', ...linkProps } = props
+const Link = forwardRef<HTMLAnchorElement, LinkProps>(function Link(
+  props,
+  ref,
+) {
+  const { styleType = 'default', className, ...linkProps } = props
   return (
     <ReactRouterLink
+      ref={ref}
       {...linkProps}
-      className={`active:pressed hover:underline ${MAP_CLASSES[styleType]} ${props.className ?? ''}`}
+      className={`active:pressed hover:underline ${MAP_CLASSES[styleType]} ${className ?? ''}`}
     />
   )
-}
-
-const Link = motion.create(BaseLink);
+})
 
 export default Link

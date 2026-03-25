@@ -1,4 +1,4 @@
-import { data, Form, redirect, useFetcher } from 'react-router'
+import { data, Form, Link as RouterLink, redirect, useFetcher } from 'react-router'
 import type { Route } from './+types/route'
 import BackButtonPortal from '~/components/back-button-portal/back-button-portal.component'
 import Button from '~/components/button/button.component'
@@ -222,22 +222,22 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                   {enigma.phases.map((phase, index) => (
                     <li key={phase.id}>
                       <div className="flex items-center justify-between gap-4 px-6 py-4 transition-colors hover:bg-foreground/5">
-                        <div className="min-w-0 flex-1">
+                        <div className="min-w-0 flex-1 overflow-hidden pr-2">
                           <span className="text-xs font-medium text-foreground/50">
                             Fase {phase.order}
                             {index === 0 ? ' (entrada)' : ''}
                           </span>
-                          <p className="font-medium">{phase.title}</p>
+                          <p className="break-words font-medium">{phase.title}</p>
                         </div>
-                        <div className="flex shrink-0 items-center gap-2">
-                          <Link
+                        <div className="relative z-10 flex shrink-0 items-center gap-2">
+                          <RouterLink
                             to={`/enigmas/${enigma.slug}/edit/phases/${phase.id}`}
-                            viewTransition
-                            className="flex items-center gap-1.5 rounded-lg border border-foreground/20 px-3 py-2 text-sm font-medium transition-colors hover:bg-foreground/5"
+                            reloadDocument
+                            className="flex items-center gap-1.5 rounded-lg border border-foreground/20 px-3 py-2 text-sm font-medium transition-colors hover:bg-foreground/5 hover:underline active:pressed"
                           >
                             <PencilIcon />
                             Editar
-                          </Link>
+                          </RouterLink>
                           <fetcher.Form method="post">
                             <input type="hidden" name="intent" value="delete-phase" />
                             <input type="hidden" name="phaseId" value={phase.id} />

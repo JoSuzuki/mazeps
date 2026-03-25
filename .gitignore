@@ -8,3 +8,6 @@
 
 /app/generated/prisma
 .env
+
+# Uploads locais (enigmas, etc.); em produção use volume ou storage persistente
+/uploads/

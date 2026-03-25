@@ -6,11 +6,8 @@ import {
   toPublicEnigmaPlay,
 } from '~/lib/enigma-play-public'
 import { enigmaRobotsMeta } from '~/lib/enigma-robots-meta'
+import { resolvePhaseAnswerSubmission } from '~/lib/enigma-phase-answer.server'
 import { Role } from '~/generated/prisma/enums'
-
-function normalize(str: string) {
-  return str.trim().toLowerCase()
-}
 
 export async function loader({ context, params }: Route.LoaderArgs) {
   const { slug } = params
@@ -64,11 +61,17 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   if (!phase) throw new Response('Not Found', { status: 404 })
 
   const formData = await request.formData()
-  const submitted = normalize(formData.get('answer') as string)
-  const correct = normalize(phase.answer)
+  const resolution = resolvePhaseAnswerSubmission({
+    submittedRaw: formData.get('answer') as string,
+    correctAnswer: phase.answer,
+    whiteScreenHintsJson: phase.whiteScreenHints,
+  })
 
-  if (submitted !== correct) {
-    return data({ wrong: true })
+  if (resolution.kind === 'whiteScreen') {
+    return data({ whiteScreen: true as const, message: resolution.message })
+  }
+  if (resolution.kind === 'wrong') {
+    return data({ wrong: true as const })
   }
 
   const isLast = phase.order === enigma.phases[enigma.phases.length - 1].order

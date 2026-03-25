@@ -4,7 +4,12 @@ import BackButtonPortal from '~/components/back-button-portal/back-button-portal
 import Center from '~/components/center/center.component'
 import EnigmaPhaseForm from '~/components/enigma-phase-form/enigma-phase-form.component'
 import { enigmaRobotsMeta } from '~/lib/enigma-robots-meta'
-import { saveUploadedFile } from '~/lib/upload'
+import { saveEnigmaPhaseUpload } from '~/lib/upload'
+import {
+  parseExtraMediaBlocksFromForm,
+  parsePhaseTextExtrasFromForm,
+  parseWhiteScreenHintsFromForm,
+} from '~/lib/enigma-phase-form-parse.server'
 import { toYouTubeEmbedUrl } from '~/lib/youtube'
 import { Role } from '~/generated/prisma/enums'
 
@@ -82,16 +87,35 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   })
 
   let mediaUrl: string | null = null
-  if (uploadedFile instanceof File && uploadedFile.size > 0) {
-    mediaUrl = await saveUploadedFile(uploadedFile)
-  } else if (mediaType === 'VIDEO' && rawMediaUrl) {
-    mediaUrl = toYouTubeEmbedUrl(rawMediaUrl)
-  } else if (rawMediaUrl) {
-    mediaUrl = rawMediaUrl
-  } else {
-    // No new file or URL provided — keep existing
-    mediaUrl = existingPhase.mediaUrl
+  try {
+    if (uploadedFile instanceof File && uploadedFile.size > 0) {
+      if (mediaType === 'IMAGE') {
+        mediaUrl = await saveEnigmaPhaseUpload(uploadedFile, 'IMAGE')
+      } else if (mediaType === 'AUDIO') {
+        mediaUrl = await saveEnigmaPhaseUpload(uploadedFile, 'AUDIO')
+      }
+    } else if (mediaType === 'VIDEO' && rawMediaUrl?.trim()) {
+      mediaUrl = toYouTubeEmbedUrl(rawMediaUrl.trim())
+    } else if (rawMediaUrl?.trim()) {
+      mediaUrl = rawMediaUrl.trim()
+    } else {
+      mediaUrl = existingPhase.mediaUrl
+    }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Falha ao enviar o arquivo de mídia.'
+    return data({ error: msg }, { status: 400 })
   }
+
+  if (mediaType !== 'NONE' && !mediaUrl) {
+    return data(
+      {
+        error:
+          'Para este tipo de mídia, envie um arquivo (imagem/áudio) ou informe uma URL válida (imagem, áudio ou YouTube).',
+      },
+      { status: 400 },
+    )
+  }
+
   const imageFile = (formData.get('imageFile') as string) || null
   const imageAlt = (formData.get('imageAlt') as string) || null
   const phrase = formData.get('phrase') as string
@@ -99,6 +123,17 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   const tipPhrase = (formData.get('tipPhrase') as string) || null
   const hiddenHintRaw = (formData.get('hiddenHint') as string) ?? ''
   const hiddenHint = hiddenHintRaw.trim() === '' ? null : hiddenHintRaw.trim()
+
+  const textExtras = parsePhaseTextExtrasFromForm(formData)
+  const whiteScreenHints = parseWhiteScreenHintsFromForm(formData)
+
+  let extraMediaBlocks
+  try {
+    extraMediaBlocks = await parseExtraMediaBlocksFromForm(formData)
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Falha ao processar mídias adicionais.'
+    return data({ error: msg }, { status: 400 })
+  }
 
   const phase = await context.prisma.enigmaPhase.update({
     where: { id: Number(params.phaseId) },
@@ -114,6 +149,11 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       answer,
       tipPhrase,
       hiddenHint,
+      extraMediaBlocks,
+      extraPhrases: textExtras.extraPhrases,
+      extraTipPhrases: textExtras.extraTipPhrases,
+      extraHiddenHints: textExtras.extraHiddenHints,
+      whiteScreenHints,
     },
     include: { enigma: true },
   })
@@ -121,7 +161,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   return redirect(`/enigmas/${phase.enigma.slug}/edit`)
 }
 
-export default function Route({ loaderData }: Route.ComponentProps) {
+export default function Route({ loaderData, actionData }: Route.ComponentProps) {
   const { phase } = loaderData
 
   return (
@@ -129,6 +169,14 @@ export default function Route({ loaderData }: Route.ComponentProps) {
       <BackButtonPortal to={`/enigmas/${phase.enigma.slug}/edit`} />
       <Center>
         <div className="mx-auto max-w-2xl px-6 py-10">
+          {actionData && 'error' in actionData && actionData.error ? (
+            <div
+              className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-100"
+              role="alert"
+            >
+              {actionData.error}
+            </div>
+          ) : null}
           <header className="mb-8">
             <h1 className="font-brand flex items-center gap-2 text-2xl tracking-wide">
               <PencilIcon />
@@ -139,10 +187,11 @@ export default function Route({ loaderData }: Route.ComponentProps) {
             </p>
           </header>
 
-          <section className="mb-8 overflow-hidden rounded-2xl border border-foreground/10 bg-background/60 p-6 shadow-sm">
+          <section className="mb-8 rounded-2xl border border-foreground/10 bg-background/60 p-6 shadow-sm">
             <Form method="post" encType="multipart/form-data">
               <input type="hidden" name="intent" value="update" />
               <EnigmaPhaseForm
+                prominentAnswerSection
                 defaultValues={{
                   order: phase.order,
                   title: phase.title,
@@ -155,6 +204,11 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                   answer: phase.answer,
                   tipPhrase: phase.tipPhrase,
                   hiddenHint: phase.hiddenHint,
+                  extraMediaBlocks: phase.extraMediaBlocks,
+                  extraPhrases: phase.extraPhrases,
+                  extraTipPhrases: phase.extraTipPhrases,
+                  extraHiddenHints: phase.extraHiddenHints,
+                  whiteScreenHints: phase.whiteScreenHints,
                 }}
                 submitLabel="Salvar alterações"
               />

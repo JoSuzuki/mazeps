@@ -225,6 +225,16 @@ model EnigmaPhase {
   tipPhrase String?
   /// Na jogada: cor igual ao fundo (visível ao selecionar / realçar)
   hiddenHint String?
+  /// Blocos de mídia adicionais (mesmo modelo do campo principal: tipo + URL/arquivo + metadados de imagem)
+  extraMediaBlocks Json @default("[]")
+  /// Dicas principais extras (além de `phrase`)
+  extraPhrases     Json @default("[]")
+  /// Dicas extras (além de `tipPhrase`)
+  extraTipPhrases  Json @default("[]")
+  /// Dicas escondidas extras (além de `hiddenHint`)
+  extraHiddenHints Json @default("[]")
+  /// "Telas brancas": se o jogador envia `trigger`, mostra popup com `popupText` (não avança).
+  whiteScreenHints Json @default("[]")
 
   @@unique([enigmaId, order])
 }
