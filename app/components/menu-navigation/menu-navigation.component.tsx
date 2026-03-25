@@ -40,10 +40,10 @@ export default function MenuNavigation({ children, className }: MenuNavigationPr
 
   return (
     <>
-      <Button
+      <motion.button
         ref={menuButtonRef}
+        type="button"
         layoutId="menu-morph"
-        styleType="secondary"
         aria-label="Menu"
         onClick={openMenu}
         transition={{
@@ -51,10 +51,10 @@ export default function MenuNavigation({ children, className }: MenuNavigationPr
           stiffness: 500,
           damping: 30,
         }}
-        className={className}
+        className={`bg-secondary text-on-secondary border border-on-secondary rounded-md p-2 hover:cursor-pointer ${className ?? ''}`}
       >
         <MenuIcon />
-      </Button>
+      </motion.button>
       <AnimatePresence>
         {isMenuOpen && (
           <motion.dialog

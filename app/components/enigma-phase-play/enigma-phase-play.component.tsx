@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { useFetcher } from 'react-router'
-import Link from '~/components/link/link.component'
+import { Link, useFetcher } from 'react-router'
 import ParabensCelebration from '~/components/parabens-celebration/parabens-celebration.component'
+import type { ExtraMediaBlock } from '~/lib/enigma-phase-extras'
 import { MediaType } from '~/generated/prisma/enums'
 
 export type EnigmaPhasePlayLoaderData = {
@@ -16,12 +16,71 @@ export type EnigmaPhasePlayLoaderData = {
     mediaUrl: string | null
     imageAlt: string | null
     tipPhrase: string | null
+    extraMediaBlocks: ExtraMediaBlock[]
+    extraPhrases: string[]
+    extraTipPhrases: string[]
+    extraHiddenHints: string[]
   } | null
   isFinished: boolean
   isAdmin: boolean
 }
 
-type EnigmaPhasePlayActionResult = { wrong?: boolean }
+type EnigmaPhasePlayActionResult =
+  | { wrong?: true }
+  | { whiteScreen?: true; message?: string }
+
+function renderMediaBlock(
+  key: string,
+  mediaType: MediaType,
+  mediaUrl: string | null,
+  imageAlt: string | null,
+  title: string,
+) {
+  if (mediaType === MediaType.IMAGE && mediaUrl) {
+    return (
+      <div key={key} className="flex w-full shrink-0 flex-col items-center justify-center gap-2">
+        <img
+          src={mediaUrl}
+          alt={imageAlt ?? ''}
+          className="max-h-[min(50dvh,420px)] w-auto max-w-full rounded-md object-contain"
+          loading="lazy"
+          decoding="async"
+          onError={(e) => {
+            e.currentTarget.style.display = 'none'
+            const msg = e.currentTarget.nextElementSibling
+            if (msg instanceof HTMLElement) {
+              msg.classList.remove('hidden')
+            }
+          }}
+        />
+        <p className="hidden text-center text-sm text-foreground/50">
+          Não foi possível carregar a imagem. Se o ficheiro foi removido do servidor, edite a fase e envie de
+          novo ou use uma URL externa.
+        </p>
+      </div>
+    )
+  }
+  if (mediaType === MediaType.VIDEO && mediaUrl) {
+    return (
+      <div key={key} className="aspect-video w-full max-w-2xl shrink-0">
+        <iframe
+          src={mediaUrl}
+          className="h-full w-full rounded-md"
+          title={title}
+          allowFullScreen
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerPolicy="strict-origin-when-cross-origin"
+        />
+      </div>
+    )
+  }
+  if (mediaType === MediaType.AUDIO && mediaUrl) {
+    return (
+      <audio key={key} controls src={mediaUrl} className="w-full max-w-xl shrink-0" />
+    )
+  }
+  return null
+}
 
 export default function EnigmaPhasePlay({
   loaderData,
@@ -32,10 +91,17 @@ export default function EnigmaPhasePlay({
 }) {
   const fetcher = useFetcher<EnigmaPhasePlayActionResult>()
   const answerRef = useRef<HTMLInputElement>(null)
+  const whiteScreenDialogRef = useRef<HTMLDialogElement>(null)
   const [inputLength, setInputLength] = useState(0)
 
   useEffect(() => {
-    if (fetcher.data?.wrong) {
+    const d = fetcher.data
+    if (!d) return
+    if ('whiteScreen' in d && d.whiteScreen && typeof d.message === 'string') {
+      queueMicrotask(() => whiteScreenDialogRef.current?.showModal())
+      return
+    }
+    if ('wrong' in d && d.wrong) {
       alert('Resposta incorreta!')
       if (answerRef.current) {
         answerRef.current.value = ''
@@ -57,55 +123,93 @@ export default function EnigmaPhasePlay({
   }
 
   const { phase } = loaderData
+  const extras = phase!.extraMediaBlocks ?? []
+  const extraPhrases = phase!.extraPhrases ?? []
+  const extraTips = phase!.extraTipPhrases ?? []
+  const extraHidden = phase!.extraHiddenHints ?? []
+
+  const whiteScreenMessage =
+    fetcher.data && 'whiteScreen' in fetcher.data && fetcher.data.whiteScreen
+      ? fetcher.data.message
+      : undefined
 
   return (
     <div className="flex h-full flex-col items-center gap-4 overflow-hidden px-6 py-2">
-      <div className="flex w-full shrink-0 items-center justify-between">
-        <span className="w-16" />
-        <h1 className="text-center text-xl font-bold">{phase!.title}</h1>
+      <dialog
+        ref={whiteScreenDialogRef}
+        className="fixed left-1/2 top-1/2 z-50 w-[min(100%-2rem,28rem)] -translate-x-1/2 -translate-y-1/2 rounded-2xl border-2 border-primary/35 bg-background p-6 text-primary shadow-2xl backdrop:bg-black/50"
+        onClose={() => answerRef.current?.focus()}
+      >
+        <p className="mb-6 max-h-[min(60dvh,20rem)] overflow-y-auto whitespace-pre-wrap text-center text-base font-medium leading-relaxed text-primary">
+          {whiteScreenMessage ?? ''}
+        </p>
+        <div className="flex justify-center">
+          <button
+            type="button"
+            className="rounded-lg bg-primary px-8 py-2.5 font-medium text-on-primary hover:opacity-90"
+            onClick={() => whiteScreenDialogRef.current?.close()}
+          >
+            OK
+          </button>
+        </div>
+      </dialog>
+      <div className="flex w-full shrink-0 items-center justify-between gap-2">
+        <span className="w-16 shrink-0" aria-hidden />
+        <h1 className="min-w-0 flex-1 truncate text-center text-xl font-bold">
+          {phase!.title}
+        </h1>
         {loaderData.isAdmin ? (
           <Link
             to={`/enigmas/${slug}/edit/phases/${phase!.id}`}
-            viewTransition
-            className="w-16 text-right text-sm"
+            reloadDocument
+            className="relative z-10 w-16 shrink-0 text-right text-sm hover:underline active:pressed"
           >
             Editar
           </Link>
         ) : (
-          <span className="w-16" />
+          <span className="w-16 shrink-0" aria-hidden />
         )}
       </div>
 
-      {phase!.mediaType === MediaType.IMAGE && phase!.mediaUrl && (
-        <div className="min-h-0 flex flex-1 items-center justify-center">
-          <img
-            src={phase!.mediaUrl}
-            alt={phase!.imageAlt ?? ''}
-            className="max-h-full w-auto max-w-full rounded-md object-contain"
-          />
-        </div>
-      )}
-
-      {phase!.mediaType === MediaType.VIDEO && phase!.mediaUrl && (
-        <div className="min-h-0 flex-1 w-full">
-          <iframe
-            src={phase!.mediaUrl}
-            className="h-full w-full rounded-md"
-            title={phase!.title}
-            allowFullScreen
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            referrerPolicy="strict-origin-when-cross-origin"
-          />
-        </div>
-      )}
-
-      {phase!.mediaType === MediaType.AUDIO && phase!.mediaUrl && (
-        <audio controls src={phase!.mediaUrl} className="w-full shrink-0" />
-      )}
-
-      {phase!.mediaType === MediaType.NONE && <div className="flex-1" />}
+      {(() => {
+        const primaryShown =
+          phase!.mediaType !== MediaType.NONE && Boolean(phase!.mediaUrl)
+        const extraShown = extras.some(
+          (b) => b.mediaType !== MediaType.NONE && Boolean(b.mediaUrl),
+        )
+        if (!primaryShown && !extraShown) {
+          return <div className="min-h-0 flex-1" />
+        }
+        return (
+          <div className="flex min-h-0 w-full flex-1 flex-col items-center gap-4 overflow-y-auto">
+            {primaryShown
+              ? renderMediaBlock(
+                  'primary-media',
+                  phase!.mediaType,
+                  phase!.mediaUrl,
+                  phase!.imageAlt,
+                  phase!.title,
+                )
+              : null}
+            {extras.map((b, i) =>
+              renderMediaBlock(
+                `extra-media-${i}`,
+                b.mediaType,
+                b.mediaUrl,
+                b.imageAlt,
+                phase!.title,
+              ),
+            )}
+          </div>
+        )
+      })()}
 
       <p className="shrink-0 text-center leading-relaxed">{phase!.phrase}</p>
+      {extraPhrases.map((p, i) => (
+        <p key={`xp-${i}`} className="shrink-0 text-center leading-relaxed">
+          {p}
+        </p>
+      ))}
 
       {phase!.hiddenHint ? (
         <p
@@ -115,6 +219,15 @@ export default function EnigmaPhasePlay({
           {phase!.hiddenHint}
         </p>
       ) : null}
+      {extraHidden.map((h, i) => (
+        <p
+          key={`xh-${i}`}
+          className="shrink-0 max-w-full whitespace-pre-wrap text-center text-sm select-text"
+          style={{ color: 'var(--color-background)' }}
+        >
+          {h}
+        </p>
+      ))}
 
       <fetcher.Form method="post" className="flex shrink-0 flex-col items-center gap-2">
         <label htmlFor="answer" className="block font-medium">
@@ -142,10 +255,15 @@ export default function EnigmaPhasePlay({
       </fetcher.Form>
 
       {phase!.tipPhrase && (
-        <p className="shrink-0 pb-2 text-center text-sm italic opacity-60">
+        <p className="shrink-0 pb-1 text-center text-sm italic opacity-60">
           {phase!.tipPhrase}
         </p>
       )}
+      {extraTips.map((t, i) => (
+        <p key={`xt-${i}`} className="shrink-0 pb-2 text-center text-sm italic opacity-60">
+          {t}
+        </p>
+      ))}
     </div>
   )
 }

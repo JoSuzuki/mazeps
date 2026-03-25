@@ -1,4 +1,6 @@
 import crypto from 'crypto'
+import fs from 'node:fs'
+import path from 'node:path'
 import { createServer } from 'http'
 import compression from 'compression'
 import express from 'express'
@@ -53,7 +55,68 @@ app.use((req, res, next) => {
 
 app.disable('x-powered-by')
 
-app.use('/uploads', express.static('uploads'))
+/**
+ * Enigmas: ficheiros em disco com nome UUID; lado a lado existe `.download-name` com o nome original
+ * para Content-Disposition inline (título da aba / “Guardar como” ao abrir só a imagem).
+ */
+app.get('/uploads/enigmas/:filename', (req, res, next) => {
+  const raw = req.params.filename
+  if (
+    !raw ||
+    raw.includes('..') ||
+    raw.includes('/') ||
+    raw.includes('\\') ||
+    raw.endsWith('.download-name')
+  ) {
+    return next()
+  }
+  const safe = path.basename(raw)
+  const dir = path.join(process.cwd(), 'uploads', 'enigmas')
+  const absolute = path.join(dir, safe)
+  if (!absolute.startsWith(dir)) {
+    return next()
+  }
+  try {
+    if (!fs.existsSync(absolute) || !fs.statSync(absolute).isFile()) {
+      return next()
+    }
+  } catch {
+    return next()
+  }
+
+  let downloadName = safe
+  try {
+    const meta = fs.readFileSync(`${absolute}.download-name`, 'utf8').trim()
+    if (meta) {
+      downloadName = meta.slice(0, 240)
+    }
+  } catch {
+    // sem meta: mantém nome no disco
+  }
+
+  const ascii = downloadName.replace(/[\x00-\x1f\x7f"]/g, '_').slice(0, 200)
+  res.setHeader(
+    'Content-Disposition',
+    `inline; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(downloadName)}`,
+  )
+
+  const maxAgeMs =
+    process.env.NODE_ENV === 'production' ? 365 * 24 * 60 * 60 * 1000 : 0
+  res.sendFile(absolute, { maxAge: maxAgeMs, immutable: process.env.NODE_ENV === 'production' }, (err) => {
+    if (err) {
+      next(err)
+    }
+  })
+})
+
+app.use(
+  '/uploads',
+  express.static('uploads', {
+    maxAge: process.env.NODE_ENV === 'production' ? '1y' : 0,
+    immutable: process.env.NODE_ENV === 'production',
+    etag: true,
+  }),
+)
 
 if (DEVELOPMENT) {
   console.log('Starting development server')

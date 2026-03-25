@@ -51,8 +51,9 @@
     }
   }
 
+  /* SPA: evitar opt-in a transições cross-document no mesmo HTML; RR usa startViewTransition no cliente. */
   @view-transition {
-    navigation: auto;
+    navigation: none;
   }
 
   ::view-transition-new(*):only-child {
