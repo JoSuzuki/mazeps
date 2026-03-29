@@ -35,14 +35,24 @@ function renderMediaBlock(
   mediaUrl: string | null,
   imageAlt: string | null,
   title: string,
+  /** Mais de uma mídia: cada uma ocupa uma fatia da altura disponível, sem scroll interno. */
+  shareVerticalSpace: boolean,
 ) {
+  const slotClass = shareVerticalSpace
+    ? 'flex min-h-0 min-w-0 w-full flex-1 flex-col items-center justify-center gap-2'
+    : 'flex w-full shrink-0 flex-col items-center justify-center gap-2'
+
   if (mediaType === MediaType.IMAGE && mediaUrl) {
     return (
-      <div key={key} className="flex w-full shrink-0 flex-col items-center justify-center gap-2">
+      <div key={key} className={slotClass}>
         <img
           src={mediaUrl}
           alt={imageAlt ?? ''}
-          className="max-h-[min(50dvh,420px)] w-auto max-w-full rounded-md object-contain"
+          className={
+            shareVerticalSpace
+              ? 'max-h-full w-auto max-w-full rounded-md object-contain'
+              : 'max-h-[min(50dvh,420px)] w-auto max-w-full rounded-md object-contain'
+          }
           loading="lazy"
           decoding="async"
           onError={(e) => {
@@ -62,21 +72,25 @@ function renderMediaBlock(
   }
   if (mediaType === MediaType.VIDEO && mediaUrl) {
     return (
-      <div key={key} className="aspect-video w-full max-w-2xl shrink-0">
-        <iframe
-          src={mediaUrl}
-          className="h-full w-full rounded-md"
-          title={title}
-          allowFullScreen
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          referrerPolicy="strict-origin-when-cross-origin"
-        />
+      <div key={key} className={slotClass}>
+        <div className="aspect-video w-full max-h-full min-h-0 max-w-2xl">
+          <iframe
+            src={mediaUrl}
+            className="h-full w-full rounded-md"
+            title={title}
+            allowFullScreen
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerPolicy="strict-origin-when-cross-origin"
+          />
+        </div>
       </div>
     )
   }
   if (mediaType === MediaType.AUDIO && mediaUrl) {
     return (
-      <audio key={key} controls src={mediaUrl} className="w-full max-w-xl shrink-0" />
+      <div key={key} className={slotClass}>
+        <audio controls src={mediaUrl} className="w-full max-w-xl shrink-0" />
+      </div>
     )
   }
   return null
@@ -180,8 +194,20 @@ export default function EnigmaPhasePlay({
         if (!primaryShown && !extraShown) {
           return <div className="min-h-0 flex-1" />
         }
+        let mediaCount = 0
+        if (primaryShown) mediaCount += 1
+        for (const b of extras) {
+          if (b.mediaType !== MediaType.NONE && b.mediaUrl) mediaCount += 1
+        }
+        const shareVerticalSpace = mediaCount > 1
         return (
-          <div className="flex min-h-0 w-full flex-1 flex-col items-center gap-4 overflow-y-auto">
+          <div
+            className={
+              shareVerticalSpace
+                ? 'flex min-h-0 w-full min-w-0 flex-1 flex-col items-center gap-2 overflow-hidden'
+                : 'flex min-h-0 w-full flex-1 flex-col items-center gap-4 overflow-y-auto'
+            }
+          >
             {primaryShown
               ? renderMediaBlock(
                   'primary-media',
@@ -189,16 +215,20 @@ export default function EnigmaPhasePlay({
                   phase!.mediaUrl,
                   phase!.imageAlt,
                   phase!.title,
+                  shareVerticalSpace,
                 )
               : null}
             {extras.map((b, i) =>
-              renderMediaBlock(
-                `extra-media-${i}`,
-                b.mediaType,
-                b.mediaUrl,
-                b.imageAlt,
-                phase!.title,
-              ),
+              b.mediaType !== MediaType.NONE && b.mediaUrl
+                ? renderMediaBlock(
+                    `extra-media-${i}`,
+                    b.mediaType,
+                    b.mediaUrl,
+                    b.imageAlt,
+                    phase!.title,
+                    shareVerticalSpace,
+                  )
+                : null,
             )}
           </div>
         )
