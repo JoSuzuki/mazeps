@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { Link, useFetcher } from 'react-router'
 import ParabensCelebration from '~/components/parabens-celebration/parabens-celebration.component'
 import type { ExtraMediaBlock } from '~/lib/enigma-phase-extras'
@@ -10,7 +10,6 @@ export type EnigmaPhasePlayLoaderData = {
     id: number
     title: string
     phrase: string
-    answerLength: number
     hiddenHint: string | null
     mediaType: MediaType
     mediaUrl: string | null
@@ -106,7 +105,6 @@ export default function EnigmaPhasePlay({
   const fetcher = useFetcher<EnigmaPhasePlayActionResult>()
   const answerRef = useRef<HTMLInputElement>(null)
   const whiteScreenDialogRef = useRef<HTMLDialogElement>(null)
-  const [inputLength, setInputLength] = useState(0)
 
   useEffect(() => {
     const d = fetcher.data
@@ -120,7 +118,6 @@ export default function EnigmaPhasePlay({
       if (answerRef.current) {
         answerRef.current.value = ''
         answerRef.current.focus()
-        setInputLength(0)
       }
     }
   }, [fetcher.data])
@@ -128,7 +125,6 @@ export default function EnigmaPhasePlay({
   useEffect(() => {
     if (answerRef.current) {
       answerRef.current.value = ''
-      setInputLength(0)
     }
   }, [loaderData.phase?.id])
 
@@ -234,9 +230,9 @@ export default function EnigmaPhasePlay({
         )
       })()}
 
-      <p className="shrink-0 text-center leading-relaxed">{phase!.phrase}</p>
+      <p className="shrink-0 whitespace-pre-line text-center leading-relaxed">{phase!.phrase}</p>
       {extraPhrases.map((p, i) => (
-        <p key={`xp-${i}`} className="shrink-0 text-center leading-relaxed">
+        <p key={`xp-${i}`} className="shrink-0 whitespace-pre-line text-center leading-relaxed">
           {p}
         </p>
       ))}
@@ -271,11 +267,7 @@ export default function EnigmaPhasePlay({
           required
           autoComplete="off"
           className="w-48 rounded-md border-1 p-1 text-center"
-          onChange={(e) => setInputLength(e.target.value.length)}
         />
-        <p className="text-sm opacity-60">
-          Caracteres Restantes: {Math.max(0, phase!.answerLength - inputLength)}
-        </p>
         <button
           type="submit"
           className="active:pressed cursor-pointer rounded-md bg-primary px-6 py-2 text-on-primary hover:opacity-90"

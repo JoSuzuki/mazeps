@@ -17,12 +17,16 @@ export interface CurrentUser extends Pick<User, 'id' | 'name' | 'nickname' | 'em
   password?: never;
 }
 
+/** Segundos — sem isto o cookie é só de “sessão do navegador” e some ao fechar o app (pior em mobile). */
+const SESSION_COOKIE_MAX_AGE = 60 * 60 * 24 * 30
+
 export const sessionStorage = createCookieSessionStorage<{ user: CurrentUser }>({
   cookie: {
     name: '__session',
     httpOnly: true,
     path: '/',
     sameSite: 'lax',
+    maxAge: SESSION_COOKIE_MAX_AGE,
     secrets: [process.env.SESSION_SECRET],
     secure: process.env.NODE_ENV === 'production',
   },

@@ -1,17 +1,27 @@
-import { data, Form, redirect } from 'react-router'
+import { data, Form, redirect, useSearchParams } from 'react-router'
 import type { Route } from './+types/route'
 import BackButtonPortal from '~/components/back-button-portal/back-button-portal.component'
 import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
 import LinkButton from '~/components/link-button/link-button.component'
+import { DEFAULT_ENIGMA_ENTRANCE_PROMPT } from '~/lib/enigma-entrance-prompt'
+import {
+  enigmaRequiresEntrancePassword,
+  hasEnigmaPlayAccess,
+  resolveEntrancePrompt,
+  safeEnigmaInternalPath,
+  setEnigmaUnlockCookieHeader,
+  userBypassesEnigmaPasswordGateLive,
+} from '~/lib/enigma-entrance-access.server'
 import { enigmaRobotsMeta } from '~/lib/enigma-robots-meta'
 import { Role } from '~/generated/prisma/enums'
+import bcrypt from 'bcrypt'
 
 function normalize(str: string) {
   return str.trim().toLowerCase()
 }
 
-export async function loader({ context, params }: Route.LoaderArgs) {
+export async function loader({ context, params, request }: Route.LoaderArgs) {
   const { slug } = params
 
   const enigma = await context.prisma.enigma.findUnique({
@@ -30,13 +40,36 @@ export async function loader({ context, params }: Route.LoaderArgs) {
     throw new Response('Not Found', { status: 404 })
   }
 
-  return { enigma }
+  const accessCtx =
+    context.currentUser != null
+      ? { prisma: context.prisma, userId: Number(context.currentUser.id) }
+      : undefined
+  const hasAccess = await hasEnigmaPlayAccess(
+    request,
+    enigma,
+    context.currentUser?.role,
+    accessCtx,
+  )
+  if (!hasAccess && enigmaRequiresEntrancePassword(enigma)) {
+    return {
+      locked: true as const,
+      enigmaName: enigma.name,
+      slug: enigma.slug,
+      prompt: resolveEntrancePrompt(enigma),
+    }
+  }
+
+  return {
+    locked: false as const,
+    enigma,
+  }
 }
 
 export function meta({ data }: Route.MetaArgs) {
   const robots = enigmaRobotsMeta()
   if (!data) return [...robots, { title: 'Mazeps' }]
-  return [...robots, { title: `${data.enigma.name} | Mazeps` }]
+  const name = 'locked' in data && data.locked ? data.enigmaName : data.enigma.name
+  return [...robots, { title: `${name} | Mazeps` }]
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
@@ -58,6 +91,68 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   if (phases.length === 0) throw new Response('Not Found', { status: 404 })
 
   const formData = await request.formData()
+  const intent = (formData.get('intent') as string) || ''
+
+  if (intent === 'unlock') {
+    const hash = enigma.entrancePasswordHash
+    const nextRaw = (formData.get('next') as string) || null
+    const nextPath = safeEnigmaInternalPath(slug, nextRaw)
+
+    if (await userBypassesEnigmaPasswordGateLive(context.prisma, context.currentUser)) {
+      if (hash) {
+        const cookie = await setEnigmaUnlockCookieHeader(request, slug, enigma.id, hash)
+        return redirect(nextPath, {
+          headers: { 'Set-Cookie': cookie },
+        })
+      }
+      return redirect(nextPath)
+    }
+
+    if (!hash) {
+      return redirect(`/enigmas/${slug}/entrada`)
+    }
+    const password = (formData.get('password') as string) ?? ''
+
+    if (!password.trim()) {
+      return data({ error: 'Digite a senha.', intent: 'unlock' as const })
+    }
+
+    let ok = false
+    try {
+      ok = await bcrypt.compare(password, hash)
+    } catch {
+      ok = false
+    }
+    if (!ok) {
+      return data({
+        error: 'Senha incorreta.',
+        intent: 'unlock' as const,
+        prompt: resolveEntrancePrompt(enigma),
+      })
+    }
+
+    const cookie = await setEnigmaUnlockCookieHeader(request, slug, enigma.id, hash)
+    return redirect(nextPath, {
+      headers: { 'Set-Cookie': cookie },
+    })
+  }
+
+  const accessCtxPost =
+    context.currentUser != null
+      ? { prisma: context.prisma, userId: Number(context.currentUser.id) }
+      : undefined
+  const canPlay = await hasEnigmaPlayAccess(
+    request,
+    enigma,
+    context.currentUser?.role,
+    accessCtxPost,
+  )
+  if (!canPlay && enigmaRequiresEntrancePassword(enigma)) {
+    return data({
+      error: 'É necessário informar a senha do enigma antes de continuar.',
+    })
+  }
+
   const raw = (formData.get('lastAnswer') as string) ?? ''
   const keyNorm = normalize(raw)
 
@@ -81,11 +176,88 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   return redirect(`/enigmas/${slug}/${segment}`)
 }
 
+function LockedGateView({
+  enigmaName,
+  prompt,
+  actionData,
+}: {
+  enigmaName: string
+  prompt: string
+  actionData: Route.ComponentProps['actionData']
+}) {
+  const [searchParams] = useSearchParams()
+  const next = searchParams.get('next') ?? ''
+
+  const displayPrompt =
+    actionData && 'prompt' in actionData && typeof actionData.prompt === 'string'
+      ? actionData.prompt
+      : prompt
+
+  return (
+    <>
+      <BackButtonPortal to="/enigmas" />
+      <Center>
+        <div className="mx-auto w-full max-w-md px-6 py-10">
+          <div
+            className="rounded-2xl border border-foreground/15 bg-background/95 p-6 shadow-xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="enigma-gate-title"
+          >
+            <h1
+              id="enigma-gate-title"
+              className="mb-4 text-center font-brand text-2xl tracking-wide text-foreground/95"
+            >
+              {enigmaName}
+            </h1>
+            <p className="mb-6 whitespace-pre-wrap text-center text-sm leading-relaxed text-foreground/80">
+              {displayPrompt || DEFAULT_ENIGMA_ENTRANCE_PROMPT}
+            </p>
+            <Form method="post" className="flex flex-col gap-4">
+              <input type="hidden" name="intent" value="unlock" />
+              <input type="hidden" name="next" value={next} />
+                <label htmlFor="gate-password" className="sr-only">
+                  Senha do enigma
+                </label>
+                <input
+                  id="gate-password"
+                  name="password"
+                  type="password"
+                  autoComplete="off"
+                  className="w-full rounded-md border-1 p-2"
+                  placeholder="Senha"
+                />
+                {actionData?.error && (
+                  <p className="text-center text-sm text-red-600" role="alert">
+                    {actionData.error}
+                  </p>
+                )}
+              <Button type="submit" className="w-full py-3 text-base font-semibold">
+                Entrar
+              </Button>
+            </Form>
+          </div>
+        </div>
+      </Center>
+    </>
+  )
+}
+
 export default function Route({
   loaderData,
   actionData,
   params,
 }: Route.ComponentProps) {
+  if (loaderData.locked) {
+    return (
+      <LockedGateView
+        enigmaName={loaderData.enigmaName}
+        prompt={loaderData.prompt}
+        actionData={actionData}
+      />
+    )
+  }
+
   const { enigma } = loaderData
 
   return (

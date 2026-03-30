@@ -23,3 +23,8 @@ primary_region = 'gru'
   memory = '1gb'
   cpu_kind = 'shared'
   cpus = 1
+
+# Uploads de enigmas (imagem/áudio): disco persistente — sem isto, ficheiros perdem-se em redeploy/nova VM.
+[[mounts]]
+  source = 'enigma_uploads'
+  destination = '/app/uploads'

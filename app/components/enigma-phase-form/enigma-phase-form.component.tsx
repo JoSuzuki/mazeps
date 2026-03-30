@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import Button from '~/components/button/button.component'
 import NumberInput from '~/components/number-input/number-input.component'
 import RadioGroup, {
@@ -78,6 +78,24 @@ function emptyMediaRow(): ExtraMediaRow {
     imageAlt: '',
     persistUrl: null,
   }
+}
+
+/** Segundo `/` após outro vira `\n`. Não aplica em `://` (ex.: `http://`). */
+function keyDownDoubleSlashToNewline(
+  e: ReactKeyboardEvent<HTMLTextAreaElement>,
+  value: string,
+  apply: (next: string, caret: number) => void,
+) {
+  if (e.key !== '/') return
+  const el = e.currentTarget
+  const start = el.selectionStart ?? 0
+  const end = el.selectionEnd ?? 0
+  if (start !== end || start < 1) return
+  if (value[start - 1] !== '/') return
+  if (start >= 2 && value[start - 2] === ':') return
+  e.preventDefault()
+  const next = value.slice(0, start - 1) + '\n' + value.slice(start)
+  apply(next, start)
 }
 
 function UrlUploadSegment({
@@ -277,6 +295,10 @@ export default function EnigmaPhaseForm({
       <label className="block" htmlFor="phrase">
         Dica principal
       </label>
+      <p className="mb-1 text-xs text-foreground/50">
+        Digite <kbd className="rounded border border-foreground/20 px-1 py-px font-mono text-[0.7rem]">//</kbd>{' '}
+        para inserir uma quebra de linha.
+      </p>
       <textarea
         id="phrase"
         name="phrase"
@@ -284,6 +306,13 @@ export default function EnigmaPhaseForm({
         rows={3}
         required
         defaultValue={defaultValues?.phrase}
+        onKeyDown={(e) =>
+          keyDownDoubleSlashToNewline(e, e.currentTarget.value, (next, caret) => {
+            const ta = e.currentTarget
+            ta.value = next
+            ta.setSelectionRange(caret, caret)
+          })
+        }
       />
       <Spacer size="sm" />
 
@@ -336,7 +365,9 @@ export default function EnigmaPhaseForm({
         </h2>
         <p className="mb-4 text-sm text-foreground/60">
           Adicione mais mídias ou dicas nesta fase. Cada tipo segue as mesmas regras dos campos
-          principais acima.
+          principais acima. Nas dicas principais adicionais,{' '}
+          <kbd className="rounded border border-foreground/20 px-1 py-px font-mono text-[0.65rem]">//</kbd>{' '}
+          também insere quebra de linha.
         </p>
         <div className="mb-6 flex flex-wrap gap-2">
           <Button
@@ -514,6 +545,15 @@ export default function EnigmaPhaseForm({
               value={text}
               onChange={(e) =>
                 setExtraPhrases((p) => p.map((t, j) => (j === i ? e.target.value : t)))
+              }
+              onKeyDown={(e) =>
+                keyDownDoubleSlashToNewline(e, text, (next, caret) => {
+                  setExtraPhrases((p) => p.map((t, j) => (j === i ? next : t)))
+                  requestAnimationFrame(() => {
+                    const ta = e.currentTarget
+                    ta.setSelectionRange(caret, caret)
+                  })
+                })
               }
             />
           </div>

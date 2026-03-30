@@ -2,6 +2,10 @@ import { data, redirect } from 'react-router'
 import type { Route } from './+types/route'
 import EnigmaPhasePlay from '~/components/enigma-phase-play/enigma-phase-play.component'
 import {
+  enigmaRequiresEntrancePassword,
+  hasEnigmaPlayAccess,
+} from '~/lib/enigma-entrance-access.server'
+import {
   toPublicEnigmaPhase,
   toPublicEnigmaPlay,
 } from '~/lib/enigma-play-public'
@@ -9,7 +13,7 @@ import { enigmaRobotsMeta } from '~/lib/enigma-robots-meta'
 import { resolvePhaseAnswerSubmission } from '~/lib/enigma-phase-answer.server'
 import { Role } from '~/generated/prisma/enums'
 
-export async function loader({ context, params }: Route.LoaderArgs) {
+export async function loader({ context, params, request }: Route.LoaderArgs) {
   const { slug } = params
 
   const enigma = await context.prisma.enigma.findUnique({
@@ -22,6 +26,21 @@ export async function loader({ context, params }: Route.LoaderArgs) {
   const isAdmin = context.currentUser?.role === Role.ADMIN
   if (!isAdmin && !enigma.published) {
     throw new Response('Not Found', { status: 404 })
+  }
+
+  const accessCtx =
+    context.currentUser != null
+      ? { prisma: context.prisma, userId: Number(context.currentUser.id) }
+      : undefined
+  const canPlay = await hasEnigmaPlayAccess(
+    request,
+    enigma,
+    context.currentUser?.role,
+    accessCtx,
+  )
+  if (!canPlay && enigmaRequiresEntrancePassword(enigma)) {
+    const next = encodeURIComponent(new URL(request.url).pathname)
+    return redirect(`/enigmas/${slug}/entrada?next=${next}`)
   }
 
   const phase = enigma.phases[0] ?? null
@@ -55,6 +74,21 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   const isAdmin = context.currentUser?.role === Role.ADMIN
   if (!isAdmin && !enigma.published) {
     throw new Response('Not Found', { status: 404 })
+  }
+
+  const accessCtxAction =
+    context.currentUser != null
+      ? { prisma: context.prisma, userId: Number(context.currentUser.id) }
+      : undefined
+  const canPlay = await hasEnigmaPlayAccess(
+    request,
+    enigma,
+    context.currentUser?.role,
+    accessCtxAction,
+  )
+  if (!canPlay && enigmaRequiresEntrancePassword(enigma)) {
+    const next = encodeURIComponent(new URL(request.url).pathname)
+    return redirect(`/enigmas/${slug}/entrada?next=${next}`)
   }
 
   const phase = enigma.phases[0] ?? null

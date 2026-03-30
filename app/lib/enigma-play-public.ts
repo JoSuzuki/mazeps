@@ -7,10 +7,7 @@ function trimNonEmptyStrings(arr: string[]) {
   return arr.map((s) => s.trim()).filter((s) => s.length > 0)
 }
 
-/**
- * Dados enviados ao browser na jogada: sem `answer` (validação só no servidor).
- * Mantém `answerLength` para a dica de caracteres na UI.
- */
+/** Dados enviados ao browser na jogada: sem `answer` (validação só no servidor). */
 export function toPublicEnigmaPhase<
   T extends {
     answer: string
@@ -23,7 +20,7 @@ export function toPublicEnigmaPhase<
   },
 >(phase: T) {
   const {
-    answer,
+    answer: _answer,
     hiddenHint,
     extraMediaBlocks,
     extraPhrases,
@@ -43,7 +40,6 @@ export function toPublicEnigmaPhase<
     extraPhrases: trimNonEmptyStrings(parseStringArrayJson(extraPhrases)),
     extraTipPhrases: trimNonEmptyStrings(parseStringArrayJson(extraTipPhrases)),
     extraHiddenHints: trimNonEmptyStrings(parseStringArrayJson(extraHiddenHints)),
-    answerLength: answer.length,
   }
 }
 
