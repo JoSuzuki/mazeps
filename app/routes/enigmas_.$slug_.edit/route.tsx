@@ -8,6 +8,7 @@ import LinkButton from '~/components/link-button/link-button.component'
 import TextInput from '~/components/text-input/text-input.component'
 import { enigmaRobotsMeta } from '~/lib/enigma-robots-meta'
 import { Role } from '~/generated/prisma/enums'
+import bcrypt from 'bcrypt'
 
 const ICON_CLASS = 'h-5 w-5 shrink-0 text-foreground/50'
 
@@ -86,12 +87,18 @@ export async function loader({ context, params }: Route.LoaderArgs) {
   if (!context.currentUser) return redirect('/login')
   if (context.currentUser.role !== Role.ADMIN) return redirect('/')
 
-  const enigma = await context.prisma.enigma.findUniqueOrThrow({
+  const raw = await context.prisma.enigma.findUniqueOrThrow({
     where: { slug: params.slug },
     include: { phases: { orderBy: { order: 'asc' } } },
   })
 
-  return { enigma }
+  const { entrancePasswordHash, ...enigma } = raw
+  return {
+    enigma: {
+      ...enigma,
+      hasEntrancePassword: Boolean(entrancePasswordHash),
+    },
+  }
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
@@ -106,9 +113,34 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     const name = formData.get('name') as string
     const slug = (formData.get('slug') as string).toLowerCase().trim()
     const published = formData.get('published') === 'on'
+    const entrancePasswordClear = formData.get('entrancePasswordClear') === 'on'
+    const entrancePasswordRaw = ((formData.get('entrancePassword') as string) ?? '').trim()
+    const entrancePasswordPromptRaw = (formData.get('entrancePasswordPrompt') as string) ?? ''
+    const entrancePasswordPrompt =
+      entrancePasswordPromptRaw.trim() === '' ? null : entrancePasswordPromptRaw.trim()
+
+    const data: {
+      name: string
+      slug: string
+      published: boolean
+      entrancePasswordPrompt: string | null
+      entrancePasswordHash?: string | null
+    } = {
+      name,
+      slug,
+      published,
+      entrancePasswordPrompt,
+    }
+
+    if (entrancePasswordClear) {
+      data.entrancePasswordHash = null
+    } else if (entrancePasswordRaw) {
+      data.entrancePasswordHash = await bcrypt.hash(entrancePasswordRaw, 10)
+    }
+
     await context.prisma.enigma.update({
       where: { slug: params.slug },
-      data: { name, slug, published },
+      data,
     })
     return redirect(`/enigmas/${slug}/edit`)
   }
@@ -182,6 +214,65 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                     PUBLICADO
                   </span>
                 </label>
+
+                <div className="rounded-xl border border-foreground/15 bg-foreground/[0.02] p-4">
+                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/55">
+                    Senha da página de entrada
+                  </h3>
+                  <p className="mb-4 text-sm text-foreground/55">
+                    Quem acessar a entrada ou as fases do enigma (exceto administradores) precisará
+                    desta senha uma vez por navegador. Deixe em branco a nova senha para manter a
+                    atual.
+                  </p>
+                  {enigma.hasEntrancePassword ? (
+                    <p className="mb-3 text-sm font-medium text-foreground/70">
+                      Estado: senha definida
+                    </p>
+                  ) : (
+                    <p className="mb-3 text-sm text-foreground/50">Estado: sem senha</p>
+                  )}
+                  <label className="mb-3 flex cursor-pointer items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      name="entrancePasswordClear"
+                      className="h-4 w-4 rounded border-foreground/30 accent-primary"
+                    />
+                    Remover senha da entrada
+                  </label>
+                  <label className="mb-1 block text-sm font-medium text-foreground/80" htmlFor="entrancePassword">
+                    Nova senha (opcional)
+                  </label>
+                  <input
+                    id="entrancePassword"
+                    name="entrancePassword"
+                    type="password"
+                    autoComplete="new-password"
+                    className="mb-4 w-full rounded-md border-1 p-2"
+                    placeholder={
+                      enigma.hasEntrancePassword
+                        ? 'Deixe vazio para manter a senha atual'
+                        : 'Definir senha'
+                    }
+                  />
+                  <label
+                    className="mb-1 block text-sm font-medium text-foreground/80"
+                    htmlFor="entrancePasswordPrompt"
+                  >
+                    Texto do popup de senha
+                  </label>
+                  <p className="mb-2 text-xs text-foreground/45">
+                    Mensagem exibida antes do campo de senha. Se vazio, usamos um texto padrão.
+                  </p>
+                  <textarea
+                    id="entrancePasswordPrompt"
+                    name="entrancePasswordPrompt"
+                    rows={4}
+                    className="w-full rounded-md border-1 p-2 text-sm"
+                    defaultValue={enigma.entrancePasswordPrompt ?? ''}
+                    placeholder="Este enigma está protegido por senha. Digite-a para continuar."
+                  />
+                </div>
+
                 <div className="flex justify-end">
                   <Button type="submit">Salvar alterações</Button>
                 </div>
