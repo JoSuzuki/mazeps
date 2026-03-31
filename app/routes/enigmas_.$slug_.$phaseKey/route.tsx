@@ -14,6 +14,10 @@ import {
   normalizeEnigmaAnswerInput,
   resolvePhaseAnswerSubmission,
 } from '~/lib/enigma-phase-answer.server'
+import {
+  getPlayablePhasesOrdered,
+  hasMorePhasesAfterPlayableWindow,
+} from '~/lib/enigma-public-phases.server'
 import { Role } from '~/generated/prisma/enums'
 
 export async function loader({ context, params, request }: Route.LoaderArgs) {
@@ -55,9 +59,35 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
       enigma: toPublicEnigmaPlay(enigma),
       phase: null,
       isFinished: true,
+      celebrationKind: 'full' as const,
       isAdmin: context.currentUser?.role === Role.ADMIN,
     }
   }
+
+  if (phaseKey === 'mais-por-vir') {
+    const playable = getPlayablePhasesOrdered(
+      enigma,
+      enigma.phases,
+      context.currentUser?.role,
+    )
+    if (!hasMorePhasesAfterPlayableWindow(enigma.phases, playable)) {
+      return redirect(`/enigmas/${slug}/parabens`)
+    }
+    return {
+      enigma: toPublicEnigmaPlay(enigma),
+      phase: null,
+      isFinished: true,
+      celebrationKind: 'interlude' as const,
+      isAdmin: context.currentUser?.role === Role.ADMIN,
+    }
+  }
+
+  const playable = getPlayablePhasesOrdered(
+    enigma,
+    enigma.phases,
+    context.currentUser?.role,
+  )
+  const playableIds = new Set(playable.map((p) => p.id))
 
   let phase = null
 
@@ -69,7 +99,7 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
     phase = enigma.phases[prevIndex + 1]
   }
 
-  if (!phase) throw new Response('Not Found', { status: 404 })
+  if (!phase || !playableIds.has(phase.id)) throw new Response('Not Found', { status: 404 })
 
   return {
     enigma: toPublicEnigmaPlay(enigma),
@@ -83,6 +113,12 @@ export function meta({ data }: Route.MetaArgs) {
   const robots = enigmaRobotsMeta()
   if (!data) return [...robots, { title: 'Mazeps' }]
   if (data.isFinished) {
+    if (data.celebrationKind === 'interlude') {
+      return [
+        ...robots,
+        { title: `Há mais por vir — ${data.enigma.name} | Mazeps` },
+      ]
+    }
     return [...robots, { title: `Parabéns - ${data.enigma.name} | Mazeps` }]
   }
   const title = data.phase?.pageTitle ?? data.phase?.title ?? data.enigma.name
@@ -123,6 +159,17 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     return redirect(`/enigmas/${slug}`, { status: 307 })
   }
 
+  if (phaseKey === 'parabens' || phaseKey === 'mais-por-vir') {
+    throw new Response('Not Found', { status: 404 })
+  }
+
+  const playable = getPlayablePhasesOrdered(
+    enigma,
+    enigma.phases,
+    context.currentUser?.role,
+  )
+  const playableIds = new Set(playable.map((p) => p.id))
+
   let phase = null
   const keyNorm = normalizeEnigmaAnswerInput(phaseKey!)
   const prevIndex = enigma.phases.findIndex(
@@ -132,7 +179,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     phase = enigma.phases[prevIndex + 1]
   }
 
-  if (!phase) throw new Response('Not Found', { status: 404 })
+  if (!phase || !playableIds.has(phase.id)) throw new Response('Not Found', { status: 404 })
 
   const formData = await request.formData()
   const resolution = resolvePhaseAnswerSubmission({
@@ -148,8 +195,11 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     return data({ wrong: true as const })
   }
 
-  const isLast = phase.order === enigma.phases[enigma.phases.length - 1].order
+  const isLast = phase.order === playable[playable.length - 1]!.order
   if (isLast) {
+    if (hasMorePhasesAfterPlayableWindow(enigma.phases, playable)) {
+      return redirect(`/enigmas/${slug}/mais-por-vir`)
+    }
     return redirect(`/enigmas/${slug}/parabens`)
   }
 

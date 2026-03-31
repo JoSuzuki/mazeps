@@ -14,6 +14,10 @@ import {
   userBypassesEnigmaPasswordGateLive,
 } from '~/lib/enigma-entrance-access.server'
 import { enigmaRobotsMeta } from '~/lib/enigma-robots-meta'
+import {
+  getPlayablePhasesOrdered,
+  hasMorePhasesAfterPlayableWindow,
+} from '~/lib/enigma-public-phases.server'
 import { Role } from '~/generated/prisma/enums'
 import bcrypt from 'bcrypt'
 
@@ -59,6 +63,15 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
     }
   }
 
+  const playable = getPlayablePhasesOrdered(
+    enigma,
+    enigma.phases,
+    context.currentUser?.role,
+  )
+  if (enigma.published && playable.length === 0 && context.currentUser?.role !== Role.ADMIN) {
+    throw new Response('Not Found', { status: 404 })
+  }
+
   return {
     locked: false as const,
     enigma,
@@ -89,6 +102,15 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 
   const phases = enigma.phases
   if (phases.length === 0) throw new Response('Not Found', { status: 404 })
+
+  const playable = getPlayablePhasesOrdered(
+    enigma,
+    phases,
+    context.currentUser?.role,
+  )
+  if (enigma.published && playable.length === 0 && context.currentUser?.role !== Role.ADMIN) {
+    throw new Response('Not Found', { status: 404 })
+  }
 
   const formData = await request.formData()
   const intent = (formData.get('intent') as string) || ''
@@ -160,19 +182,22 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     return data({ error: 'Preencha o campo para continuar.' })
   }
 
-  const matchIndex = phases.findIndex((p) => normalize(p.answer) === keyNorm)
+  const matchIndex = playable.findIndex((p) => normalize(p.answer) === keyNorm)
   if (matchIndex === -1) {
     return data({
       error: 'Não encontramos essa resposta neste enigma. Confira ortografia e espaços.',
     })
   }
 
-  const isLast = matchIndex === phases.length - 1
+  const isLast = matchIndex === playable.length - 1
   if (isLast) {
+    if (hasMorePhasesAfterPlayableWindow(enigma.phases, playable)) {
+      return redirect(`/enigmas/${slug}/mais-por-vir`)
+    }
     return redirect(`/enigmas/${slug}/parabens`)
   }
 
-  const segment = encodeURIComponent(phases[matchIndex].answer.trim())
+  const segment = encodeURIComponent(playable[matchIndex]!.answer.trim())
   return redirect(`/enigmas/${slug}/${segment}`)
 }
 

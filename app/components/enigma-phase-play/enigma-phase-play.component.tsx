@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Link, useFetcher } from 'react-router'
+import EnigmaJourneyInterlude from '~/components/enigma-journey-interlude/enigma-journey-interlude.component'
 import ParabensCelebration from '~/components/parabens-celebration/parabens-celebration.component'
 import type { ExtraMediaBlock } from '~/lib/enigma-phase-extras'
 import { MediaType } from '~/generated/prisma/enums'
@@ -21,6 +22,8 @@ export type EnigmaPhasePlayLoaderData = {
     extraHiddenHints: string[]
   } | null
   isFinished: boolean
+  /** `interlude` = fim do bloco público, ainda há fases não liberadas. */
+  celebrationKind?: 'full' | 'interlude'
   isAdmin: boolean
 }
 
@@ -129,6 +132,9 @@ export default function EnigmaPhasePlay({
   }, [loaderData.phase?.id])
 
   if (loaderData.isFinished) {
+    if (loaderData.celebrationKind === 'interlude') {
+      return <EnigmaJourneyInterlude enigmaName={loaderData.enigma.name} />
+    }
     return <ParabensCelebration enigmaName={loaderData.enigma.name} />
   }
 

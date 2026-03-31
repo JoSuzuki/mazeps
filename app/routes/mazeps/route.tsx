@@ -46,9 +46,7 @@ const TEAM = [
   {
     name: 'Ivan Cassane',
     role: 'CCM — Chief Creative Meeple',
-    photo: '/team/ivan-cassane.jpeg',
-    photoPosition: 'object-[100%_30%]',
-    photoScale: 'scale-150',
+    photo: '/team/ivan-cassane.png',
     bio: 'Fundador #2 do Mazeps',
   },
   {

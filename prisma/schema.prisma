@@ -204,6 +204,10 @@ model Enigma {
   name      String
   slug      String        @unique
   published Boolean       @default(false)
+  /// Ordem inclusiva visível ao público (com `published`); null = desde a menor ordem existente
+  publicPhaseOrderFrom Int?
+  /// Ordem inclusiva visível ao público; null = até a maior ordem existente
+  publicPhaseOrderTo   Int?
   /// bcrypt; null = página de entrada e jogada sem senha
   entrancePasswordHash   String?
   /// Texto do popup de senha (vazio no servidor = texto padrão na UI)
