@@ -3,6 +3,7 @@ import BackButtonPortal from '~/components/back-button-portal/back-button-portal
 import Center from '~/components/center/center.component'
 import Link from '~/components/link/link.component'
 import LinkButton from '~/components/link-button/link-button.component'
+import { countPublicPlayablePhases } from '~/lib/enigma-public-phases.server'
 import { enigmaRobotsMeta } from '~/lib/enigma-robots-meta'
 import { Role } from '~/generated/prisma/enums'
 
@@ -14,13 +15,20 @@ export async function loader({ context }: Route.LoaderArgs) {
   const isAdmin = context.currentUser?.role === Role.ADMIN
 
   const enigmas = await context.prisma.enigma.findMany({
-    include: { _count: { select: { phases: true } } },
+    include: {
+      _count: { select: { phases: true } },
+      phases: { select: { order: true } },
+    },
     orderBy: { createdAt: 'desc' },
   })
 
-  // Enigma "publicado" = published=true E tem pelo menos uma fase (jogável)
   const publishedEnigmas = enigmas.filter(
-    (e) => e.published && e._count.phases > 0,
+    (e) =>
+      e.published &&
+      countPublicPlayablePhases(
+        e,
+        e.phases.map((p) => p.order),
+      ) > 0,
   )
 
   return {

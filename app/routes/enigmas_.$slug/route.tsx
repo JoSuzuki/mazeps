@@ -11,6 +11,10 @@ import {
 } from '~/lib/enigma-play-public'
 import { enigmaRobotsMeta } from '~/lib/enigma-robots-meta'
 import { resolvePhaseAnswerSubmission } from '~/lib/enigma-phase-answer.server'
+import {
+  getPlayablePhasesOrdered,
+  hasMorePhasesAfterPlayableWindow,
+} from '~/lib/enigma-public-phases.server'
 import { Role } from '~/generated/prisma/enums'
 
 export async function loader({ context, params, request }: Route.LoaderArgs) {
@@ -43,7 +47,12 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
     return redirect(`/enigmas/${slug}/entrada?next=${next}`)
   }
 
-  const phase = enigma.phases[0] ?? null
+  const playable = getPlayablePhasesOrdered(
+    enigma,
+    enigma.phases,
+    context.currentUser?.role,
+  )
+  const phase = playable[0] ?? null
   if (!phase) throw new Response('Not Found', { status: 404 })
 
   return {
@@ -91,7 +100,12 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     return redirect(`/enigmas/${slug}/entrada?next=${next}`)
   }
 
-  const phase = enigma.phases[0] ?? null
+  const playable = getPlayablePhasesOrdered(
+    enigma,
+    enigma.phases,
+    context.currentUser?.role,
+  )
+  const phase = playable[0] ?? null
   if (!phase) throw new Response('Not Found', { status: 404 })
 
   const formData = await request.formData()
@@ -108,8 +122,11 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     return data({ wrong: true as const })
   }
 
-  const isLast = phase.order === enigma.phases[enigma.phases.length - 1].order
+  const isLast = phase.order === playable[playable.length - 1]!.order
   if (isLast) {
+    if (hasMorePhasesAfterPlayableWindow(enigma.phases, playable)) {
+      return redirect(`/enigmas/${slug}/mais-por-vir`)
+    }
     return redirect(`/enigmas/${slug}/parabens`)
   }
 

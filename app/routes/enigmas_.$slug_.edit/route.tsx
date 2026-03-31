@@ -1,4 +1,11 @@
-import { data, Form, Link as RouterLink, redirect, useFetcher } from 'react-router'
+import {
+  data,
+  Form,
+  Link as RouterLink,
+  redirect,
+  useActionData,
+  useFetcher,
+} from 'react-router'
 import type { Route } from './+types/route'
 import BackButtonPortal from '~/components/back-button-portal/back-button-portal.component'
 import Button from '~/components/button/button.component'
@@ -6,6 +13,7 @@ import Center from '~/components/center/center.component'
 import Link from '~/components/link/link.component'
 import LinkButton from '~/components/link-button/link-button.component'
 import TextInput from '~/components/text-input/text-input.component'
+import { enigmaPlayPathForPhaseIndex } from '~/lib/enigma-phase-play-path'
 import { enigmaRobotsMeta } from '~/lib/enigma-robots-meta'
 import { Role } from '~/generated/prisma/enums'
 import bcrypt from 'bcrypt'
@@ -119,28 +127,74 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     const entrancePasswordPrompt =
       entrancePasswordPromptRaw.trim() === '' ? null : entrancePasswordPromptRaw.trim()
 
-    const data: {
+    const parseOptOrder = (v: FormDataEntryValue | null): number | null => {
+      if (v == null || v === '') return null
+      const n = Number(v)
+      return Number.isFinite(n) ? Math.trunc(n) : null
+    }
+    const publicPhaseOrderFrom = parseOptOrder(formData.get('publicPhaseOrderFrom'))
+    const publicPhaseOrderTo = parseOptOrder(formData.get('publicPhaseOrderTo'))
+
+    const existing = await context.prisma.enigma.findUniqueOrThrow({
+      where: { slug: params.slug },
+      include: { phases: { select: { order: true } } },
+    })
+    const orders = existing.phases.map((p) => p.order)
+    const gmin = orders.length > 0 ? Math.min(...orders) : 1
+    const gmax = orders.length > 0 ? Math.max(...orders) : 1
+    const effFrom = publicPhaseOrderFrom ?? gmin
+    const effTo = publicPhaseOrderTo ?? gmax
+    if (effFrom > effTo) {
+      return data(
+        { error: 'A ordem inicial do intervalo público não pode ser maior que a final.' },
+        { status: 400 },
+      )
+    }
+    if (effFrom < gmin || effTo > gmax) {
+      return data(
+        {
+          error: `As ordens devem estar entre ${gmin} e ${gmax} (limites das fases deste enigma).`,
+        },
+        { status: 400 },
+      )
+    }
+    const hasPlayable = orders.some((o) => o >= effFrom && o <= effTo)
+    if (published && !hasPlayable) {
+      return data(
+        {
+          error:
+            'Com este intervalo nenhuma fase ficaria visível ao público. Ajuste as ordens ou adicione fases.',
+        },
+        { status: 400 },
+      )
+    }
+
+    const updatePayload: {
       name: string
       slug: string
       published: boolean
       entrancePasswordPrompt: string | null
+      publicPhaseOrderFrom: number | null
+      publicPhaseOrderTo: number | null
       entrancePasswordHash?: string | null
     } = {
       name,
       slug,
       published,
       entrancePasswordPrompt,
+      publicPhaseOrderFrom,
+      publicPhaseOrderTo,
     }
 
     if (entrancePasswordClear) {
-      data.entrancePasswordHash = null
+      updatePayload.entrancePasswordHash = null
     } else if (entrancePasswordRaw) {
-      data.entrancePasswordHash = await bcrypt.hash(entrancePasswordRaw, 10)
+      updatePayload.entrancePasswordHash = await bcrypt.hash(entrancePasswordRaw, 10)
     }
 
     await context.prisma.enigma.update({
       where: { slug: params.slug },
-      data,
+      data: updatePayload,
     })
     return redirect(`/enigmas/${slug}/edit`)
   }
@@ -161,7 +215,15 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 
 export default function Route({ loaderData }: Route.ComponentProps) {
   const fetcher = useFetcher()
+  const actionData = useActionData<typeof action>()
   const { enigma } = loaderData
+
+  const orderMin = enigma.phases.length
+    ? Math.min(...enigma.phases.map((p) => p.order))
+    : 1
+  const orderMax = enigma.phases.length
+    ? Math.max(...enigma.phases.map((p) => p.order))
+    : 1
 
   return (
     <>
@@ -187,6 +249,11 @@ export default function Route({ loaderData }: Route.ComponentProps) {
             <Form method="post">
               <input type="hidden" name="intent" value="update" />
               <div className="space-y-5">
+                {actionData?.error && (
+                  <p className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200">
+                    {actionData.error}
+                  </p>
+                )}
                 <TextInput
                   id="name"
                   name="name"
@@ -214,6 +281,50 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                     PUBLICADO
                   </span>
                 </label>
+
+                <div className="rounded-xl border border-foreground/15 bg-foreground/[0.02] p-4">
+                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/55">
+                    Fases visíveis ao público
+                  </h3>
+                  <p className="mb-4 text-sm text-foreground/55">
+                    Com o enigma publicado, só quem não é administrador vê as fases cuja{' '}
+                    <strong className="text-foreground/75">ordem</strong> estiver entre os valores
+                    abaixo (inclusive). Deixe os dois campos vazios para liberar todas as fases. Podes
+                    ir ampliando o intervalo quando quiseres lançar mais conteúdo.
+                  </p>
+                  <p className="mb-3 text-xs text-foreground/45">
+                    Ordens existentes neste enigma: {orderMin}–{orderMax}
+                    {enigma.phases.length === 0 ? ' (adicione fases primeiro)' : ''}
+                  </p>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <TextInput
+                      id="publicPhaseOrderFrom"
+                      name="publicPhaseOrderFrom"
+                      label="Da ordem (opcional)"
+                      type="number"
+                      required={false}
+                      defaultValue={
+                        enigma.publicPhaseOrderFrom === null ||
+                        enigma.publicPhaseOrderFrom === undefined
+                          ? ''
+                          : String(enigma.publicPhaseOrderFrom)
+                      }
+                    />
+                    <TextInput
+                      id="publicPhaseOrderTo"
+                      name="publicPhaseOrderTo"
+                      label="Até a ordem (opcional)"
+                      type="number"
+                      required={false}
+                      defaultValue={
+                        enigma.publicPhaseOrderTo === null ||
+                        enigma.publicPhaseOrderTo === undefined
+                          ? ''
+                          : String(enigma.publicPhaseOrderTo)
+                      }
+                    />
+                  </div>
+                </div>
 
                 <div className="rounded-xl border border-foreground/15 bg-foreground/[0.02] p-4">
                   <h3 className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/55">
@@ -320,7 +431,16 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                           </span>
                           <p className="break-words font-medium">{phase.title}</p>
                         </div>
-                        <div className="relative z-10 flex shrink-0 items-center gap-2">
+                        <div className="relative z-10 flex shrink-0 flex-wrap items-center justify-end gap-2">
+                          <RouterLink
+                            to={enigmaPlayPathForPhaseIndex(enigma.slug, enigma.phases, index)}
+                            reloadDocument
+                            title="Abre esta fase no modo jogador (como se tivesses acertado as anteriores)."
+                            className="flex items-center gap-1.5 rounded-lg border border-primary/35 bg-primary/10 px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/20 active:pressed"
+                          >
+                            <PlayIcon />
+                            Testar Daqui
+                          </RouterLink>
                           <RouterLink
                             to={`/enigmas/${enigma.slug}/edit/phases/${phase.id}`}
                             reloadDocument
