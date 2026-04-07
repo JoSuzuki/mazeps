@@ -174,7 +174,7 @@ export default function Route({ loaderData, matches }: Route.ComponentProps) {
           )}
         </MenuNavigation>
       </nav>
-      <main className="min-h-0 flex-1">
+      <main className="min-h-0 flex-1 overflow-y-auto">
         <Outlet />
       </main>
     </>

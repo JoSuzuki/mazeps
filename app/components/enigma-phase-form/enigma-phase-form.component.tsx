@@ -1,4 +1,9 @@
-import { useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
+import {
+  useLayoutEffect,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from 'react'
 import Button from '~/components/button/button.component'
 import NumberInput from '~/components/number-input/number-input.component'
 import RadioGroup, {
@@ -98,6 +103,13 @@ function keyDownDoubleSlashToNewline(
   apply(next, start)
 }
 
+/** Altura do textarea = conteúdo (sem scroll interno). */
+function autoResizeTextareaToContent(el: HTMLTextAreaElement | null) {
+  if (!el) return
+  el.style.height = '0px'
+  el.style.height = `${el.scrollHeight}px`
+}
+
 function UrlUploadSegment({
   name,
   value,
@@ -183,6 +195,12 @@ export default function EnigmaPhaseForm({
   const supportsUpload = mediaType === 'IMAGE' || mediaType === 'AUDIO'
   const acceptAttr = mediaType === 'IMAGE' ? 'image/*' : 'audio/*'
   const hasStoredServerUpload = isEnigmaServerUploadUrl(defaultValues?.mediaUrl)
+
+  const phraseTextareaRef = useRef<HTMLTextAreaElement>(null)
+
+  useLayoutEffect(() => {
+    autoResizeTextareaToContent(phraseTextareaRef.current)
+  }, [defaultValues?.phrase])
 
   return (
     <>
@@ -302,15 +320,18 @@ export default function EnigmaPhaseForm({
       <textarea
         id="phrase"
         name="phrase"
-        className="w-full rounded-md border-1 p-1"
-        rows={3}
+        ref={phraseTextareaRef}
+        className="min-h-[4.5rem] w-full resize-none overflow-hidden rounded-md border-1 p-1"
+        rows={1}
         required
         defaultValue={defaultValues?.phrase}
+        onInput={(e) => autoResizeTextareaToContent(e.currentTarget)}
         onKeyDown={(e) =>
           keyDownDoubleSlashToNewline(e, e.currentTarget.value, (next, caret) => {
             const ta = e.currentTarget
             ta.value = next
             ta.setSelectionRange(caret, caret)
+            queueMicrotask(() => autoResizeTextareaToContent(ta))
           })
         }
       />
