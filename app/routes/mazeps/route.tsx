@@ -79,7 +79,7 @@ const TEAM = [
     name: 'Jonathan Suzuki',
     role: 'CTM — Chief Technology Meeple',
     photo: '/team/jonathan-suzuki.jpeg',
-    photoPosition: 'object-[50%_35%]',
+    photoPosition: 'object-[top]',
     gridClass: 'sm:col-start-2',
     bio: '',
   },
@@ -204,8 +204,8 @@ export default function Route() {
                     src={member.photo}
                     alt={member.name}
                     className={`h-full w-full object-cover ${
-                      'photoPosition' in member ? `sm:${member.photoPosition}` : ''
-                    } ${'photoScale' in member ? `sm:${member.photoScale}` : ''}`}
+                      'photoPosition' in member ? `${member.photoPosition}` : ''
+                      } ${'photoScale' in member ? `${member.photoScale}` : ''}`}
                   />
                 ) : (
                   <div className="bg-foreground/10 flex h-full w-full items-center justify-center">
