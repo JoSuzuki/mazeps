@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect } from 'react'
 import { Link } from 'react-router'
 import type { Route } from './+types/route'
 import Board from '~/components/board/board.component'
+import HomeThemeHint from '~/components/home-theme-hint/home-theme-hint.component'
 import Calendar from '~/components/calendar/calendar.component'
 import LinkButton from '~/components/link-button/link-button.component'
 import Title from '~/components/title/title.component'
@@ -23,11 +24,14 @@ export default function Route({}: Route.ComponentProps) {
 
   return (
     <>
-      <div className="mb-4 flex justify-center px-4 sm:mb-6">
-        <Title />
-      </div>
-      <div className="px-2 sm:px-4 md:px-6">
-        <Board />
+      <div className="relative w-full sm:pb-20">
+        <HomeThemeHint />
+        <div className="mb-4 flex justify-center px-4 sm:mb-6">
+          <Title />
+        </div>
+        <div className="px-2 sm:px-4 md:px-6">
+          <Board />
+        </div>
       </div>
       {/* Bloco de frases mais compacto e lado a lado para o calendário aparecer sem scroll */}
       <div className="mt-6 px-4 sm:mt-8">

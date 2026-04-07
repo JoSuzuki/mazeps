@@ -37,12 +37,9 @@ function renderMediaBlock(
   mediaUrl: string | null,
   imageAlt: string | null,
   title: string,
-  /** Mais de uma mídia: cada uma ocupa uma fatia da altura disponível, sem scroll interno. */
-  shareVerticalSpace: boolean,
 ) {
-  const slotClass = shareVerticalSpace
-    ? 'flex min-h-0 min-w-0 w-full flex-1 flex-col items-center justify-center gap-2'
-    : 'flex w-full shrink-0 flex-col items-center justify-center gap-2'
+  const slotClass =
+    'flex w-full shrink-0 flex-col items-center justify-center gap-2'
 
   if (mediaType === MediaType.IMAGE && mediaUrl) {
     return (
@@ -50,11 +47,7 @@ function renderMediaBlock(
         <img
           src={mediaUrl}
           alt={imageAlt ?? ''}
-          className={
-            shareVerticalSpace
-              ? 'max-h-full w-auto max-w-full rounded-md object-contain'
-              : 'max-h-[min(50dvh,420px)] w-auto max-w-full rounded-md object-contain'
-          }
+          className="max-h-[min(50dvh,420px)] w-auto max-w-full rounded-md object-contain"
           loading="lazy"
           decoding="async"
           onError={(e) => {
@@ -75,7 +68,7 @@ function renderMediaBlock(
   if (mediaType === MediaType.VIDEO && mediaUrl) {
     return (
       <div key={key} className={slotClass}>
-        <div className="aspect-video w-full max-h-full min-h-0 max-w-2xl">
+        <div className="aspect-video w-full max-w-2xl">
           <iframe
             src={mediaUrl}
             className="h-full w-full rounded-md"
@@ -150,7 +143,7 @@ export default function EnigmaPhasePlay({
       : undefined
 
   return (
-    <div className="flex h-full flex-col items-center gap-4 overflow-hidden px-6 py-2">
+    <div className="flex w-full flex-col items-center gap-4 px-6 py-2 pb-8">
       <dialog
         ref={whiteScreenDialogRef}
         className="fixed left-1/2 top-1/2 z-50 w-[min(100%-2rem,28rem)] -translate-x-1/2 -translate-y-1/2 rounded-2xl border-2 border-primary/35 bg-background p-6 text-primary shadow-2xl backdrop:bg-black/50"
@@ -171,7 +164,7 @@ export default function EnigmaPhasePlay({
       </dialog>
       <div className="flex w-full shrink-0 items-center justify-between gap-2">
         <span className="w-16 shrink-0" aria-hidden />
-        <h1 className="min-w-0 flex-1 truncate text-center text-xl font-bold">
+        <h1 className="min-w-0 flex-1 text-balance text-center text-xl font-bold leading-snug break-words whitespace-normal sm:leading-normal">
           {phase!.title}
         </h1>
         {loaderData.isAdmin ? (
@@ -193,50 +186,48 @@ export default function EnigmaPhasePlay({
         const extraShown = extras.some(
           (b) => b.mediaType !== MediaType.NONE && Boolean(b.mediaUrl),
         )
-        if (!primaryShown && !extraShown) {
-          return <div className="min-h-0 flex-1" />
-        }
-        let mediaCount = 0
-        if (primaryShown) mediaCount += 1
-        for (const b of extras) {
-          if (b.mediaType !== MediaType.NONE && b.mediaUrl) mediaCount += 1
-        }
-        const shareVerticalSpace = mediaCount > 1
-        return (
-          <div
-            className={
-              shareVerticalSpace
-                ? 'flex min-h-0 w-full min-w-0 flex-1 flex-col items-center gap-2 overflow-hidden'
-                : 'flex min-h-0 w-full flex-1 flex-col items-center gap-4 overflow-y-auto'
-            }
+        const hasMedia = primaryShown || extraShown
+
+        const phraseEl = (
+          <p
+            className={`w-full shrink-0 whitespace-pre-line text-center leading-relaxed${hasMedia ? ' mt-2' : ''}`}
           >
-            {primaryShown
-              ? renderMediaBlock(
-                  'primary-media',
-                  phase!.mediaType,
-                  phase!.mediaUrl,
-                  phase!.imageAlt,
-                  phase!.title,
-                  shareVerticalSpace,
-                )
-              : null}
-            {extras.map((b, i) =>
-              b.mediaType !== MediaType.NONE && b.mediaUrl
+            {phase!.phrase}
+          </p>
+        )
+
+        if (!hasMedia) {
+          return phraseEl
+        }
+
+        return (
+          <div className="flex w-full flex-col items-center">
+            <div className="flex w-full flex-col items-center gap-4">
+              {primaryShown
                 ? renderMediaBlock(
-                    `extra-media-${i}`,
-                    b.mediaType,
-                    b.mediaUrl,
-                    b.imageAlt,
+                    'primary-media',
+                    phase!.mediaType,
+                    phase!.mediaUrl,
+                    phase!.imageAlt,
                     phase!.title,
-                    shareVerticalSpace,
                   )
-                : null,
-            )}
+                : null}
+              {extras.map((b, i) =>
+                b.mediaType !== MediaType.NONE && b.mediaUrl
+                  ? renderMediaBlock(
+                      `extra-media-${i}`,
+                      b.mediaType,
+                      b.mediaUrl,
+                      b.imageAlt,
+                      phase!.title,
+                    )
+                  : null,
+              )}
+            </div>
+            {phraseEl}
           </div>
         )
       })()}
-
-      <p className="shrink-0 whitespace-pre-line text-center leading-relaxed">{phase!.phrase}</p>
       {extraPhrases.map((p, i) => (
         <p key={`xp-${i}`} className="shrink-0 whitespace-pre-line text-center leading-relaxed">
           {p}
