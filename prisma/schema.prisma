@@ -42,6 +42,8 @@ model User {
   tournamentPlayers TournamentPlayer[]
   createdSantoriniRooms SantoriniRoom[]
   santoriniRoomPlayers SantoriniRoomPlayer[]
+  createdDuoRegnaRooms DuoRegnaRoom[]
+  duoRegnaRoomPlayers DuoRegnaRoomPlayer[]
   eventParticipants EventParticipant[]
   blogPosts BlogPost[]
   passwordResetTokens PasswordResetToken[]
@@ -279,6 +281,39 @@ model SantoriniRoomPlayer {
   userId Int
   room SantoriniRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
   roomId Int
+  winner Boolean @default(false)
+
+  @@unique([roomId, userId])
+  @@index([roomId, userId])
+}
+
+model DuoRegnaRoom {
+  id        Int                 @id @default(autoincrement())
+  creator   User                @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  creatorId Int
+  roomCode  String              @unique
+  status    DuoRegnaRoomStatus  @default(WAITING)
+  /// [DuoRegnaGameState]
+  gameState Json
+  players   DuoRegnaRoomPlayer[]
+
+  @@index([roomCode])
+}
+
+enum DuoRegnaRoomStatus {
+  WAITING
+  PLAYING
+  FINISHED
+}
+
+model DuoRegnaRoomPlayer {
+  id     Int @id @default(autoincrement())
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+  room   DuoRegnaRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  roomId Int
+  /// 0 = verde (criador), 1 = vermelho
+  seat   Int
   winner Boolean @default(false)
 
   @@unique([roomId, userId])

@@ -2,6 +2,7 @@ import 'react-router'
 import { createRequestHandler } from '@react-router/express'
 import express from 'express'
 import type { ExtendedError, Server } from 'socket.io'
+import { registerDuoRegnaHandlers } from './duo-regna/socket-handler'
 import { registerSantoriniHandlers } from './santorini/socket-handler'
 import type { PrismaClient } from '~/generated/prisma/client'
 import prisma from '~/lib/prisma'
@@ -44,6 +45,7 @@ export const socket = (io: Server) => {
     )
 
     registerSantoriniHandlers(io, socket)
+    registerDuoRegnaHandlers(io, socket)
   })
 }
 
