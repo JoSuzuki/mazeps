@@ -191,8 +191,9 @@
     --color-warning: #fcd34d;
     --color-on-warning: var(--color-golden-deep);
 
-    --color-tile-surface: #c4956a;
-    --color-tile-step: #1f0a0c;
+    /* Hexágonos da base dos botões da home (skin 03) */
+    --color-tile-surface: #4b4a52;
+    --color-tile-step: #1d1828;
   }
 
   [data-theme='dark'] {

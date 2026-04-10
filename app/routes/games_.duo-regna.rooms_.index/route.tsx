@@ -82,7 +82,9 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
   })
 
   if (playingRooms) {
-    const inLobby = playingRooms.status === DuoRegnaRoomStatus.WAITING
+    const inLobby =
+      playingRooms.status === DuoRegnaRoomStatus.WAITING ||
+      playingRooms.status === DuoRegnaRoomStatus.FINISHED
     return redirect(
       `/games/duo-regna/rooms/${playingRooms.roomCode}${inLobby ? '' : '/play'}`,
     )

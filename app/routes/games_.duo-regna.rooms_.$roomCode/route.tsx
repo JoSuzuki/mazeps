@@ -29,10 +29,7 @@ export const loader = async ({ context, params }: Route.LoaderArgs) => {
     return redirect('/games/duo-regna/rooms/index')
   }
 
-  if (
-    room.status === DuoRegnaRoomStatus.PLAYING ||
-    room.status === DuoRegnaRoomStatus.FINISHED
-  ) {
+  if (room.status === DuoRegnaRoomStatus.PLAYING) {
     return redirect(`/games/duo-regna/rooms/${params.roomCode}/play`)
   }
 
@@ -59,10 +56,15 @@ export default function Route({ loaderData, actionData, params }: Route.Componen
     socket.on('room_joined', onJoin)
     socket.on('room_left', onLeft)
     socket.on('duo_regna_game_started', onStart)
+    const onLobbyUpdated = async () => {
+      await revalidator.revalidate()
+    }
+    socket.on('duo_regna_lobby_updated', onLobbyUpdated)
     return () => {
       socket.off('room_joined', onJoin)
       socket.off('room_left', onLeft)
       socket.off('duo_regna_game_started', onStart)
+      socket.off('duo_regna_lobby_updated', onLobbyUpdated)
       socket.emit('leave_room', loaderData.room.roomCode)
     }
   }, [socket, loaderData.room.roomCode, navigate, params.roomCode, revalidator])
@@ -110,6 +112,20 @@ export default function Route({ loaderData, actionData, params }: Route.Componen
           },
         ]}
       />
+      {loaderData.room.status === DuoRegnaRoomStatus.FINISHED && (
+        <>
+          <Spacer size="md" />
+          <p className="text-center text-sm text-foreground/70">
+            A partida terminou. Prepara a mesa para jogar outra vez.
+          </p>
+          <Spacer size="sm" />
+          <Form className="flex justify-center" method="post">
+            <input type="hidden" name="intent" value="reset_after_game" />
+            <input type="hidden" name="roomId" value={loaderData.room.id} />
+            <Button type="submit">Nova partida</Button>
+          </Form>
+        </>
+      )}
       {loaderData.room.players.length === 2 && loaderData.room.status === DuoRegnaRoomStatus.WAITING && (
         <>
           <Spacer size="md" />
@@ -147,6 +163,34 @@ export const action = async ({ context, request, params }: Route.ActionArgs) => 
     }
     context.io.emit('room_left')
     return redirect('/games/duo-regna/rooms/index')
+  }
+
+  if (intent === 'reset_after_game') {
+    const roomId = Number(formData.get('roomId'))
+    const room = await context.prisma.duoRegnaRoom.findFirst({
+      where: {
+        id: roomId,
+        roomCode: String(params.roomCode),
+        status: DuoRegnaRoomStatus.FINISHED,
+        players: { some: { userId: context.currentUser.id } },
+      },
+    })
+    if (!room) {
+      return data({ error: 'Sala não encontrada ou ainda em jogo.' })
+    }
+    await context.prisma.duoRegnaRoomPlayer.updateMany({
+      where: { roomId: room.id },
+      data: { winner: false },
+    })
+    await context.prisma.duoRegnaRoom.update({
+      where: { id: room.id },
+      data: {
+        status: DuoRegnaRoomStatus.WAITING,
+        gameState: {},
+      },
+    })
+    context.io.to(params.roomCode).emit('duo_regna_lobby_updated')
+    return redirect(`/games/duo-regna/rooms/${params.roomCode}`)
   }
 
   if (intent === 'start') {

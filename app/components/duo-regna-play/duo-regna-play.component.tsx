@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useRevalidator } from 'react-router'
+import { useNavigate, useRevalidator } from 'react-router'
 import Button from '~/components/button/button.component'
 import type { DuoRegnaCardValue, DuoRegnaClientState } from '~/lib/duo-regna'
 import { useSocket } from '~/services/socket-context'
@@ -33,10 +33,16 @@ export default function DuoRegnaPlay({
   finishedFromLoader: boolean
 }) {
   const socket = useSocket()
+  const navigate = useNavigate()
   const revalidator = useRevalidator()
   const [state, setState] = useState<DuoRegnaClientState | null>(initialClientState)
   const [error, setError] = useState<string | null>(null)
   const finished = finishedFromLoader || state?.status === 'finished'
+
+  useEffect(() => {
+    if (!finished) return
+    void navigate(`/games/duo-regna/rooms/${roomCode}`)
+  }, [finished, navigate, roomCode])
 
   useEffect(() => {
     if (!socket) return
@@ -61,7 +67,7 @@ export default function DuoRegnaPlay({
       socket.off('duo_regna_finished', onFin)
       socket.emit('leave_room', roomCode)
     }
-  }, [socket, roomCode, revalidator])
+  }, [socket, roomCode, navigate, revalidator])
 
   useEffect(() => {
     if (initialClientState) setState(initialClientState)
