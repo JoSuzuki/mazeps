@@ -76,4 +76,9 @@ export const PegasusTile = (
   </ButtonTile>
 )
 
+/** Tile só com o tabuleiro isométrico — sem mascote (ex.: tema golden na home). */
+export const PlainThemeTile = (
+  props: Omit<ButtonTileProps, 'children' | 'data-theme'>,
+) => <ButtonTile {...props}>{() => null}</ButtonTile>
+
 export default Tile

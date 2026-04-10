@@ -24,6 +24,11 @@ const Title = ({ size = 'home' }: TitleProps) => {
       >
         CMBG
       </h2>
+      <h2
+        className={`${MAP_SIZES[size].cmbg} show-if-golden bg-background font-brand absolute hidden -rotate-12 rounded-md border-2 tracking-wide`}
+      >
+        ENIGMAZEPS
+      </h2>
     </div>
   )
 }
