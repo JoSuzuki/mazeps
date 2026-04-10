@@ -1,6 +1,7 @@
 import type { Route } from './+types/route'
 import BackButtonPortal from '~/components/back-button-portal/back-button-portal.component'
 import Center from '~/components/center/center.component'
+import EnigmasDetectiveFlamingo from '~/components/enigmas-detective-flamingo/enigmas-detective-flamingo.component'
 import Link from '~/components/link/link.component'
 import LinkButton from '~/components/link-button/link-button.component'
 import { countPublicPlayablePhases } from '~/lib/enigma-public-phases.server'
@@ -57,11 +58,19 @@ function DoorIcon() {
   )
 }
 
+function EnigmasFlamingoBackdrop() {
+  return (
+    <EnigmasDetectiveFlamingo className="fixed top-20 left-0 z-0 w-[min(130vw,480px)] max-w-[480px] -translate-x-[46%] opacity-[0.94] drop-shadow-[0_12px_32px_rgba(0,0,0,0.16)] sm:top-24 sm:w-[min(120vw,520px)] sm:max-w-[520px] sm:-translate-x-[48%] md:top-28 md:w-[540px] md:max-w-[540px] md:-translate-x-[45%] lg:w-[580px] lg:max-w-[580px] lg:-translate-x-[42%]" />
+  )
+}
+
 function EmBrevePage() {
   return (
     <>
       <BackButtonPortal to="/" />
-      <Center>
+      <div className="relative overflow-x-hidden">
+        <EnigmasFlamingoBackdrop />
+        <Center className="relative z-[1]">
         <div className="relative mx-auto max-w-2xl px-6 py-20">
           {/* Efeito de névoa/overlay */}
           <div
@@ -84,9 +93,9 @@ function EmBrevePage() {
             </div>
           </div>
 
-          {/* Título misterioso */}
-          <h1 className="mb-4 text-center font-mono text-2xl font-light uppercase tracking-[0.4em] text-foreground/60">
-            Enigmas
+          {/* Título */}
+          <h1 className="mb-4 text-center font-brand text-4xl font-semibold uppercase tracking-[0.12em] text-foreground drop-shadow-sm sm:text-5xl md:text-6xl">
+            Enigmazeps
           </h1>
 
           {/* EM BREVE com efeito */}
@@ -109,7 +118,8 @@ function EmBrevePage() {
             Em breve, novos desafios serão revelados
           </p>
         </div>
-      </Center>
+        </Center>
+      </div>
     </>
   )
 }
@@ -187,7 +197,9 @@ export default function Route({ loaderData }: Route.ComponentProps) {
   return (
     <>
       <BackButtonPortal to="/" />
-      <Center>
+      <div className="relative overflow-x-hidden">
+        <EnigmasFlamingoBackdrop />
+        <Center className="relative z-[1]">
         <div className="relative mx-auto max-w-4xl px-6 py-10">
           {/* Overlay para usuários não logados */}
           {!isLoggedIn && (
@@ -222,10 +234,12 @@ export default function Route({ loaderData }: Route.ComponentProps) {
             </div>
           )}
           {/* Header */}
-          <header className="mb-10 text-center">
-            <h1 className="font-brand text-3xl tracking-wide">Enigmas</h1>
-            <p className="mt-2 text-sm uppercase tracking-[0.2em] text-foreground/50">
-              ESCOLHA UMA PORTA E SEJA BEM VINDO
+          <header className="mb-12 text-center sm:mb-14">
+            <h1 className="font-brand text-4xl font-semibold uppercase tracking-[0.1em] text-foreground drop-shadow-sm sm:text-5xl md:text-6xl lg:text-7xl">
+              Enigmazeps
+            </h1>
+            <p className="mt-4 text-xs font-medium uppercase tracking-[0.28em] text-foreground/55 sm:text-sm sm:tracking-[0.22em]">
+              Escolha uma porta e seja bem-vindo
             </p>
           </header>
 
@@ -280,7 +294,8 @@ export default function Route({ loaderData }: Route.ComponentProps) {
             </div>
           )}
         </div>
-      </Center>
+        </Center>
+      </div>
     </>
   )
 }

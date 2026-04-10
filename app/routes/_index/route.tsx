@@ -6,8 +6,19 @@ import HomeThemeHint from '~/components/home-theme-hint/home-theme-hint.componen
 import Calendar from '~/components/calendar/calendar.component'
 import LinkButton from '~/components/link-button/link-button.component'
 import Title from '~/components/title/title.component'
+import {
+  parseThemeFromCookie,
+  tileIdFromTheme,
+} from '~/lib/theme-preference'
 
-export default function Route({}: Route.ComponentProps) {
+export const loader = async ({ request }: Route.LoaderArgs) => {
+  const theme = parseThemeFromCookie(request.headers.get('Cookie'))
+  return {
+    initialSelectedTileId: tileIdFromTheme(theme),
+  }
+}
+
+export default function Route({ loaderData }: Route.ComponentProps) {
   // Home sempre abre no topo (reload, link, etc.) — evita restaurar scroll no meio da página
   useLayoutEffect(() => {
     window.scrollTo(0, 0)
@@ -30,7 +41,7 @@ export default function Route({}: Route.ComponentProps) {
           <Title />
         </div>
         <div className="px-2 sm:px-4 md:px-6">
-          <Board />
+          <Board initialSelectedTileId={loaderData.initialSelectedTileId} />
         </div>
       </div>
       {/* Bloco de frases mais compacto e lado a lado para o calendário aparecer sem scroll */}

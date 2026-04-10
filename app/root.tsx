@@ -51,8 +51,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
             __html: `
             (function(){
       const savedTheme = localStorage.getItem('theme')
-      if (savedTheme && savedTheme !== 'null') {
+      const allowed = ['flamingo', 'pegasus', 'golden']
+      if (savedTheme && allowed.includes(savedTheme)) {
         document.documentElement.setAttribute('data-theme', savedTheme)
+        document.cookie = 'mazepsTheme=' + encodeURIComponent(savedTheme) + '; path=/; max-age=31536000; samesite=lax'
       }
     })()`,
           }}

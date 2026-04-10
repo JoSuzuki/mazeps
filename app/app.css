@@ -11,6 +11,10 @@
   display: block;
 }
 
+[data-theme='golden'] .show-if-golden {
+  display: block;
+}
+
 @theme inline {
   --color-*: initial;
   --color-background: var(--color-background);
@@ -157,6 +161,38 @@
     --color-flamingo-body: var(--color-white);
     --color-flamingo-body-shadow: var(--color-gray);
     --color-flamingo-eye: var(--color-black);
+  }
+
+  /* Tema âmbar / vinho — terceiro botão da home (sem animação no tile) */
+  [data-theme='golden'] {
+    --color-golden-bg: #321014;
+    --color-golden-text: #faa94f;
+    --color-golden-text-muted: #d4914a;
+    --color-golden-deep: #1f0a0c;
+    --color-golden-cream: #faa94f;
+    --color-golden-amber: #ffb24d;
+
+    --color-background: var(--color-golden-bg);
+    --color-on-background: var(--color-golden-text);
+    --color-foreground: var(--color-golden-text);
+
+    --color-primary: var(--color-golden-cream);
+    --color-on-primary: var(--color-golden-deep);
+    --color-secondary: var(--color-golden-deep);
+    --color-on-secondary: var(--color-golden-cream);
+
+    --color-accent: var(--color-golden-amber);
+    --color-on-accent: var(--color-golden-deep);
+
+    --color-success: #7cb878;
+    --color-on-success: var(--color-golden-deep);
+    --color-error: #fca5a5;
+    --color-on-error: var(--color-golden-deep);
+    --color-warning: #fcd34d;
+    --color-on-warning: var(--color-golden-deep);
+
+    --color-tile-surface: #c4956a;
+    --color-tile-step: #1f0a0c;
   }
 
   [data-theme='dark'] {
