@@ -22,6 +22,10 @@ export const loader = async ({ context, params }: Route.LoaderArgs) => {
     return redirect('/games/duo-regna/rooms/index')
   }
 
+  if (room.status === DuoRegnaRoomStatus.FINISHED) {
+    return redirect(`/games/duo-regna/rooms/${params.roomCode}`)
+  }
+
   if (room.status === DuoRegnaRoomStatus.WAITING) {
     return redirect(`/games/duo-regna/rooms/${params.roomCode}`)
   }
@@ -34,13 +38,12 @@ export const loader = async ({ context, params }: Route.LoaderArgs) => {
   const player = room.players.find((a) => a.userId === currentUser.id)!
   const seat = player.seat as 0 | 1
   const initialClientState = toClientState(gs, seat, room.status)
-  const finishedFromLoader = room.status === DuoRegnaRoomStatus.FINISHED
 
   return {
     roomCode: room.roomCode,
     seat,
     initialClientState,
-    finishedFromLoader,
+    finishedFromLoader: false,
   }
 }
 

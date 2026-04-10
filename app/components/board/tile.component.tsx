@@ -67,7 +67,7 @@ export const FlamingoTile = (
 export const PegasusTile = (
   props: Omit<ButtonTileProps, 'children' | 'data-theme'>,
 ) => (
-  <ButtonTile {...props} data-theme="pegasus">
+  <ButtonTile {...props}>
     {(show) => (
       <div className="relative -top-1 -left-21">
         <Pegasus show={show} />
