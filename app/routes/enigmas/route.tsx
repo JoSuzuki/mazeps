@@ -60,7 +60,7 @@ function DoorIcon() {
 
 function EnigmasFlamingoBackdrop() {
   return (
-    <EnigmasDetectiveFlamingo className="fixed top-20 left-0 z-0 w-[min(130vw,480px)] max-w-[480px] -translate-x-[46%] opacity-[0.94] drop-shadow-[0_12px_32px_rgba(0,0,0,0.16)] sm:top-24 sm:w-[min(120vw,520px)] sm:max-w-[520px] sm:-translate-x-[48%] md:top-28 md:w-[540px] md:max-w-[540px] md:-translate-x-[45%] lg:w-[580px] lg:max-w-[580px] lg:-translate-x-[42%]" />
+    <EnigmasDetectiveFlamingo className="fixed bottom-3 left-0 z-0 w-[min(24vw,96px)] max-w-[96px] -translate-x-[14%] opacity-75 drop-shadow-[0_6px_16px_rgba(0,0,0,0.12)] sm:bottom-auto sm:top-24 sm:w-[min(92vw,420px)] sm:max-w-[420px] sm:-translate-x-[54%] sm:opacity-[0.94] sm:drop-shadow-[0_12px_32px_rgba(0,0,0,0.16)] md:top-28 md:w-[440px] md:max-w-[440px] md:-translate-x-[52%] lg:w-[480px] lg:max-w-[480px] lg:-translate-x-[50%]" />
   )
 }
 
@@ -138,15 +138,15 @@ function EnigmaDoorCard({
     <Link
       to={isPlayable ? `/enigmas/${enigma.slug}/entrada` : '#'}
       viewTransition
-      className={`group block ${!isPlayable ? 'pointer-events-none opacity-60' : ''}`}
+      className={`group relative block md:z-[2] ${!isPlayable ? 'pointer-events-none opacity-60' : ''}`}
     >
-      <div className="relative overflow-hidden rounded-2xl border-2 border-foreground/20 bg-gradient-to-b from-foreground/5 to-foreground/10 p-10 shadow-lg transition-all duration-300 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 md:p-14">
+      <div className="relative overflow-hidden rounded-2xl border-2 border-foreground/20 bg-gradient-to-b from-foreground/5 to-foreground/10 p-10 shadow-lg transition-all duration-300 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 md:bg-none md:bg-background md:p-14 md:shadow-xl">
         {/* Moldura da porta */}
-        <div className="absolute inset-3 rounded-xl border border-foreground/10" aria-hidden />
+        <div className="absolute inset-3 rounded-xl border border-foreground/10 md:border-foreground/15" aria-hidden />
 
         {/* Maçaneta / elemento central */}
         <div className="mb-6 flex justify-center">
-          <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-foreground/20 bg-foreground/5 transition-transform duration-300 group-hover:scale-110 group-hover:border-primary/30">
+          <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-foreground/20 bg-foreground/5 transition-transform duration-300 group-hover:scale-110 group-hover:border-primary/30 md:border-foreground/25 md:bg-foreground/10">
             <DoorIcon />
           </div>
         </div>
