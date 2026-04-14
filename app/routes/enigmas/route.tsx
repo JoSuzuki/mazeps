@@ -4,8 +4,13 @@ import Center from '~/components/center/center.component'
 import EnigmasDetectiveFlamingo from '~/components/enigmas-detective-flamingo/enigmas-detective-flamingo.component'
 import Link from '~/components/link/link.component'
 import LinkButton from '~/components/link-button/link-button.component'
+import {
+  EnigmaCardSymbolIcon,
+  parseEnigmaCardSymbol,
+} from '~/components/enigma-card-symbol/enigma-card-symbol.component'
 import { countPublicPlayablePhases } from '~/lib/enigma-public-phases.server'
 import { enigmaRobotsMeta } from '~/lib/enigma-robots-meta'
+import type { EnigmaCardSymbol } from '~/generated/prisma/enums'
 import { Role } from '~/generated/prisma/enums'
 
 export function meta() {
@@ -39,10 +44,12 @@ export async function loader({ context }: Route.LoaderArgs) {
   }
 }
 
-function DoorIcon() {
+function DoorIcon({ size = 'lg' }: { size?: 'lg' | 'sm' }) {
+  const dim =
+    size === 'sm' ? 'h-9 w-9 text-foreground/45' : 'h-16 w-16 text-foreground/40'
   return (
     <svg
-      className="h-16 w-16 text-foreground/40"
+      className={dim}
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
       fill="none"
@@ -128,26 +135,33 @@ function EnigmaDoorCard({
   enigma,
   isAdmin,
 }: {
-  enigma: { id: number; name: string; slug: string; _count: { phases: number } }
+  enigma: {
+    id: number
+    name: string
+    slug: string
+    cardSymbol: EnigmaCardSymbol
+    _count: { phases: number }
+  }
   isAdmin: boolean
 }) {
   const phaseCount = enigma._count.phases
   const isPlayable = phaseCount > 0
+  const symbol = parseEnigmaCardSymbol(enigma.cardSymbol)
 
   return (
     <Link
       to={isPlayable ? `/enigmas/${enigma.slug}/entrada` : '#'}
       viewTransition
-      className={`group relative block md:z-[2] ${!isPlayable ? 'pointer-events-none opacity-60' : ''}`}
+      className={`group relative z-[2] block ${!isPlayable ? 'pointer-events-none opacity-60' : ''}`}
     >
-      <div className="relative overflow-hidden rounded-2xl border-2 border-foreground/20 bg-gradient-to-b from-foreground/5 to-foreground/10 p-10 shadow-lg transition-all duration-300 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 md:bg-none md:bg-background md:p-14 md:shadow-xl">
+      <div className="relative overflow-hidden rounded-2xl border-2 border-foreground/20 bg-background p-10 shadow-lg transition-all duration-300 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 md:p-14 md:shadow-xl">
         {/* Moldura da porta */}
-        <div className="absolute inset-3 rounded-xl border border-foreground/10 md:border-foreground/15" aria-hidden />
+        <div className="absolute inset-3 rounded-xl border border-foreground/15" aria-hidden />
 
         {/* Maçaneta / elemento central */}
         <div className="mb-6 flex justify-center">
-          <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-foreground/20 bg-foreground/5 transition-transform duration-300 group-hover:scale-110 group-hover:border-primary/30 md:border-foreground/25 md:bg-foreground/10">
-            <DoorIcon />
+          <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-foreground/25 bg-[color-mix(in_srgb,var(--color-on-background)_12%,var(--color-background))] transition-transform duration-300 group-hover:scale-110 group-hover:border-primary/30">
+            <EnigmaCardSymbolIcon symbol={symbol} />
           </div>
         </div>
 
@@ -182,6 +196,86 @@ function EnigmaDoorCard({
         )}
       </div>
     </Link>
+  )
+}
+
+function AdminEnigmaManageList({
+  enigmas,
+}: {
+  enigmas: Array<{
+    id: number
+    name: string
+    slug: string
+    published: boolean
+    cardSymbol: EnigmaCardSymbol
+    _count: { phases: number }
+  }>
+}) {
+  return (
+    <section
+      className="relative z-[2] mx-auto mt-10 w-full max-w-md"
+      aria-labelledby="admin-enigmas-manage-heading"
+    >
+      <h2
+        id="admin-enigmas-manage-heading"
+        className="mb-5 text-center font-brand text-xl font-semibold uppercase tracking-[0.16em] text-foreground/60 sm:text-2xl sm:tracking-[0.14em] md:text-3xl"
+      >
+        Editar enigmas
+      </h2>
+      <ul className="flex flex-col gap-3">
+        {enigmas.map((enigma) => {
+          const phases = enigma._count.phases
+          const phaseLabel =
+            phases === 0
+              ? 'Sem fases'
+              : phases === 1
+                ? '1 fase'
+                : `${phases} fases`
+
+          return (
+            <li key={enigma.id}>
+              <Link
+                to={`/enigmas/${enigma.slug}/edit`}
+                viewTransition
+                className="flex items-stretch gap-3 rounded-2xl border-2 border-foreground/20 bg-background p-3 shadow-md transition-colors hover:border-primary/45 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              >
+                <div
+                  className="flex w-14 shrink-0 flex-col items-center justify-center rounded-xl border border-foreground/15 bg-[color-mix(in_srgb,var(--color-on-background)_10%,var(--color-background))]"
+                  aria-hidden
+                >
+                  <EnigmaCardSymbolIcon
+                    symbol={parseEnigmaCardSymbol(enigma.cardSymbol)}
+                    size="sm"
+                  />
+                </div>
+                <div className="min-w-0 flex-1 py-0.5">
+                  <div className="flex flex-wrap items-center gap-2 gap-y-1">
+                    <span className="font-brand text-lg font-semibold leading-tight text-foreground">
+                      {enigma.name}
+                    </span>
+                    {enigma.published ? (
+                      <span className="shrink-0 rounded-md border border-foreground/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-foreground/70">
+                        Publicado
+                      </span>
+                    ) : (
+                      <span className="shrink-0 rounded-md border border-foreground/25 bg-[color-mix(in_srgb,var(--color-on-background)_8%,var(--color-background))] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-foreground/75">
+                        Rascunho
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs text-foreground/40">{phaseLabel}</p>
+                </div>
+                <div className="flex shrink-0 items-center">
+                  <span className="rounded-lg bg-primary px-3 py-2 text-center text-xs font-bold uppercase tracking-wide text-on-primary sm:px-4 sm:text-sm">
+                    Editar
+                  </span>
+                </div>
+              </Link>
+            </li>
+          )
+        })}
+      </ul>
+    </section>
   )
 }
 
@@ -256,7 +350,7 @@ export default function Route({ loaderData }: Route.ComponentProps) {
           )}
 
           {loaderData.enigmas.length === 0 ? (
-            <div className="rounded-2xl border-2 border-dashed border-foreground/20 bg-foreground/5 px-6 py-20 text-center">
+            <div className="relative z-[2] rounded-2xl border-2 border-dashed border-foreground/20 bg-background px-6 py-20 text-center shadow-lg">
               <DoorIcon />
               <p className="mt-4 text-foreground/60">
                 {isAdmin
@@ -278,20 +372,7 @@ export default function Route({ loaderData }: Route.ComponentProps) {
           )}
 
           {isAdmin && loaderData.enigmas.length > 0 && (
-            <div className="mt-8 rounded-2xl border border-foreground/10 bg-background/60 p-6 shadow-sm">
-              <div className="flex flex-wrap justify-center gap-4">
-                {loaderData.enigmas.map((enigma) => (
-                  <Link
-                    key={enigma.id}
-                    to={`/enigmas/${enigma.slug}/edit`}
-                    viewTransition
-                    className="text-base font-semibold text-foreground/60 underline-offset-2 hover:text-foreground/90 hover:underline"
-                  >
-                    Gerenciar: {enigma.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
+            <AdminEnigmaManageList enigmas={loaderData.enigmas} />
           )}
         </div>
         </Center>

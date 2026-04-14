@@ -13,8 +13,11 @@ import Center from '~/components/center/center.component'
 import Link from '~/components/link/link.component'
 import LinkButton from '~/components/link-button/link-button.component'
 import TextInput from '~/components/text-input/text-input.component'
+import { EnigmaCardSymbolFormField } from '~/components/enigma-card-symbol/enigma-card-symbol-form-field.component'
+import { parseEnigmaCardSymbol } from '~/components/enigma-card-symbol/enigma-card-symbol.component'
 import { enigmaPlayPathForPhaseIndex } from '~/lib/enigma-phase-play-path'
 import { enigmaRobotsMeta } from '~/lib/enigma-robots-meta'
+import type { EnigmaCardSymbol } from '~/generated/prisma/enums'
 import { Role } from '~/generated/prisma/enums'
 import bcrypt from 'bcrypt'
 
@@ -134,6 +137,9 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     }
     const publicPhaseOrderFrom = parseOptOrder(formData.get('publicPhaseOrderFrom'))
     const publicPhaseOrderTo = parseOptOrder(formData.get('publicPhaseOrderTo'))
+    const cardSymbol = parseEnigmaCardSymbol(
+      (formData.get('cardSymbol') as string | null) ?? undefined,
+    )
 
     const existing = await context.prisma.enigma.findUniqueOrThrow({
       where: { slug: params.slug },
@@ -172,6 +178,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     const updatePayload: {
       name: string
       slug: string
+      cardSymbol: EnigmaCardSymbol
       published: boolean
       entrancePasswordPrompt: string | null
       publicPhaseOrderFrom: number | null
@@ -180,6 +187,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     } = {
       name,
       slug,
+      cardSymbol,
       published,
       entrancePasswordPrompt,
       publicPhaseOrderFrom,
@@ -238,6 +246,16 @@ export default function Route({ loaderData }: Route.ComponentProps) {
             <p className="mt-1 text-sm uppercase tracking-[0.2em] text-foreground/50">
               {enigma.name}
             </p>
+            <p className="mt-3 text-sm text-foreground/55">
+              <a
+                href="#enigma-card-symbol-fieldset"
+                className="font-medium text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary"
+              >
+                Símbolo do cartão em /enigmas
+              </a>
+              {' — '}
+              escolhe na secção abaixo (no topo do formulário Informações).
+            </p>
           </header>
 
           {/* Informações */}
@@ -254,6 +272,20 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                     {actionData.error}
                   </p>
                 )}
+
+                <EnigmaCardSymbolFormField
+                  defaultSymbol={parseEnigmaCardSymbol(enigma.cardSymbol)}
+                  helperText={
+                    <>
+                      Ícone deste enigma na página{' '}
+                      <span className="font-mono text-foreground/70">/enigmas</span>.
+                      Escolhe um símbolo e confirma com{' '}
+                      <strong className="text-foreground/80">Salvar alterações</strong> no fim
+                      deste formulário.
+                    </>
+                  }
+                />
+
                 <TextInput
                   id="name"
                   name="name"
@@ -270,6 +302,7 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                   required={true}
                   defaultValue={enigma.slug}
                 />
+
                 <label className="flex cursor-pointer items-center gap-4 rounded-xl border-2 border-foreground/20 p-6 transition-colors hover:border-foreground/30 has-[:checked]:border-primary has-[:checked]:bg-primary/5">
                   <input
                     type="checkbox"
