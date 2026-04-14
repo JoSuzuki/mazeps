@@ -5,8 +5,10 @@ import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
 import LinkButton from '~/components/link-button/link-button.component'
 import TextInput from '~/components/text-input/text-input.component'
+import { EnigmaCardSymbolFormField } from '~/components/enigma-card-symbol/enigma-card-symbol-form-field.component'
+import { parseEnigmaCardSymbol } from '~/components/enigma-card-symbol/enigma-card-symbol.component'
 import { enigmaRobotsMeta } from '~/lib/enigma-robots-meta'
-import { Role } from '~/generated/prisma/enums'
+import { EnigmaCardSymbol, Role } from '~/generated/prisma/enums'
 
 const ICON_CLASS = 'h-5 w-5 shrink-0 text-foreground/50'
 
@@ -77,6 +79,18 @@ export default function Route() {
                 required={true}
                 placeholder="Ex: mistério-labirinto"
               />
+
+              <EnigmaCardSymbolFormField
+                defaultSymbol={EnigmaCardSymbol.DOOR}
+                helperText={
+                  <>
+                    Ícone na listagem{' '}
+                    <span className="font-mono text-foreground/70">/enigmas</span>. Depois podes
+                    mudar em <strong className="text-foreground/80">Gerenciar enigma</strong>.
+                  </>
+                }
+              />
+
               <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:justify-end">
                 <LinkButton
                   to="/enigmas"
@@ -106,8 +120,13 @@ export async function action({ request, context }: Route.ActionArgs) {
   const formData = await request.formData()
   const name = formData.get('name') as string
   const slug = (formData.get('slug') as string).toLowerCase().trim()
+  const cardSymbol = parseEnigmaCardSymbol(
+    (formData.get('cardSymbol') as string | null) ?? undefined,
+  )
 
-  const enigma = await context.prisma.enigma.create({ data: { name, slug } })
+  const enigma = await context.prisma.enigma.create({
+    data: { name, slug, cardSymbol },
+  })
 
   return redirect(`/enigmas/${enigma.slug}/edit`)
 }

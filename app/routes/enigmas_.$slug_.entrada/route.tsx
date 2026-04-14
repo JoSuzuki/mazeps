@@ -74,15 +74,14 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
 
   return {
     locked: false as const,
-    enigma,
+    enigmaName: enigma.name,
   }
 }
 
 export function meta({ data }: Route.MetaArgs) {
   const robots = enigmaRobotsMeta()
   if (!data) return [...robots, { title: 'Mazeps' }]
-  const name = 'locked' in data && data.locked ? data.enigmaName : data.enigma.name
-  return [...robots, { title: `${name} | Mazeps` }]
+  return [...robots, { title: `${data.enigmaName} | Mazeps` }]
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
@@ -283,8 +282,6 @@ export default function Route({
     )
   }
 
-  const { enigma } = loaderData
-
   return (
     <>
       <BackButtonPortal to="/enigmas" />
@@ -295,7 +292,7 @@ export default function Route({
               Enigma
             </p>
             <h1 className="font-brand text-3xl tracking-wide text-foreground/95">
-              {enigma.name}
+              {loaderData.enigmaName}
             </h1>
           </header>
 

@@ -199,12 +199,27 @@ model MatchResult {
   @@index([playerId, matchId])
 }
 
+enum EnigmaCardSymbol {
+  DOOR
+  KEY
+  LOCK
+  EYE
+  MOON
+  SCROLL
+  MAGNIFYING_GLASS
+  QUESTION_MARK
+  COMPASS
+  CRYSTAL_BALL
+}
+
 model Enigma {
   id        Int           @id @default(autoincrement())
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
   name      String
   slug      String        @unique
+  /// Ícone exibido no cartão na listagem /enigmas
+  cardSymbol EnigmaCardSymbol @default(DOOR)
   published Boolean       @default(false)
   /// Ordem inclusiva visível ao público (com `published`); null = desde a menor ordem existente
   publicPhaseOrderFrom Int?
