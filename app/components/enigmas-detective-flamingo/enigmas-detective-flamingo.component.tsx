@@ -1,11 +1,17 @@
 /**
  * Flamingo colorido (SVG fornecido) + chapéu de detetive e lupa, para decoração da lista de enigmas.
+ * `plain`: só o flamingo, sem acessórios e sem inclinação (ex.: página 404).
  */
 export default function EnigmasDetectiveFlamingo({
   className = '',
+  variant = 'detective',
 }: {
   className?: string
+  variant?: 'detective' | 'plain'
 }) {
+  const bodyTransform =
+    variant === 'plain' ? undefined : 'rotate(26, 72, 524)'
+
   return (
     <div
       className={`pointer-events-none select-none ${className}`}
@@ -21,7 +27,7 @@ export default function EnigmasDetectiveFlamingo({
           Rotação em torno da base esquerda (pés): corpo em diagonal para a direita,
           como a olhar para as portas. Pivô ~ (72, 524) no viewBox.
         */}
-        <g transform="rotate(26, 72, 524)">
+        <g transform={bodyTransform}>
         {/* Flamingo (base) */}
         <g id="flamingo-art">
           <path
@@ -62,64 +68,68 @@ export default function EnigmasDetectiveFlamingo({
           />
           <circle cx="239.46" cy="38.96" r="8.16" fill="#5c6667" />
         </g>
-        {/* Chapéu centrado acima da cabeça (olho ~239,39) — translateY sobe o conjunto */}
-        <g id="detective-hat" transform="translate(0, -18)">
-          <ellipse
-            cx="239.5"
-            cy="24"
-            rx="58"
-            ry="11"
-            fill="#2d2118"
-            opacity={0.96}
-          />
-          <path
-            d="M188 27 Q239.5 -24 291 27 L281 41 Q239.5 54 198 41 Z"
-            fill="#3d2e24"
-          />
-          <ellipse
-            cx="239.5"
-            cy="31"
-            rx="30"
-            ry="7"
-            fill="#1a1410"
-            opacity={0.42}
-          />
-          <path
-            d="M214 23 L239.5 4 L265 23"
-            fill="none"
-            stroke="#5c4a3d"
-            strokeWidth={2.5}
-            strokeLinecap="round"
-          />
-        </g>
-        {/* Lupa à frente, apontando às portas */}
-        <g transform="translate(118, 122) rotate(30)">
-          <circle
-            cx={0}
-            cy={0}
-            r={26}
-            fill="rgba(186, 220, 255, 0.28)"
-            stroke="#4a5568"
-            strokeWidth={3.5}
-          />
-          <circle
-            cx={0}
-            cy={0}
-            r={22}
-            fill="none"
-            stroke="rgba(255,255,255,0.5)"
-            strokeWidth={1}
-          />
-          <line
-            x1={18}
-            y1={20}
-            x2={62}
-            y2={68}
-            stroke="#3d4852"
-            strokeWidth={7}
-            strokeLinecap="round"
-          />
-        </g>
+        {variant === 'detective' ? (
+          <>
+            {/* Chapéu centrado acima da cabeça (olho ~239,39) — translateY sobe o conjunto */}
+            <g id="detective-hat" transform="translate(0, -18)">
+              <ellipse
+                cx="239.5"
+                cy="24"
+                rx="58"
+                ry="11"
+                fill="#2d2118"
+                opacity={0.96}
+              />
+              <path
+                d="M188 27 Q239.5 -24 291 27 L281 41 Q239.5 54 198 41 Z"
+                fill="#3d2e24"
+              />
+              <ellipse
+                cx="239.5"
+                cy="31"
+                rx="30"
+                ry="7"
+                fill="#1a1410"
+                opacity={0.42}
+              />
+              <path
+                d="M214 23 L239.5 4 L265 23"
+                fill="none"
+                stroke="#5c4a3d"
+                strokeWidth={2.5}
+                strokeLinecap="round"
+              />
+            </g>
+            {/* Lupa à frente, apontando às portas */}
+            <g transform="translate(118, 122) rotate(30)">
+              <circle
+                cx={0}
+                cy={0}
+                r={26}
+                fill="rgba(186, 220, 255, 0.28)"
+                stroke="#4a5568"
+                strokeWidth={3.5}
+              />
+              <circle
+                cx={0}
+                cy={0}
+                r={22}
+                fill="none"
+                stroke="rgba(255,255,255,0.5)"
+                strokeWidth={1}
+              />
+              <line
+                x1={18}
+                y1={20}
+                x2={62}
+                y2={68}
+                stroke="#3d4852"
+                strokeWidth={7}
+                strokeLinecap="round"
+              />
+            </g>
+          </>
+        ) : null}
         </g>
       </svg>
     </div>
