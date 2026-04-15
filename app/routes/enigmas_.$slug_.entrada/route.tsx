@@ -205,8 +205,8 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     )
   }
 
-  const segment = encodeURIComponent(playable[matchIndex]!.answer.trim())
-  return redirect(`/enigmas/${slug}/${segment}`)
+  const nextPlayable = playable[matchIndex + 1]!
+  return redirect(`/enigmas/${slug}/${nextPlayable.playPathToken}`)
 }
 
 function LockedGateView({

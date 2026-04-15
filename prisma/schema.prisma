@@ -260,8 +260,11 @@ model EnigmaPhase {
   extraHiddenHints Json @default("[]")
   /// "Telas brancas": se o jogador envia `trigger`, mostra popup com `popupText` (não avança).
   whiteScreenHints Json @default("[]")
+  /// Segmento opaco em `/enigmas/:slug/:phaseKey` para esta fase (legado ainda aceita resposta da fase anterior).
+  playPathToken String
 
   @@unique([enigmaId, order])
+  @@unique([enigmaId, playPathToken])
 }
 
 enum MediaType {

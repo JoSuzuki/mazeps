@@ -22,6 +22,7 @@ export async function loadEnigmaLightForPlay(
           id: true,
           order: true,
           answer: true,
+          playPathToken: true,
         },
       },
     },

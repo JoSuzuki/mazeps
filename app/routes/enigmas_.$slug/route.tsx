@@ -142,8 +142,15 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     )
   }
 
-  const segment = encodeURIComponent(phaseFull.answer.trim())
-  return redirect(`/enigmas/${slug}/${segment}`)
+  const curIdx = enigma.phases.findIndex((p) => p.id === phaseFull.id)
+  const nextLight =
+    curIdx !== -1 && curIdx + 1 < enigma.phases.length
+      ? enigma.phases[curIdx + 1]!
+      : null
+  if (!nextLight) {
+    throw new Response('Not Found', { status: 404 })
+  }
+  return redirect(`/enigmas/${slug}/${nextLight.playPathToken}`)
 }
 
 export default function Route({ loaderData, params }: Route.ComponentProps) {

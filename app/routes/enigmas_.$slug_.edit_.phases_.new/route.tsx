@@ -15,6 +15,7 @@ import {
   ENIGMA_PHASE_DUPLICATE_ANSWER_ERROR,
   phaseAnswerConflictsWithSiblingPhases,
 } from '~/lib/enigma-phase-answer.server'
+import { allocateUniquePlayPathToken } from '~/lib/enigma-play-path-token.server'
 import { toYouTubeEmbedUrl } from '~/lib/youtube'
 import { Role } from '~/generated/prisma/enums'
 
@@ -119,6 +120,11 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     return data({ error: msg }, { status: 400 })
   }
 
+  const playPathToken = await allocateUniquePlayPathToken(
+    context.prisma,
+    enigma.id,
+  )
+
   await context.prisma.enigmaPhase.create({
     data: {
       enigmaId: enigma.id,
@@ -131,6 +137,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       imageAlt,
       phrase,
       answer,
+      playPathToken,
       tipPhrase,
       hiddenHint,
       extraMediaBlocks,
