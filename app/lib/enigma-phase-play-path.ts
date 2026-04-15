@@ -1,18 +1,18 @@
 /**
  * Caminho HTTP para jogar a fase na posição `index` (0 = primeira; `orderedPhases` por `order` asc).
- * A rota `/:slug/:phaseKey` mostra a fase seguinte à cuja `answer` corresponde `phaseKey`.
+ * Usa `playPathToken` da fase em `index` (legado na rota ainda aceita resposta da fase anterior).
  */
 export function enigmaPlayPathForPhaseIndex(
   slug: string,
-  orderedPhases: readonly { answer: string }[],
+  orderedPhases: readonly { playPathToken: string }[],
   index: number,
 ): string {
   if (index <= 0) {
     return `/enigmas/${slug}`
   }
-  const prev = orderedPhases[index - 1]
-  if (!prev) {
+  const phase = orderedPhases[index]
+  if (!phase) {
     return `/enigmas/${slug}`
   }
-  return `/enigmas/${slug}/${encodeURIComponent(prev.answer.trim())}`
+  return `/enigmas/${slug}/${phase.playPathToken}`
 }
