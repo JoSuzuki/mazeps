@@ -7,6 +7,7 @@ import {
   ScrollRestoration,
 } from 'react-router'
 import type { Route } from './+types/root'
+import NotFoundPage from '~/components/not-found-page/not-found-page.component'
 import { useNonce } from './services/nonce'
 import './app.css'
 
@@ -74,16 +75,17 @@ export default function App() {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  if (isRouteErrorResponse(error) && error.status === 404) {
+    return <NotFoundPage />
+  }
+
   let message = 'Oops!'
   let details = 'An unexpected error occurred.'
   let stack: string | undefined
 
   if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? '404' : 'Error'
-    details =
-      error.status === 404
-        ? 'The requested page could not be found.'
-        : error.statusText || details
+    message = `Erro ${error.status}`
+    details = error.statusText || details
   } else if (import.meta.env.DEV && error && error instanceof Error) {
     details = error.message
     stack = error.stack
