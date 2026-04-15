@@ -590,6 +590,12 @@ export function ProfilePage({
                       {currentUser.role}
                     </span>
                   </div>
+                  <p
+                    className="mt-1.5 text-center font-mono text-[10px] leading-snug tracking-wide text-background sm:text-left"
+                    aria-hidden="true"
+                  >
+                    investigador_mazeps
+                  </p>
                 </div>
                 {!adminPreview && (
                   <newsEmailsFetcher.Form
