@@ -181,6 +181,26 @@ export default function Route({ loaderData }: Route.ComponentProps) {
               </section>
             )}
 
+            {isAdmin && (
+              <section className="rounded-2xl border border-foreground/10 bg-background/60 p-6 shadow-sm">
+                <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/60">
+                  E-mail com novidades
+                </h2>
+                <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-foreground/10 px-4 py-3 transition-colors hover:bg-foreground/5">
+                  <input
+                    type="checkbox"
+                    name="newsletterSubscribed"
+                    value="on"
+                    defaultChecked={user.newsletterSubscribed}
+                    className="h-4 w-4 rounded border-foreground/30"
+                  />
+                  <span className="text-sm">
+                    Deseja receber e-mails com novidades
+                  </span>
+                </label>
+              </section>
+            )}
+
             {/* Excluir usuário (apenas ADMIN, não pode excluir a si mesmo) */}
             {canDeleteUser && (
               <section className="rounded-2xl border border-red-200 bg-red-50/50 p-6 shadow-sm dark:border-red-900/50 dark:bg-red-950/20">
@@ -334,16 +354,19 @@ export async function action({ context, request, params }: Route.ActionArgs) {
     return redirect('/users')
   }
 
+  const actorIsAdmin = context.currentUser.role === Role.ADMIN
+
   const user = await context.prisma.user.update({
     where: { id: Number(params.userId) },
     data: {
       name: formData.get('name') as string,
       email: formData.get('email') as string,
       nickname: formData.get('nickname') as string,
-      ...(context.currentUser.role === Role.ADMIN && {
+      ...(actorIsAdmin && {
         role: formData.get('role') as Role,
         isWriter: formData.get('isWriter') === 'on',
         isSupporter: formData.get('isSupporter') === 'on',
+        newsletterSubscribed: formData.get('newsletterSubscribed') === 'on',
       }),
     },
   })

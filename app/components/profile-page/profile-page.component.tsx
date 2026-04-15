@@ -1,7 +1,8 @@
-import { useState } from 'react'
-import { Form } from 'react-router'
+import { useEffect, useState } from 'react'
+import { Form, Link as RouterLink, useFetcher, useRevalidator } from 'react-router'
 import { formatEventDate } from '~/lib/date'
 import type { ProfilePageData } from '~/lib/profile-page-data'
+import { Role } from '~/generated/prisma/enums'
 import BackButtonPortal from '~/components/back-button-portal/back-button-portal.component'
 import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
@@ -520,6 +521,8 @@ export function ProfilePage({
   loaderData: ProfilePageLoaderData
 }) {
   const [avatarError, setAvatarError] = useState(false)
+  const newsEmailsFetcher = useFetcher<{ ok?: boolean }>()
+  const revalidator = useRevalidator()
   const {
     currentUser,
     eventParticipants,
@@ -528,6 +531,15 @@ export function ProfilePage({
     adminPreview,
   } = loaderData
   const showAvatar = currentUser.avatarUrl && !avatarError
+
+  useEffect(() => {
+    if (
+      newsEmailsFetcher.state === 'idle' &&
+      newsEmailsFetcher.data?.ok === true
+    ) {
+      revalidator.revalidate()
+    }
+  }, [newsEmailsFetcher.state, newsEmailsFetcher.data, revalidator])
 
   return (
     <>
@@ -544,7 +556,7 @@ export function ProfilePage({
           )}
           {/* Header: avatar + nome + editar (sempre no topo) */}
           <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-start lg:mb-10">
-            <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
+            <div className="flex w-full min-w-0 flex-col items-center gap-4 sm:flex-row sm:items-start">
               {showAvatar ? (
                 <img
                   src={currentUser.avatarUrl}
@@ -558,25 +570,83 @@ export function ProfilePage({
                   {getInitials(currentUser.name)}
                 </div>
               )}
-              <div className="text-center sm:text-left">
-                <h1 className="text-2xl font-semibold tracking-tight">
-                  <SupporterNameDisplay
-                    name={currentUser.name}
-                    isSupporter={currentUser.isSupporter}
-                  />
-                </h1>
-                <p className="mt-1 text-foreground/60">
-                  <SupporterNameDisplay
-                    name={`@${currentUser.nickname}`}
-                    isSupporter={currentUser.isSupporter}
-                    nameClassName="text-foreground/60"
-                  />
-                </p>
-                <div className="mt-3 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-                  <span className="rounded-full bg-foreground/10 px-2.5 py-0.5 text-xs font-medium uppercase">
-                    {currentUser.role}
-                  </span>
+              <div className="flex w-full min-w-0 flex-1 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+                <div className="min-w-0 text-center sm:flex-1 sm:text-left">
+                  <h1 className="text-2xl font-semibold tracking-tight">
+                    <SupporterNameDisplay
+                      name={currentUser.name}
+                      isSupporter={currentUser.isSupporter}
+                    />
+                  </h1>
+                  <p className="mt-1 text-foreground/60">
+                    <SupporterNameDisplay
+                      name={`@${currentUser.nickname}`}
+                      isSupporter={currentUser.isSupporter}
+                      nameClassName="text-foreground/60"
+                    />
+                  </p>
+                  <div className="mt-3 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                    <span className="rounded-full bg-foreground/10 px-2.5 py-0.5 text-xs font-medium uppercase">
+                      {currentUser.role}
+                    </span>
+                  </div>
                 </div>
+                {!adminPreview && (
+                  <newsEmailsFetcher.Form
+                    method="post"
+                    action="/profile"
+                    className="relative w-full max-w-full shrink-0 overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/[0.14] via-accent/[0.1] to-primary/[0.05] px-4 py-3.5 shadow-[0_12px_36px_-14px_color-mix(in_oklab,var(--color-primary)_45%,transparent)] ring-1 ring-inset ring-primary/20 backdrop-blur-[2px] sm:max-w-[min(100%,17.5rem)]"
+                  >
+                    <div
+                      className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-primary via-accent to-primary/50"
+                      aria-hidden
+                    />
+                    <input
+                      type="hidden"
+                      name="_action"
+                      value="updateNewsEmails"
+                    />
+                    <label className="relative flex cursor-pointer items-start gap-3 pl-1.5 text-left text-sm leading-snug">
+                      <span
+                        className="mt-0.5 shrink-0 [&_svg]:!text-primary [&_svg]:stroke-[2.25]"
+                        aria-hidden
+                      >
+                        <MailIcon />
+                      </span>
+                      <span className="flex min-w-0 flex-1 items-start gap-3">
+                        <span className="relative mt-1 inline-flex h-4 w-4 shrink-0">
+                          <input
+                            type="checkbox"
+                            name="newsletterSubscribed"
+                            defaultChecked={currentUser.newsletterSubscribed}
+                            key={String(currentUser.newsletterSubscribed)}
+                            disabled={newsEmailsFetcher.state !== 'idle'}
+                            onChange={(e) => {
+                              const form = e.currentTarget.form
+                              if (form) newsEmailsFetcher.submit(form)
+                            }}
+                            className="peer h-4 w-4 cursor-pointer appearance-none rounded border-2 border-primary/55 bg-primary/15 shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] transition-colors checked:border-primary checked:bg-primary hover:border-primary/70 hover:bg-primary/25 checked:hover:bg-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary/50 disabled:cursor-not-allowed disabled:opacity-50 dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.35)]"
+                          />
+                          <svg
+                            className="pointer-events-none absolute left-0.5 top-0.5 h-3 w-3 text-on-primary opacity-0 transition-opacity peer-checked:opacity-100"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="3.2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-hidden
+                          >
+                            <path d="M5 13l4 4L19 7" />
+                          </svg>
+                        </span>
+                        <span className="min-w-0 font-medium text-foreground/95 [text-wrap:balance]">
+                          Desejo receber e-mails com novidades
+                        </span>
+                      </span>
+                    </label>
+                  </newsEmailsFetcher.Form>
+                )}
               </div>
             </div>
             {!adminPreview && (
@@ -811,10 +881,24 @@ export function ProfilePage({
             </section>
           </div>
 
-          {/* Sair — centralizado por último */}
+          {/* Admin: exportar e-mails da newsletter — Sair */}
           {!adminPreview && (
-            <div className="mx-auto flex w-full max-w-sm justify-center px-2 pb-2">
-              <Form method="post" action="/logout" className="w-full sm:w-auto">
+            <div className="mx-auto flex w-full max-w-sm flex-col items-stretch gap-3 px-2 pb-2">
+              {currentUser.role === Role.ADMIN && (
+                <RouterLink
+                  to="/profile/newsletter-emails"
+                  reloadDocument
+                  className="bg-secondary text-on-secondary border-on-secondary flex w-full min-w-[12rem] items-center justify-center gap-2 rounded-md border p-2 text-center transition-transform hover:scale-[1.02] active:scale-[0.98] motion-reduce:transform-none sm:w-auto sm:self-center [&_svg]:!text-on-secondary"
+                >
+                  <MailIcon />
+                  Receber e-mails válidos:
+                </RouterLink>
+              )}
+              <Form
+                method="post"
+                action="/logout"
+                className="flex w-full justify-center sm:w-auto sm:self-center"
+              >
                 <Button
                   type="submit"
                   className="flex w-full min-w-[12rem] items-center justify-center gap-2 sm:w-auto"

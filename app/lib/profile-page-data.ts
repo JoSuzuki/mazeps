@@ -22,6 +22,7 @@ export async function loadProfilePageData(
         favoriteGame: true,
         favoriteEvent: true,
         isSupporter: true,
+        newsletterSubscribed: true,
       },
     }),
     prisma.eventParticipant.findMany({

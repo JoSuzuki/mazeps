@@ -37,6 +37,9 @@ model User {
   birthday DateTime?
   favoriteGame String?
   favoriteEvent String?
+  /// Opt-in para e-mails com novidades (marketing / newsletter)
+  newsletterSubscribed Boolean @default(false)
+  newsletterUnsubscribeToken String? @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   tournamentPlayers TournamentPlayer[]
