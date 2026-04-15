@@ -5,6 +5,7 @@ import {
   redirect,
   useActionData,
   useFetcher,
+  useNavigation,
 } from 'react-router'
 import type { Route } from './+types/route'
 import BackButtonPortal from '~/components/back-button-portal/back-button-portal.component'
@@ -223,8 +224,12 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 
 export default function Route({ loaderData }: Route.ComponentProps) {
   const fetcher = useFetcher()
+  const navigation = useNavigation()
   const actionData = useActionData<typeof action>()
   const { enigma } = loaderData
+  const navBusy = navigation.state === 'submitting'
+  const fetcherBusy = fetcher.state !== 'idle'
+  const formBusy = navBusy || fetcherBusy
 
   const orderMin = enigma.phases.length
     ? Math.min(...enigma.phases.map((p) => p.order))
@@ -418,7 +423,13 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                 </div>
 
                 <div className="flex justify-end">
-                  <Button type="submit">Salvar alterações</Button>
+                  <Button
+                    type="submit"
+                    disabled={formBusy}
+                    className="disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Salvar alterações
+                  </Button>
                 </div>
               </div>
             </Form>
@@ -487,7 +498,8 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                             <input type="hidden" name="phaseId" value={phase.id} />
                             <button
                               type="submit"
-                              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                              disabled={formBusy}
+                              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-950/30"
                               onClick={(e) => {
                                 if (!confirm('Remover esta fase?')) e.preventDefault()
                               }}
@@ -530,7 +542,8 @@ export default function Route({ loaderData }: Route.ComponentProps) {
               <input type="hidden" name="intent" value="delete-enigma" />
               <button
                 type="submit"
-                className="flex items-center gap-2 rounded-lg border border-red-300 bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 dark:border-red-800 dark:bg-red-700 dark:hover:bg-red-800"
+                disabled={formBusy}
+                className="flex items-center gap-2 rounded-lg border border-red-300 bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-800 dark:bg-red-700 dark:hover:bg-red-800"
                 onClick={(e) => {
                   if (!confirm(`Deletar o enigma "${enigma.name}" permanentemente? Esta ação não pode ser desfeita.`)) e.preventDefault()
                 }}

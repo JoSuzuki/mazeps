@@ -1,7 +1,8 @@
-import { data, Form, redirect } from 'react-router'
+import { data, Form, redirect, useNavigation } from 'react-router'
 import type { Route } from './+types/route'
 import BackButtonPortal from '~/components/back-button-portal/back-button-portal.component'
 import Center from '~/components/center/center.component'
+import EnigmaPhaseEditorErrorBanner from '~/components/enigma-phase-editor-error-banner/enigma-phase-editor-error-banner.component'
 import EnigmaPhaseForm from '~/components/enigma-phase-form/enigma-phase-form.component'
 import { enigmaRobotsMeta } from '~/lib/enigma-robots-meta'
 import { saveEnigmaPhaseUpload } from '~/lib/upload'
@@ -10,6 +11,10 @@ import {
   parsePhaseTextExtrasFromForm,
   parseWhiteScreenHintsFromForm,
 } from '~/lib/enigma-phase-form-parse.server'
+import {
+  ENIGMA_PHASE_DUPLICATE_ANSWER_ERROR,
+  phaseAnswerConflictsWithSiblingPhases,
+} from '~/lib/enigma-phase-answer.server'
 import { toYouTubeEmbedUrl } from '~/lib/youtube'
 import { Role } from '~/generated/prisma/enums'
 
@@ -92,6 +97,13 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   const imageAlt = (formData.get('imageAlt') as string) || null
   const phrase = formData.get('phrase') as string
   const answer = formData.get('answer') as string
+  const siblingPhases = await context.prisma.enigmaPhase.findMany({
+    where: { enigmaId: enigma.id },
+    select: { id: true, answer: true },
+  })
+  if (phaseAnswerConflictsWithSiblingPhases(siblingPhases, answer)) {
+    return data({ error: ENIGMA_PHASE_DUPLICATE_ANSWER_ERROR }, { status: 400 })
+  }
   const tipPhrase = (formData.get('tipPhrase') as string) || null
   const hiddenHintRaw = (formData.get('hiddenHint') as string) ?? ''
   const hiddenHint = hiddenHintRaw.trim() === '' ? null : hiddenHintRaw.trim()
@@ -133,6 +145,8 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 }
 
 export default function Route({ loaderData, actionData }: Route.ComponentProps) {
+  const navigation = useNavigation()
+  const formBusy = navigation.state === 'submitting'
   const nextOrder = loaderData.enigma._count.phases + 1
 
   return (
@@ -140,14 +154,13 @@ export default function Route({ loaderData, actionData }: Route.ComponentProps) 
       <BackButtonPortal to={`/enigmas/${loaderData.enigma.slug}/edit`} />
       <Center>
         <div className="mx-auto max-w-2xl px-6 py-10">
-          {actionData && 'error' in actionData && actionData.error ? (
-            <div
-              className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-100"
-              role="alert"
-            >
-              {actionData.error}
-            </div>
-          ) : null}
+          <EnigmaPhaseEditorErrorBanner
+            message={
+              actionData && 'error' in actionData && actionData.error
+                ? actionData.error
+                : undefined
+            }
+          />
           <header className="mb-8">
             <h1 className="font-brand flex items-center gap-2 text-2xl tracking-wide">
               <PlusIcon />
@@ -163,6 +176,7 @@ export default function Route({ loaderData, actionData }: Route.ComponentProps) 
               <EnigmaPhaseForm
                 defaultValues={{ order: nextOrder }}
                 submitLabel="Criar fase"
+                submitDisabled={formBusy}
               />
             </Form>
           </section>

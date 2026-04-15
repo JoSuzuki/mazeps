@@ -75,11 +75,6 @@ export function verifyEnigmaUnlockFromMap(
   }
 }
 
-export type EnigmaPlayAccessContext = {
-  prisma: PrismaClient
-  userId: number
-}
-
 /** Sessão pode estar desatualizada após mudança de papel no banco. */
 export async function userBypassesEnigmaPasswordGateLive(
   prisma: PrismaClient,
@@ -96,23 +91,22 @@ export async function userBypassesEnigmaPasswordGateLive(
   return userBypassesEnigmaPasswordGate(row?.role)
 }
 
+/** Só ADMIN ignora o cookie de parabéns / mais-por-vir. STAFF segue o fluxo como jogador. */
+export function userBypassesEnigmaCelebrationPreviewGate(
+  role: string | undefined,
+): boolean {
+  if (role == null || role === '') return false
+  return String(role).trim().toUpperCase() === Role.ADMIN
+}
+
 export async function hasEnigmaPlayAccess(
   request: Request,
   enigma: Pick<Enigma, 'id' | 'slug' | 'entrancePasswordHash'>,
   userRole: string | undefined,
-  accessContext?: EnigmaPlayAccessContext,
 ): Promise<boolean> {
   if (!enigma.entrancePasswordHash) return true
 
-  const bypass =
-    accessContext?.prisma && Number.isFinite(accessContext.userId)
-      ? await userBypassesEnigmaPasswordGateLive(accessContext.prisma, {
-          id: accessContext.userId,
-          role: userRole,
-        })
-      : userBypassesEnigmaPasswordGate(userRole)
-
-  if (bypass) return true
+  if (userBypassesEnigmaPasswordGate(userRole)) return true
 
   const map = await parseEnigmaUnlockMap(request)
   return verifyEnigmaUnlockFromMap(map, enigma.slug, enigma.id, enigma.entrancePasswordHash)
