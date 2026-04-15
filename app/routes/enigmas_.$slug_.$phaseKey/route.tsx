@@ -1,10 +1,15 @@
 import { data, redirect } from 'react-router'
 import type { Route } from './+types/route'
 import EnigmaPhasePlay from '~/components/enigma-phase-play/enigma-phase-play.component'
+import { allowEnigmaAnswerAttempt } from '~/lib/enigma-answer-rate-limit.server'
 import {
   enigmaRequiresEntrancePassword,
   hasEnigmaPlayAccess,
 } from '~/lib/enigma-entrance-access.server'
+import {
+  loadEnigmaLightForPlay,
+  loadEnigmaPhasePlayPayload,
+} from '~/lib/enigma-play-queries.server'
 import {
   toPublicEnigmaPhase,
   toPublicEnigmaPlay,
@@ -15,6 +20,11 @@ import {
   resolvePhaseAnswerSubmission,
 } from '~/lib/enigma-phase-answer.server'
 import {
+  canAccessCelebrationScreen,
+  canAccessParabensScreen,
+  redirectWithCelebrationCookie,
+} from '~/lib/enigma-celebration-cookie.server'
+import {
   getPlayablePhasesOrdered,
   hasMorePhasesAfterPlayableWindow,
 } from '~/lib/enigma-public-phases.server'
@@ -23,10 +33,7 @@ import { Role } from '~/generated/prisma/enums'
 export async function loader({ context, params, request }: Route.LoaderArgs) {
   const { slug, phaseKey } = params
 
-  const enigma = await context.prisma.enigma.findUnique({
-    where: { slug },
-    include: { phases: { orderBy: { order: 'asc' } } },
-  })
+  const enigma = await loadEnigmaLightForPlay(context.prisma, slug)
 
   if (!enigma) throw new Response('Not Found', { status: 404 })
 
@@ -35,15 +42,10 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
     throw new Response('Not Found', { status: 404 })
   }
 
-  const accessCtx =
-    context.currentUser != null
-      ? { prisma: context.prisma, userId: Number(context.currentUser.id) }
-      : undefined
   const canPlay = await hasEnigmaPlayAccess(
     request,
     enigma,
     context.currentUser?.role,
-    accessCtx,
   )
   if (!canPlay && enigmaRequiresEntrancePassword(enigma)) {
     const next = encodeURIComponent(new URL(request.url).pathname)
@@ -55,6 +57,14 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
   }
 
   if (phaseKey === 'parabens') {
+    const ok = await canAccessParabensScreen(
+      request,
+      context.currentUser,
+      slug,
+      enigma,
+      context.currentUser?.role,
+    )
+    if (!ok) return redirect(`/enigmas/${slug}`)
     return {
       enigma: toPublicEnigmaPlay(enigma),
       phase: null,
@@ -73,6 +83,14 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
     if (!hasMorePhasesAfterPlayableWindow(enigma.phases, playable)) {
       return redirect(`/enigmas/${slug}/parabens`)
     }
+    const ok = await canAccessCelebrationScreen(
+      request,
+      context.currentUser,
+      slug,
+      enigma.id,
+      'interlude',
+    )
+    if (!ok) return redirect(`/enigmas/${slug}`)
     return {
       enigma: toPublicEnigmaPlay(enigma),
       phase: null,
@@ -89,21 +107,26 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
   )
   const playableIds = new Set(playable.map((p) => p.id))
 
-  let phase = null
+  let nextLight: (typeof enigma.phases)[number] | null = null
 
   const keyNorm = normalizeEnigmaAnswerInput(phaseKey!)
   const prevIndex = enigma.phases.findIndex(
     (p) => normalizeEnigmaAnswerInput(p.answer) === keyNorm,
   )
   if (prevIndex !== -1 && prevIndex + 1 < enigma.phases.length) {
-    phase = enigma.phases[prevIndex + 1]
+    nextLight = enigma.phases[prevIndex + 1]!
   }
 
-  if (!phase || !playableIds.has(phase.id)) throw new Response('Not Found', { status: 404 })
+  if (!nextLight || !playableIds.has(nextLight.id)) {
+    throw new Response('Not Found', { status: 404 })
+  }
+
+  const phaseFull = await loadEnigmaPhasePlayPayload(context.prisma, nextLight.id)
+  if (!phaseFull) throw new Response('Not Found', { status: 404 })
 
   return {
     enigma: toPublicEnigmaPlay(enigma),
-    phase: toPublicEnigmaPhase(phase),
+    phase: toPublicEnigmaPhase(phaseFull),
     isFinished: false,
     isAdmin: context.currentUser?.role === Role.ADMIN,
   }
@@ -128,10 +151,11 @@ export function meta({ data }: Route.MetaArgs) {
 export async function action({ request, context, params }: Route.ActionArgs) {
   const { slug, phaseKey } = params
 
-  const enigma = await context.prisma.enigma.findUnique({
-    where: { slug },
-    include: { phases: { orderBy: { order: 'asc' } } },
-  })
+  if (!allowEnigmaAnswerAttempt(request, slug)) {
+    return data({ tooManyAttempts: true as const }, { status: 429 })
+  }
+
+  const enigma = await loadEnigmaLightForPlay(context.prisma, slug)
 
   if (!enigma) throw new Response('Not Found', { status: 404 })
 
@@ -140,15 +164,10 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     throw new Response('Not Found', { status: 404 })
   }
 
-  const accessCtxAction =
-    context.currentUser != null
-      ? { prisma: context.prisma, userId: Number(context.currentUser.id) }
-      : undefined
   const canPlay = await hasEnigmaPlayAccess(
     request,
     enigma,
     context.currentUser?.role,
-    accessCtxAction,
   )
   if (!canPlay && enigmaRequiresEntrancePassword(enigma)) {
     const next = encodeURIComponent(new URL(request.url).pathname)
@@ -170,22 +189,27 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   )
   const playableIds = new Set(playable.map((p) => p.id))
 
-  let phase = null
+  let nextLight: (typeof enigma.phases)[number] | null = null
   const keyNorm = normalizeEnigmaAnswerInput(phaseKey!)
   const prevIndex = enigma.phases.findIndex(
     (p) => normalizeEnigmaAnswerInput(p.answer) === keyNorm,
   )
   if (prevIndex !== -1 && prevIndex + 1 < enigma.phases.length) {
-    phase = enigma.phases[prevIndex + 1]
+    nextLight = enigma.phases[prevIndex + 1]!
   }
 
-  if (!phase || !playableIds.has(phase.id)) throw new Response('Not Found', { status: 404 })
+  if (!nextLight || !playableIds.has(nextLight.id)) {
+    throw new Response('Not Found', { status: 404 })
+  }
+
+  const phaseFull = await loadEnigmaPhasePlayPayload(context.prisma, nextLight.id)
+  if (!phaseFull) throw new Response('Not Found', { status: 404 })
 
   const formData = await request.formData()
   const resolution = resolvePhaseAnswerSubmission({
     submittedRaw: formData.get('answer') as string,
-    correctAnswer: phase.answer,
-    whiteScreenHintsJson: phase.whiteScreenHints,
+    correctAnswer: phaseFull.answer,
+    whiteScreenHintsJson: phaseFull.whiteScreenHints,
   })
 
   if (resolution.kind === 'whiteScreen') {
@@ -195,15 +219,28 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     return data({ wrong: true as const })
   }
 
-  const isLast = phase.order === playable[playable.length - 1]!.order
+  const isLast = phaseFull.order === playable[playable.length - 1]!.order
   if (isLast) {
     if (hasMorePhasesAfterPlayableWindow(enigma.phases, playable)) {
-      return redirect(`/enigmas/${slug}/mais-por-vir`)
+      return redirectWithCelebrationCookie(
+        `/enigmas/${slug}/mais-por-vir`,
+        request,
+        slug,
+        enigma.id,
+        'interlude',
+      )
     }
-    return redirect(`/enigmas/${slug}/parabens`)
+    return redirectWithCelebrationCookie(
+      `/enigmas/${slug}/parabens`,
+      request,
+      slug,
+      enigma.id,
+      'full',
+    )
   }
 
-  return redirect(`/enigmas/${slug}/${phase.answer}`)
+  const segment = encodeURIComponent(phaseFull.answer.trim())
+  return redirect(`/enigmas/${slug}/${segment}`)
 }
 
 export default function Route({ loaderData, params }: Route.ComponentProps) {

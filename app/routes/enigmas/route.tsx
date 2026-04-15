@@ -20,6 +20,31 @@ export function meta() {
 export async function loader({ context }: Route.LoaderArgs) {
   const isAdmin = context.currentUser?.role === Role.ADMIN
 
+  if (!context.currentUser) {
+    const publishedCandidates = await context.prisma.enigma.findMany({
+      where: { published: true },
+      select: {
+        published: true,
+        publicPhaseOrderFrom: true,
+        publicPhaseOrderTo: true,
+        phases: { select: { order: true } },
+      },
+    })
+    const hasPublishedEnigmas = publishedCandidates.some(
+      (e) =>
+        countPublicPlayablePhases(
+          e,
+          e.phases.map((p) => p.order),
+        ) > 0,
+    )
+    return {
+      enigmas: [],
+      hasPublishedEnigmas,
+      currentUser: null,
+      guestGate: true as const,
+    }
+  }
+
   const enigmas = await context.prisma.enigma.findMany({
     include: {
       _count: { select: { phases: true } },
@@ -41,6 +66,7 @@ export async function loader({ context }: Route.LoaderArgs) {
     enigmas: isAdmin ? enigmas : publishedEnigmas,
     hasPublishedEnigmas: publishedEnigmas.length > 0,
     currentUser: context.currentUser,
+    guestGate: false as const,
   }
 }
 
@@ -68,6 +94,29 @@ function DoorIcon({ size = 'lg' }: { size?: 'lg' | 'sm' }) {
 function EnigmasFlamingoBackdrop() {
   return (
     <EnigmasDetectiveFlamingo className="fixed bottom-3 left-0 z-0 w-[min(24vw,96px)] max-w-[96px] -translate-x-[14%] opacity-75 drop-shadow-[0_6px_16px_rgba(0,0,0,0.12)] sm:bottom-auto sm:top-24 sm:w-[min(92vw,420px)] sm:max-w-[420px] sm:-translate-x-[54%] sm:opacity-[0.94] sm:drop-shadow-[0_12px_32px_rgba(0,0,0,0.16)] md:top-28 md:w-[440px] md:max-w-[440px] md:-translate-x-[52%] lg:w-[480px] lg:max-w-[480px] lg:-translate-x-[50%]" />
+  )
+}
+
+/** Visitante sem login: decoração atrás do overlay, sem nomes/slugs dos enigmas. */
+function GuestMysteryDoorsBackdrop() {
+  return (
+    <div
+      className="flex flex-col items-center gap-8 opacity-[0.38]"
+      aria-hidden
+    >
+      {[0, 1, 2].map((i) => (
+        <div
+          key={i}
+          className="w-full max-w-md rounded-2xl border-2 border-foreground/18 bg-background/85 p-10 shadow-inner md:p-14"
+        >
+          <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full border-2 border-foreground/20 bg-[color-mix(in_srgb,var(--color-on-background)_10%,var(--color-background))]">
+            <span className="text-3xl font-light text-foreground/35">?</span>
+          </div>
+          <div className="mx-auto h-7 w-4/5 rounded-md bg-foreground/10" />
+          <div className="mx-auto mt-3 h-4 w-1/2 rounded bg-foreground/8" />
+        </div>
+      ))}
+    </div>
   )
 }
 
@@ -349,7 +398,9 @@ export default function Route({ loaderData }: Route.ComponentProps) {
             </div>
           )}
 
-          {loaderData.enigmas.length === 0 ? (
+          {loaderData.guestGate ? (
+            <GuestMysteryDoorsBackdrop />
+          ) : loaderData.enigmas.length === 0 ? (
             <div className="relative z-[2] rounded-2xl border-2 border-dashed border-foreground/20 bg-background px-6 py-20 text-center shadow-lg">
               <DoorIcon />
               <p className="mt-4 text-foreground/60">

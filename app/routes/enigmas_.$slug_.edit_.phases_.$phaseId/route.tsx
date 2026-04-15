@@ -1,7 +1,8 @@
-import { data, Form, redirect } from 'react-router'
+import { data, Form, redirect, useNavigation } from 'react-router'
 import type { Route } from './+types/route'
 import BackButtonPortal from '~/components/back-button-portal/back-button-portal.component'
 import Center from '~/components/center/center.component'
+import EnigmaPhaseEditorErrorBanner from '~/components/enigma-phase-editor-error-banner/enigma-phase-editor-error-banner.component'
 import EnigmaPhaseForm from '~/components/enigma-phase-form/enigma-phase-form.component'
 import { enigmaRobotsMeta } from '~/lib/enigma-robots-meta'
 import { saveEnigmaPhaseUpload } from '~/lib/upload'
@@ -10,6 +11,10 @@ import {
   parsePhaseTextExtrasFromForm,
   parseWhiteScreenHintsFromForm,
 } from '~/lib/enigma-phase-form-parse.server'
+import {
+  ENIGMA_PHASE_DUPLICATE_ANSWER_ERROR,
+  phaseAnswerConflictsWithSiblingPhases,
+} from '~/lib/enigma-phase-answer.server'
 import { toYouTubeEmbedUrl } from '~/lib/youtube'
 import { Role } from '~/generated/prisma/enums'
 
@@ -124,6 +129,20 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   const hiddenHintRaw = (formData.get('hiddenHint') as string) ?? ''
   const hiddenHint = hiddenHintRaw.trim() === '' ? null : hiddenHintRaw.trim()
 
+  const siblingPhases = await context.prisma.enigmaPhase.findMany({
+    where: { enigmaId: existingPhase.enigmaId },
+    select: { id: true, answer: true },
+  })
+  if (
+    phaseAnswerConflictsWithSiblingPhases(
+      siblingPhases,
+      answer,
+      existingPhase.id,
+    )
+  ) {
+    return data({ error: ENIGMA_PHASE_DUPLICATE_ANSWER_ERROR }, { status: 400 })
+  }
+
   const textExtras = parsePhaseTextExtrasFromForm(formData)
   const whiteScreenHints = parseWhiteScreenHintsFromForm(formData)
 
@@ -162,6 +181,8 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 }
 
 export default function Route({ loaderData, actionData }: Route.ComponentProps) {
+  const navigation = useNavigation()
+  const formBusy = navigation.state === 'submitting'
   const { phase } = loaderData
 
   return (
@@ -169,14 +190,13 @@ export default function Route({ loaderData, actionData }: Route.ComponentProps) 
       <BackButtonPortal to={`/enigmas/${phase.enigma.slug}/edit`} />
       <Center>
         <div className="mx-auto max-w-2xl px-6 py-10">
-          {actionData && 'error' in actionData && actionData.error ? (
-            <div
-              className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-100"
-              role="alert"
-            >
-              {actionData.error}
-            </div>
-          ) : null}
+          <EnigmaPhaseEditorErrorBanner
+            message={
+              actionData && 'error' in actionData && actionData.error
+                ? actionData.error
+                : undefined
+            }
+          />
           <header className="mb-8">
             <h1 className="font-brand flex items-center gap-2 text-2xl tracking-wide">
               <PencilIcon />
@@ -211,6 +231,7 @@ export default function Route({ loaderData, actionData }: Route.ComponentProps) 
                   whiteScreenHints: phase.whiteScreenHints,
                 }}
                 submitLabel="Salvar alterações"
+                submitDisabled={formBusy}
               />
             </Form>
           </section>
@@ -226,7 +247,8 @@ export default function Route({ loaderData, actionData }: Route.ComponentProps) 
               <input type="hidden" name="intent" value="delete" />
               <button
                 type="submit"
-                className="flex items-center gap-2 rounded-lg border border-red-300 bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 dark:border-red-800 dark:bg-red-700 dark:hover:bg-red-800"
+                disabled={formBusy}
+                className="flex items-center gap-2 rounded-lg border border-red-300 bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-800 dark:bg-red-700 dark:hover:bg-red-800"
                 onClick={(e) => {
                   if (!confirm('Remover esta fase permanentemente?')) e.preventDefault()
                 }}

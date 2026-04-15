@@ -1,10 +1,11 @@
-import { data, Form, redirect, useSearchParams } from 'react-router'
+import { data, Form, redirect, useNavigation, useSearchParams } from 'react-router'
 import type { Route } from './+types/route'
 import BackButtonPortal from '~/components/back-button-portal/back-button-portal.component'
 import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
 import LinkButton from '~/components/link-button/link-button.component'
 import { DEFAULT_ENIGMA_ENTRANCE_PROMPT } from '~/lib/enigma-entrance-prompt'
+import { allowEnigmaAnswerAttempt } from '~/lib/enigma-answer-rate-limit.server'
 import {
   enigmaRequiresEntrancePassword,
   hasEnigmaPlayAccess,
@@ -13,7 +14,9 @@ import {
   setEnigmaUnlockCookieHeader,
   userBypassesEnigmaPasswordGateLive,
 } from '~/lib/enigma-entrance-access.server'
+import { loadEnigmaLightForPlay } from '~/lib/enigma-play-queries.server'
 import { enigmaRobotsMeta } from '~/lib/enigma-robots-meta'
+import { redirectWithCelebrationCookie } from '~/lib/enigma-celebration-cookie.server'
 import {
   getPlayablePhasesOrdered,
   hasMorePhasesAfterPlayableWindow,
@@ -28,10 +31,7 @@ function normalize(str: string) {
 export async function loader({ context, params, request }: Route.LoaderArgs) {
   const { slug } = params
 
-  const enigma = await context.prisma.enigma.findUnique({
-    where: { slug },
-    include: { phases: { orderBy: { order: 'asc' } } },
-  })
+  const enigma = await loadEnigmaLightForPlay(context.prisma, slug)
 
   if (!enigma) throw new Response('Not Found', { status: 404 })
 
@@ -44,15 +44,10 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
     throw new Response('Not Found', { status: 404 })
   }
 
-  const accessCtx =
-    context.currentUser != null
-      ? { prisma: context.prisma, userId: Number(context.currentUser.id) }
-      : undefined
   const hasAccess = await hasEnigmaPlayAccess(
     request,
     enigma,
     context.currentUser?.role,
-    accessCtx,
   )
   if (!hasAccess && enigmaRequiresEntrancePassword(enigma)) {
     return {
@@ -87,10 +82,7 @@ export function meta({ data }: Route.MetaArgs) {
 export async function action({ request, context, params }: Route.ActionArgs) {
   const { slug } = params
 
-  const enigma = await context.prisma.enigma.findUnique({
-    where: { slug },
-    include: { phases: { orderBy: { order: 'asc' } } },
-  })
+  const enigma = await loadEnigmaLightForPlay(context.prisma, slug)
 
   if (!enigma) throw new Response('Not Found', { status: 404 })
 
@@ -158,20 +150,25 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     })
   }
 
-  const accessCtxPost =
-    context.currentUser != null
-      ? { prisma: context.prisma, userId: Number(context.currentUser.id) }
-      : undefined
   const canPlay = await hasEnigmaPlayAccess(
     request,
     enigma,
     context.currentUser?.role,
-    accessCtxPost,
   )
   if (!canPlay && enigmaRequiresEntrancePassword(enigma)) {
     return data({
       error: 'É necessário informar a senha do enigma antes de continuar.',
     })
+  }
+
+  if (!allowEnigmaAnswerAttempt(request, slug)) {
+    return data(
+      {
+        error:
+          'Muitas tentativas. Aguarda cerca de um minuto e tenta de novo.',
+      },
+      { status: 429 },
+    )
   }
 
   const raw = (formData.get('lastAnswer') as string) ?? ''
@@ -191,9 +188,21 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   const isLast = matchIndex === playable.length - 1
   if (isLast) {
     if (hasMorePhasesAfterPlayableWindow(enigma.phases, playable)) {
-      return redirect(`/enigmas/${slug}/mais-por-vir`)
+      return redirectWithCelebrationCookie(
+        `/enigmas/${slug}/mais-por-vir`,
+        request,
+        slug,
+        enigma.id,
+        'interlude',
+      )
     }
-    return redirect(`/enigmas/${slug}/parabens`)
+    return redirectWithCelebrationCookie(
+      `/enigmas/${slug}/parabens`,
+      request,
+      slug,
+      enigma.id,
+      'full',
+    )
   }
 
   const segment = encodeURIComponent(playable[matchIndex]!.answer.trim())
@@ -204,10 +213,12 @@ function LockedGateView({
   enigmaName,
   prompt,
   actionData,
+  formBusy,
 }: {
   enigmaName: string
   prompt: string
   actionData: Route.ComponentProps['actionData']
+  formBusy: boolean
 }) {
   const [searchParams] = useSearchParams()
   const next = searchParams.get('next') ?? ''
@@ -248,7 +259,8 @@ function LockedGateView({
                   name="password"
                   type="password"
                   autoComplete="off"
-                  className="w-full rounded-md border-1 p-2"
+                  disabled={formBusy}
+                  className="w-full rounded-md border-1 p-2 disabled:cursor-not-allowed disabled:opacity-60"
                   placeholder="Senha"
                 />
                 {actionData?.error && (
@@ -256,7 +268,11 @@ function LockedGateView({
                     {actionData.error}
                   </p>
                 )}
-              <Button type="submit" className="w-full py-3 text-base font-semibold">
+              <Button
+                type="submit"
+                disabled={formBusy}
+                className="w-full py-3 text-base font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+              >
                 Entrar
               </Button>
             </Form>
@@ -272,12 +288,16 @@ export default function Route({
   actionData,
   params,
 }: Route.ComponentProps) {
+  const navigation = useNavigation()
+  const formBusy = navigation.state === 'submitting'
+
   if (loaderData.locked) {
     return (
       <LockedGateView
         enigmaName={loaderData.enigmaName}
         prompt={loaderData.prompt}
         actionData={actionData}
+        formBusy={formBusy}
       />
     )
   }
@@ -322,15 +342,20 @@ export default function Route({
                   name="lastAnswer"
                   type="text"
                   autoComplete="off"
+                  disabled={formBusy}
                   placeholder="Ex.: a palavra ou frase que você encontrou"
-                  className="w-full rounded-md border-1 p-2"
+                  className="w-full rounded-md border-1 p-2 disabled:cursor-not-allowed disabled:opacity-60"
                 />
                 {actionData?.error && (
                   <p className="text-sm text-red-600" role="alert">
                     {actionData.error}
                   </p>
                 )}
-                <Button type="submit" className="w-full py-3 text-base font-semibold">
+                <Button
+                  type="submit"
+                  disabled={formBusy}
+                  className="w-full py-3 text-base font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+                >
                   Ir para a fase
                 </Button>
               </Form>

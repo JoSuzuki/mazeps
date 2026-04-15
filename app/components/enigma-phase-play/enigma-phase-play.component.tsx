@@ -29,6 +29,7 @@ export type EnigmaPhasePlayLoaderData = {
 
 type EnigmaPhasePlayActionResult =
   | { wrong?: true }
+  | { tooManyAttempts?: true }
   | { whiteScreen?: true; message?: string }
 
 function renderMediaBlock(
@@ -107,16 +108,17 @@ export default function EnigmaPhasePlay({
     if (!d) return
     if ('whiteScreen' in d && d.whiteScreen && typeof d.message === 'string') {
       queueMicrotask(() => whiteScreenDialogRef.current?.showModal())
-      return
-    }
-    if ('wrong' in d && d.wrong) {
-      alert('Resposta incorreta!')
-      if (answerRef.current) {
-        answerRef.current.value = ''
-        answerRef.current.focus()
-      }
     }
   }, [fetcher.data])
+
+  useEffect(() => {
+    const d = fetcher.data
+    if (!d || fetcher.state !== 'idle') return
+    if ('wrong' in d && d.wrong && answerRef.current) {
+      answerRef.current.value = ''
+      answerRef.current.focus()
+    }
+  }, [fetcher.data, fetcher.state])
 
   useEffect(() => {
     if (answerRef.current) {
@@ -141,6 +143,16 @@ export default function EnigmaPhasePlay({
     fetcher.data && 'whiteScreen' in fetcher.data && fetcher.data.whiteScreen
       ? fetcher.data.message
       : undefined
+
+  const submitBusy = fetcher.state !== 'idle'
+  const answerError =
+    fetcher.state === 'idle' && fetcher.data
+      ? 'tooManyAttempts' in fetcher.data && fetcher.data.tooManyAttempts
+        ? 'Muitas tentativas. Aguarda cerca de um minuto e tenta de novo.'
+        : 'wrong' in fetcher.data && fetcher.data.wrong
+          ? 'Resposta incorreta.'
+          : null
+      : null
 
   return (
     <div className="flex w-full flex-col items-center gap-4 px-6 py-2 pb-8">
@@ -263,11 +275,18 @@ export default function EnigmaPhasePlay({
           type="text"
           required
           autoComplete="off"
-          className="w-48 rounded-md border-1 p-1 text-center"
+          disabled={submitBusy}
+          className="w-48 rounded-md border-1 p-1 text-center disabled:opacity-60"
         />
+        {answerError ? (
+          <p className="text-center text-sm text-red-600" role="alert">
+            {answerError}
+          </p>
+        ) : null}
         <button
           type="submit"
-          className="active:pressed cursor-pointer rounded-md bg-primary px-6 py-2 text-on-primary hover:opacity-90"
+          disabled={submitBusy}
+          className="active:pressed cursor-pointer rounded-md bg-primary px-6 py-2 text-on-primary hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Enviar
         </button>

@@ -45,6 +45,8 @@ interface EnigmaPhaseFormProps {
   submitLabel: string
   /** Na edição: resposta num bloco destacado no fim (acima do envio / zona de perigo). */
   prominentAnswerSection?: boolean
+  /** Evita duplo envio enquanto o pedido está a ser processado. */
+  submitDisabled?: boolean
 }
 
 const MEDIA_TYPE_OPTIONS = [
@@ -161,6 +163,7 @@ export default function EnigmaPhaseForm({
   defaultValues,
   submitLabel,
   prominentAnswerSection = false,
+  submitDisabled = false,
 }: EnigmaPhaseFormProps) {
   const [mediaType, setMediaType] = useState<string>(
     defaultValues?.mediaType ?? 'NONE',
@@ -747,7 +750,13 @@ export default function EnigmaPhaseForm({
 
       <Spacer size="md" />
 
-      <Button type="submit">{submitLabel}</Button>
+      <Button
+        type="submit"
+        disabled={submitDisabled}
+        className="disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {submitLabel}
+      </Button>
     </>
   )
 }
