@@ -35,6 +35,9 @@
   --color-on-error: var(--color-on-error);
 
   --font-brand: 'Farmshow';
+  --font-albert-sans:
+    'Albert Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   --font-default:
     'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
     'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
