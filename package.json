@@ -15,7 +15,8 @@
     "console": "tsx console.ts",
     "typecheck": "react-router typegen && tsc -b",
     "eslint": "eslint . --fix",
-    "prettier": "prettier . --write"
+    "prettier": "prettier . --write",
+    "assets:golden-mascot": "tsx scripts/prepare-golden-mascot.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^6.15.0",
@@ -71,6 +72,7 @@
     "eslint": "^9.34.0",
     "prettier": "3.6.2",
     "prettier-plugin-tailwindcss": "^0.6.14",
+    "sharp": "^0.34.5",
     "tailwindcss": "^4.1.4",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3",

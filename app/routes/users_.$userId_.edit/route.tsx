@@ -6,6 +6,7 @@ import Button from '~/components/button/button.component'
 import Center from '~/components/center/center.component'
 import LinkButton from '~/components/link-button/link-button.component'
 import TextInput from '~/components/text-input/text-input.component'
+import ThemedCheckbox from '~/components/themed-checkbox/themed-checkbox.component'
 import SupporterNameDisplay from '~/components/supporter-name-display/supporter-name-display.component'
 import { Role } from '~/generated/prisma/enums'
 
@@ -154,24 +155,20 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                     </div>
                   </div>
                   <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-foreground/10 px-4 py-3 transition-colors hover:bg-foreground/5">
-                    <input
-                      type="checkbox"
+                    <ThemedCheckbox
                       name="isWriter"
                       value="on"
                       defaultChecked={user.isWriter}
-                      className="h-4 w-4 rounded border-foreground/30"
                     />
                     <span className="text-sm">
                       Escritor (pode publicar no blog)
                     </span>
                   </label>
                   <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-foreground/10 px-4 py-3 transition-colors hover:bg-foreground/5">
-                    <input
-                      type="checkbox"
+                    <ThemedCheckbox
                       name="isSupporter"
                       value="on"
                       defaultChecked={user.isSupporter}
-                      className="h-4 w-4 rounded border-foreground/30"
                     />
                     <span className="text-sm">
                       Apoiador (tag pública; sem funções extras por enquanto)
@@ -187,12 +184,10 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                   E-mail com novidades
                 </h2>
                 <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-foreground/10 px-4 py-3 transition-colors hover:bg-foreground/5">
-                  <input
-                    type="checkbox"
+                  <ThemedCheckbox
                     name="newsletterSubscribed"
                     value="on"
                     defaultChecked={user.newsletterSubscribed}
-                    className="h-4 w-4 rounded border-foreground/30"
                   />
                   <span className="text-sm">
                     Deseja receber e-mails com novidades

@@ -5,7 +5,7 @@ import {
   themeFromTileId,
   tileIdFromTheme,
 } from '~/lib/theme-preference'
-import { FlamingoTile, PegasusTile, PlainThemeTile } from './tile.component'
+import { FlamingoTile, GoldenMascotTile, PegasusTile } from './tile.component'
 
 const VERTICAL_STEP = 60
 const HORIZONTAL_STEP = 120
@@ -59,7 +59,7 @@ const Board = ({
         top={1 * VERTICAL_STEP}
         left={1 * HORIZONTAL_STEP}
       />
-      <PlainThemeTile
+      <GoldenMascotTile
         id="3"
         selectedId={selectedId}
         onClick={handleClick}

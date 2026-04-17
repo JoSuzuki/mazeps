@@ -1,3 +1,4 @@
+import type { FormEvent } from 'react'
 import {
   data,
   Form,
@@ -14,6 +15,7 @@ import Center from '~/components/center/center.component'
 import Link from '~/components/link/link.component'
 import LinkButton from '~/components/link-button/link-button.component'
 import TextInput from '~/components/text-input/text-input.component'
+import ThemedCheckbox from '~/components/themed-checkbox/themed-checkbox.component'
 import { EnigmaCardSymbolFormField } from '~/components/enigma-card-symbol/enigma-card-symbol-form-field.component'
 import { parseEnigmaCardSymbol } from '~/components/enigma-card-symbol/enigma-card-symbol.component'
 import { enigmaPlayPathForPhaseIndex } from '~/lib/enigma-phase-play-path'
@@ -225,6 +227,35 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
 
   if (intent === 'delete-enigma') {
+    const acknowledge = formData.get('deleteEnigmaAcknowledge') === 'on'
+    const confirmSlug = ((formData.get('deleteEnigmaConfirmSlug') as string) ?? '').trim()
+
+    const existing = await context.prisma.enigma.findUnique({
+      where: { slug: params.slug },
+      select: { slug: true },
+    })
+    if (!existing) {
+      return data({ enigmaDeleteError: 'Enigma não encontrado.' }, { status: 404 })
+    }
+    if (!acknowledge) {
+      return data(
+        {
+          enigmaDeleteError:
+            'Marque a caixa confirmando que entende que a eliminação é permanente.',
+        },
+        { status: 400 },
+      )
+    }
+    if (confirmSlug !== existing.slug) {
+      return data(
+        {
+          enigmaDeleteError:
+            'O slug escrito não coincide com o slug deste enigma. Escreva exatamente o slug mostrado abaixo (respeitando maiúsculas e minúsculas).',
+        },
+        { status: 400 },
+      )
+    }
+
     await context.prisma.enigma.delete({ where: { slug: params.slug } })
     return redirect('/enigmas')
   }
@@ -247,6 +278,14 @@ export default function Route({ loaderData }: Route.ComponentProps) {
   const orderMax = enigma.phases.length
     ? Math.max(...enigma.phases.map((p) => p.order))
     : 1
+
+  const enigmaDeleteError =
+    actionData &&
+    typeof actionData === 'object' &&
+    'enigmaDeleteError' in actionData &&
+    typeof (actionData as { enigmaDeleteError: unknown }).enigmaDeleteError === 'string'
+      ? (actionData as { enigmaDeleteError: string }).enigmaDeleteError
+      : null
 
   return (
     <>
@@ -300,11 +339,10 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                 />
 
                 <label className="flex cursor-pointer items-center gap-4 rounded-xl border-2 border-foreground/20 p-6 transition-colors hover:border-foreground/30 has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-                  <input
-                    type="checkbox"
+                  <ThemedCheckbox
                     name="published"
                     defaultChecked={enigma.published}
-                    className="h-6 w-6 shrink-0 rounded border-2 border-foreground/30 accent-primary"
+                    visualSize="lg"
                   />
                   <span className="text-lg font-semibold uppercase tracking-wide">
                     PUBLICADO
@@ -370,11 +408,7 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                     <p className="mb-3 text-sm text-foreground/50">Estado: sem senha</p>
                   )}
                   <label className="mb-3 flex cursor-pointer items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      name="entrancePasswordClear"
-                      className="h-4 w-4 rounded border-foreground/30 accent-primary"
-                    />
+                    <ThemedCheckbox name="entrancePasswordClear" />
                     Remover senha da entrada
                   </label>
                   <label className="mb-1 block text-sm font-medium text-foreground/80" htmlFor="entrancePassword">
@@ -560,20 +594,81 @@ export default function Route({ loaderData }: Route.ComponentProps) {
               Zona de perigo
             </h2>
             <p className="mb-4 text-sm text-red-600 dark:text-red-300">
-              Deletar o enigma é irreversível. Todas as fases e dados serão removidos.
+              Deletar o enigma é irreversível. Todas as fases, certificados associados e outros dados
+              serão removidos. Só avance se tiver a certeza absoluta.
             </p>
-            <Form method="post">
+            {enigmaDeleteError ? (
+              <p className="mb-4 rounded-lg border border-red-300 bg-white px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/60 dark:text-red-100">
+                {enigmaDeleteError}
+              </p>
+            ) : null}
+            <Form
+              method="post"
+              className="space-y-4"
+              onSubmit={(e: FormEvent<HTMLFormElement>) => {
+                const fd = new FormData(e.currentTarget)
+                if (fd.get('deleteEnigmaAcknowledge') !== 'on') {
+                  e.preventDefault()
+                  return
+                }
+                const typed = String(fd.get('deleteEnigmaConfirmSlug') ?? '').trim()
+                if (typed !== enigma.slug) {
+                  e.preventDefault()
+                  window.alert(
+                    'O slug escrito não coincide com o slug deste enigma. Copie o slug exatamente como aparece no campo de confirmação.',
+                  )
+                  return
+                }
+                if (
+                  !window.confirm(
+                    `Primeira confirmação: eliminar permanentemente o enigma "${enigma.name}"?\n\nEsta ação não pode ser desfeita.`,
+                  )
+                ) {
+                  e.preventDefault()
+                  return
+                }
+                if (
+                  !window.confirm(
+                    `Segunda confirmação: o enigma "${enigma.name}" (slug: ${enigma.slug}) e todas as ${enigma.phases.length} fase(s) serão apagados. Continuar?`,
+                  )
+                ) {
+                  e.preventDefault()
+                }
+              }}
+            >
               <input type="hidden" name="intent" value="delete-enigma" />
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-red-200/80 bg-white/80 px-4 py-3 text-sm text-red-900 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-100">
+                <ThemedCheckbox name="deleteEnigmaAcknowledge" value="on" wrapperClassName="mt-0.5" />
+                <span className="leading-snug">
+                  Confirmo que quero apagar <strong>permanentemente</strong> este enigma e todos os dados
+                  associados. Sei que não há como recuperar.
+                </span>
+              </label>
+              <div>
+                <label
+                  className="mb-1.5 block text-sm font-medium text-red-800 dark:text-red-200"
+                  htmlFor="deleteEnigmaConfirmSlug"
+                >
+                  Para confirmar, escreva o <strong>slug</strong> do enigma (exatamente como no URL):
+                </label>
+                <p className="mb-2 font-mono text-sm text-red-700 dark:text-red-300">{enigma.slug}</p>
+                <input
+                  id="deleteEnigmaConfirmSlug"
+                  name="deleteEnigmaConfirmSlug"
+                  type="text"
+                  autoComplete="off"
+                  spellCheck={false}
+                  placeholder="cole ou digite o slug aqui"
+                  className="w-full rounded-md border-2 border-red-300 bg-white px-3 py-2 text-sm text-foreground placeholder:text-foreground/40 dark:border-red-800 dark:bg-red-950/50"
+                />
+              </div>
               <button
                 type="submit"
                 disabled={formBusy}
                 className="flex items-center gap-2 rounded-lg border border-red-300 bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-800 dark:bg-red-700 dark:hover:bg-red-800"
-                onClick={(e) => {
-                  if (!confirm(`Deletar o enigma "${enigma.name}" permanentemente? Esta ação não pode ser desfeita.`)) e.preventDefault()
-                }}
               >
                 <TrashIcon />
-                Deletar enigma
+                Deletar enigma (irreversível)
               </button>
             </Form>
           </section>
