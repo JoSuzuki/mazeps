@@ -5,8 +5,11 @@ import Spacer from '~/components/spacer/spacer.component'
 
 export default function EnigmaJourneyInterlude({
   enigmaName,
+  customBody,
 }: {
   enigmaName: string
+  /** Se definido, substitui os dois parágrafos narrativos abaixo do título principal (várias linhas). */
+  customBody?: string | null
 }) {
   return (
     <>
@@ -28,34 +31,38 @@ export default function EnigmaJourneyInterlude({
         `}</style>
         <Center>
           <div className="relative z-10 mx-auto max-w-lg px-6 text-center">
-            <p
-              className="font-mono text-xs uppercase tracking-[0.45em] text-foreground/40"
+            <h1
+              className="text-balance font-brand text-2xl font-semibold tracking-wide text-foreground/90 sm:text-3xl md:text-4xl"
               style={{ animation: 'enigma-fade 0.9s ease-out both' }}
             >
-              …
-            </p>
-            <Spacer size="md" />
-            <h1
-              className="font-brand text-3xl font-semibold tracking-wide text-foreground/90 sm:text-4xl"
-              style={{ animation: 'enigma-fade 0.9s ease-out 0.15s both' }}
-            >
-              Chegaste até aqui
+              Você chegou até aqui, mas este não é o fim...
             </h1>
             <Spacer size="md" />
-            <p
-              className="text-lg leading-relaxed text-foreground/70"
-              style={{ animation: 'enigma-fade 0.9s ease-out 0.3s both' }}
-            >
-              Algo em ti desvendou o trecho que estava ao alcance de todos em{' '}
-              <strong className="font-medium text-foreground/85">{enigmaName}</strong>.
-            </p>
-            <Spacer size="sm" />
-            <p
-              className="text-base leading-relaxed text-foreground/55"
-              style={{ animation: 'enigma-fade 0.9s ease-out 0.45s both' }}
-            >
-              Ainda há caminhos por abrir. Esta jornada não terminou — volta mais tarde.
-            </p>
+            {customBody?.trim() ? (
+              <p
+                className="whitespace-pre-line text-lg leading-relaxed text-foreground/70"
+                style={{ animation: 'enigma-fade 0.9s ease-out 0.3s both' }}
+              >
+                {customBody.trim()}
+              </p>
+            ) : (
+              <>
+                <p
+                  className="text-lg leading-relaxed text-foreground/70"
+                  style={{ animation: 'enigma-fade 0.9s ease-out 0.3s both' }}
+                >
+                  Algo em ti desvendou o trecho que estava ao alcance de todos em{' '}
+                  <strong className="font-medium text-foreground/85">{enigmaName}</strong>.
+                </p>
+                <Spacer size="sm" />
+                <p
+                  className="text-base leading-relaxed text-foreground/55"
+                  style={{ animation: 'enigma-fade 0.9s ease-out 0.45s both' }}
+                >
+                  Ainda há caminhos por abrir. Esta jornada não terminou — volta mais tarde.
+                </p>
+              </>
+            )}
             <Spacer size="lg" />
             <Link
               to="/enigmas"

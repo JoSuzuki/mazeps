@@ -15,6 +15,7 @@ import {
   ENIGMA_PHASE_DUPLICATE_ANSWER_ERROR,
   phaseAnswerConflictsWithSiblingPhases,
 } from '~/lib/enigma-phase-answer.server'
+import { resolvePhaseCertificateFromForm } from '~/lib/enigma-phase-certificate.server'
 import { toYouTubeEmbedUrl } from '~/lib/youtube'
 import { Role } from '~/generated/prisma/enums'
 
@@ -154,6 +155,15 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     return data({ error: msg }, { status: 400 })
   }
 
+  const resolvedCert = await resolvePhaseCertificateFromForm(formData, {
+    providesCertificate: existingPhase.providesCertificate,
+    certificateTitle: existingPhase.certificateTitle,
+    certificateImageUrl: existingPhase.certificateImageUrl,
+  })
+  if (!resolvedCert.ok) {
+    return data({ error: resolvedCert.error }, { status: 400 })
+  }
+
   const phase = await context.prisma.enigmaPhase.update({
     where: { id: Number(params.phaseId) },
     data: {
@@ -173,6 +183,9 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       extraTipPhrases: textExtras.extraTipPhrases,
       extraHiddenHints: textExtras.extraHiddenHints,
       whiteScreenHints,
+      providesCertificate: resolvedCert.providesCertificate,
+      certificateTitle: resolvedCert.certificateTitle,
+      certificateImageUrl: resolvedCert.certificateImageUrl,
     },
     include: { enigma: true },
   })
@@ -229,6 +242,9 @@ export default function Route({ loaderData, actionData }: Route.ComponentProps) 
                   extraTipPhrases: phase.extraTipPhrases,
                   extraHiddenHints: phase.extraHiddenHints,
                   whiteScreenHints: phase.whiteScreenHints,
+                  providesCertificate: phase.providesCertificate,
+                  certificateTitle: phase.certificateTitle,
+                  certificateImageUrl: phase.certificateImageUrl,
                 }}
                 submitLabel="Salvar alterações"
                 submitDisabled={formBusy}

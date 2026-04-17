@@ -50,6 +50,7 @@ model User {
   eventParticipants EventParticipant[]
   blogPosts BlogPost[]
   passwordResetTokens PasswordResetToken[]
+  enigmaPhaseCertificateAwards EnigmaPhaseCertificateAward[]
 
   @@index([email])
 }
@@ -232,6 +233,10 @@ model Enigma {
   entrancePasswordHash   String?
   /// Texto do popup de senha (vazio no servidor = texto padrão na UI)
   entrancePasswordPrompt String? @db.Text
+  /// Corpo da tela Parabéns (várias linhas). Vazio = mensagem padrão com o nome do enigma.
+  parabensScreenBody  String? @db.Text
+  /// Corpo da tela ao fim do bloco público (URL …/mais-por-vir). Vazio = textos padrão.
+  interludeScreenBody String? @db.Text
   phases    EnigmaPhase[]
 }
 
@@ -265,9 +270,33 @@ model EnigmaPhase {
   whiteScreenHints Json @default("[]")
   /// Segmento opaco em `/enigmas/:slug/:phaseKey` para esta fase (legado ainda aceita resposta da fase anterior).
   playPathToken String
+  /// Se ativo, na primeira resposta certa (utilizador autenticado) regista-se certificado no perfil.
+  providesCertificate   Boolean @default(false)
+  /// Nome exibido no perfil / sugerido ao descarregar o JPEG.
+  certificateTitle      String?
+  /// Caminho servido em `/uploads/enigma-certificates/…` (só JPEG).
+  certificateImageUrl   String?
+
+  certificateAwards EnigmaPhaseCertificateAward[]
 
   @@unique([enigmaId, order])
   @@unique([enigmaId, playPathToken])
+}
+
+model EnigmaPhaseCertificateAward {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  userId    Int
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  enigmaPhaseId Int
+  phase     EnigmaPhase @relation(fields: [enigmaPhaseId], references: [id], onDelete: Cascade)
+  /// Cópia do nome no momento da conquista (perfil não depende só da fase atual).
+  awardTitle    String?
+  /// Cópia do URL do JPEG no momento da conquista.
+  awardImageUrl String?
+
+  @@unique([userId, enigmaPhaseId])
+  @@index([userId])
 }
 
 enum MediaType {

@@ -71,6 +71,45 @@ export async function saveEnigmaPhaseUpload(
   return `/uploads/enigmas/${filename}`
 }
 
+const CERT_JPEG_MAX_BYTES = 12 * 1024 * 1024
+
+/**
+ * JPEG apenas, para certificado de fase de enigma.
+ * Grava em `/uploads/enigma-certificates/` com `.download-name` para o servidor enviar como anexo.
+ */
+export async function saveEnigmaCertificateJpeg(
+  file: File,
+  displayTitle: string,
+): Promise<string> {
+  if (file.size > CERT_JPEG_MAX_BYTES) {
+    throw new Error('Imagem do certificado muito grande (máximo 12 MB).')
+  }
+  const mime = (file.type || '').toLowerCase().split(';')[0].trim()
+  if (mime !== 'image/jpeg' && mime !== 'image/jpg') {
+    throw new Error('O certificado tem de ser uma imagem JPEG (.jpg ou .jpeg).')
+  }
+
+  const uploadDir = join(process.cwd(), 'uploads', 'enigma-certificates')
+  await mkdir(uploadDir, { recursive: true })
+
+  const filename = `${crypto.randomUUID()}.jpg`
+  const buffer = Buffer.from(await file.arrayBuffer())
+  await writeFile(join(uploadDir, filename), buffer)
+
+  const base =
+    displayTitle.replace(/^.*[/\\]/, '').trim().slice(0, 200) || 'certificado'
+  const downloadLabel = base.toLowerCase().endsWith('.jpg')
+    ? base
+    : `${base}.jpg`
+  await writeFile(
+    join(uploadDir, `${filename}.download-name`),
+    downloadLabel,
+    'utf8',
+  )
+
+  return `/uploads/enigma-certificates/${filename}`
+}
+
 export async function saveUploadedFile(
   file: File,
   folder: string = 'enigmas',

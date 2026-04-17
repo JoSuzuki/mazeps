@@ -14,7 +14,11 @@ import {
   setEnigmaUnlockCookieHeader,
   userBypassesEnigmaPasswordGateLive,
 } from '~/lib/enigma-entrance-access.server'
-import { loadEnigmaLightForPlay } from '~/lib/enigma-play-queries.server'
+import { grantEnigmaPhaseCertificateIfEligible } from '~/lib/enigma-phase-certificate-award.server'
+import {
+  loadEnigmaLightForPlay,
+  loadEnigmaPhasePlayPayload,
+} from '~/lib/enigma-play-queries.server'
 import { enigmaRobotsMeta } from '~/lib/enigma-robots-meta'
 import { redirectWithCelebrationCookie } from '~/lib/enigma-celebration-cookie.server'
 import {
@@ -183,6 +187,19 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     return data({
       error: 'Não encontramos essa resposta neste enigma. Confira ortografia e espaços.',
     })
+  }
+
+  const matchedPhase = playable[matchIndex]!
+  const matchedPhaseFull = await loadEnigmaPhasePlayPayload(
+    context.prisma,
+    matchedPhase.id,
+  )
+  if (matchedPhaseFull) {
+    await grantEnigmaPhaseCertificateIfEligible(
+      context.prisma,
+      context.currentUser,
+      matchedPhaseFull,
+    )
   }
 
   const isLast = matchIndex === playable.length - 1

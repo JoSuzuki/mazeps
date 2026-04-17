@@ -6,7 +6,11 @@ import type { ExtraMediaBlock } from '~/lib/enigma-phase-extras'
 import { MediaType } from '~/generated/prisma/enums'
 
 export type EnigmaPhasePlayLoaderData = {
-  enigma: { name: string }
+  enigma: {
+    name: string
+    parabensScreenBody: string | null
+    interludeScreenBody: string | null
+  }
   phase: {
     id: number
     title: string
@@ -128,9 +132,19 @@ export default function EnigmaPhasePlay({
 
   if (loaderData.isFinished) {
     if (loaderData.celebrationKind === 'interlude') {
-      return <EnigmaJourneyInterlude enigmaName={loaderData.enigma.name} />
+      return (
+        <EnigmaJourneyInterlude
+          enigmaName={loaderData.enigma.name}
+          customBody={loaderData.enigma.interludeScreenBody}
+        />
+      )
     }
-    return <ParabensCelebration enigmaName={loaderData.enigma.name} />
+    return (
+      <ParabensCelebration
+        enigmaName={loaderData.enigma.name}
+        customBody={loaderData.enigma.parabensScreenBody}
+      />
+    )
   }
 
   const { phase } = loaderData

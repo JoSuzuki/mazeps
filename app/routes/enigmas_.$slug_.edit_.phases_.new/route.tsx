@@ -15,6 +15,7 @@ import {
   ENIGMA_PHASE_DUPLICATE_ANSWER_ERROR,
   phaseAnswerConflictsWithSiblingPhases,
 } from '~/lib/enigma-phase-answer.server'
+import { resolvePhaseCertificateFromForm } from '~/lib/enigma-phase-certificate.server'
 import { allocateUniquePlayPathToken } from '~/lib/enigma-play-path-token.server'
 import { toYouTubeEmbedUrl } from '~/lib/youtube'
 import { Role } from '~/generated/prisma/enums'
@@ -120,6 +121,15 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     return data({ error: msg }, { status: 400 })
   }
 
+  const resolvedCert = await resolvePhaseCertificateFromForm(formData, {
+    providesCertificate: false,
+    certificateTitle: null,
+    certificateImageUrl: null,
+  })
+  if (!resolvedCert.ok) {
+    return data({ error: resolvedCert.error }, { status: 400 })
+  }
+
   const playPathToken = await allocateUniquePlayPathToken(
     context.prisma,
     enigma.id,
@@ -145,6 +155,9 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       extraTipPhrases: textExtras.extraTipPhrases,
       extraHiddenHints: textExtras.extraHiddenHints,
       whiteScreenHints,
+      providesCertificate: resolvedCert.providesCertificate,
+      certificateTitle: resolvedCert.certificateTitle,
+      certificateImageUrl: resolvedCert.certificateImageUrl,
     },
   })
 

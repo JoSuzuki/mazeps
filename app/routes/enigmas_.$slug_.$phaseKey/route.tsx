@@ -27,6 +27,7 @@ import {
   hasMorePhasesAfterPlayableWindow,
 } from '~/lib/enigma-public-phases.server'
 import { Role } from '~/generated/prisma/enums'
+import { grantEnigmaPhaseCertificateIfEligible } from '~/lib/enigma-phase-certificate-award.server'
 
 export async function loader({ context, params, request }: Route.LoaderArgs) {
   const { slug, phaseKey } = params
@@ -205,6 +206,12 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   if (resolution.kind === 'wrong') {
     return data({ wrong: true as const })
   }
+
+  await grantEnigmaPhaseCertificateIfEligible(
+    context.prisma,
+    context.currentUser,
+    phaseFull,
+  )
 
   const isLast = phaseFull.order === playable[playable.length - 1]!.order
   if (isLast) {

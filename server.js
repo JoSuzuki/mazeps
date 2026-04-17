@@ -109,6 +109,59 @@ app.get('/uploads/enigmas/:filename', (req, res, next) => {
   })
 })
 
+/**
+ * Certificados de enigma: JPEG em disco; força download no browser (attachment).
+ */
+app.get('/uploads/enigma-certificates/:filename', (req, res, next) => {
+  const raw = req.params.filename
+  if (
+    !raw ||
+    raw.includes('..') ||
+    raw.includes('/') ||
+    raw.includes('\\') ||
+    raw.endsWith('.download-name')
+  ) {
+    return next()
+  }
+  const safe = path.basename(raw)
+  const dir = path.join(process.cwd(), 'uploads', 'enigma-certificates')
+  const absolute = path.join(dir, safe)
+  if (!absolute.startsWith(dir)) {
+    return next()
+  }
+  try {
+    if (!fs.existsSync(absolute) || !fs.statSync(absolute).isFile()) {
+      return next()
+    }
+  } catch {
+    return next()
+  }
+
+  let downloadName = safe
+  try {
+    const meta = fs.readFileSync(`${absolute}.download-name`, 'utf8').trim()
+    if (meta) {
+      downloadName = meta.slice(0, 240)
+    }
+  } catch {
+    // sem meta
+  }
+
+  const ascii = downloadName.replace(/[\x00-\x1f\x7f"]/g, '_').slice(0, 200)
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(downloadName)}`,
+  )
+
+  const maxAgeMs =
+    process.env.NODE_ENV === 'production' ? 365 * 24 * 60 * 60 * 1000 : 0
+  res.sendFile(absolute, { maxAge: maxAgeMs, immutable: process.env.NODE_ENV === 'production' }, (err) => {
+    if (err) {
+      next(err)
+    }
+  })
+})
+
 app.use(
   '/uploads',
   express.static('uploads', {

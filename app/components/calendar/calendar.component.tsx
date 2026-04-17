@@ -8,7 +8,6 @@ const DAYS_PT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 // Format: 'YYYY-MM-DD' => event label
 const EVENTS: Record<string, string> = {
   '2026-03-21': 'CMBG TACTICS',
-  '2026-04-24': 'Início Youtube',
   '2026-04-17': 'Enigmas?',
 }
 
