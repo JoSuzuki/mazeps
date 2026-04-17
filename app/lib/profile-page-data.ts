@@ -6,7 +6,7 @@ export async function loadProfilePageData(
   prisma: PrismaClient,
   userId: number,
 ) {
-  const [user, eventParticipants] = await Promise.all([
+  const [user, eventParticipants, certificateAwards] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -39,6 +39,21 @@ export async function loadProfilePageData(
         },
       },
       orderBy: { checkedInAt: 'desc' },
+    }),
+    prisma.enigmaPhaseCertificateAward.findMany({
+      where: { userId },
+      select: {
+        id: true,
+        awardTitle: true,
+        awardImageUrl: true,
+        phase: {
+          select: {
+            certificateTitle: true,
+            certificateImageUrl: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
     }),
   ])
 
@@ -81,6 +96,20 @@ export async function loadProfilePageData(
       return db - da
     })
 
+  const certificates = certificateAwards
+    .map((a) => {
+      const imageUrl =
+        a.awardImageUrl?.trim() ||
+        a.phase.certificateImageUrl?.trim() ||
+        ''
+      const title =
+        a.awardTitle?.trim() ||
+        a.phase.certificateTitle?.trim() ||
+        'Certificado'
+      return { id: a.id, title, imageUrl }
+    })
+    .filter((c) => c.imageUrl.length > 0)
+
   return {
     currentUser: {
       ...user,
@@ -89,6 +118,7 @@ export async function loadProfilePageData(
     eventParticipants,
     championTrophies,
     tournamentTrophies,
+    certificates,
   }
 }
 

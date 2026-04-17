@@ -130,6 +130,12 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     const entrancePasswordPromptRaw = (formData.get('entrancePasswordPrompt') as string) ?? ''
     const entrancePasswordPrompt =
       entrancePasswordPromptRaw.trim() === '' ? null : entrancePasswordPromptRaw.trim()
+    const parabensScreenBodyRaw = (formData.get('parabensScreenBody') as string) ?? ''
+    const interludeScreenBodyRaw = (formData.get('interludeScreenBody') as string) ?? ''
+    const parabensScreenBody =
+      parabensScreenBodyRaw.trim() === '' ? null : parabensScreenBodyRaw.trim()
+    const interludeScreenBody =
+      interludeScreenBodyRaw.trim() === '' ? null : interludeScreenBodyRaw.trim()
 
     const parseOptOrder = (v: FormDataEntryValue | null): number | null => {
       if (v == null || v === '') return null
@@ -182,6 +188,8 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       cardSymbol: EnigmaCardSymbol
       published: boolean
       entrancePasswordPrompt: string | null
+      parabensScreenBody: string | null
+      interludeScreenBody: string | null
       publicPhaseOrderFrom: number | null
       publicPhaseOrderTo: number | null
       entrancePasswordHash?: string | null
@@ -191,6 +199,8 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       cardSymbol,
       published,
       entrancePasswordPrompt,
+      parabensScreenBody,
+      interludeScreenBody,
       publicPhaseOrderFrom,
       publicPhaseOrderTo,
     }
@@ -244,22 +254,12 @@ export default function Route({ loaderData }: Route.ComponentProps) {
       <Center>
         <div className="mx-auto max-w-2xl px-6 py-10">
           {/* Header */}
-          <header className="mb-8">
-            <h1 className="font-brand text-2xl tracking-wide">
+          <header className="mb-8 text-center">
+            <h1 className="font-brand text-2xl tracking-wide text-foreground/70">
               Gerenciar enigma
             </h1>
-            <p className="mt-1 text-sm uppercase tracking-[0.2em] text-foreground/50">
+            <p className="mt-4 text-balance font-brand text-3xl font-semibold tracking-wide text-foreground/95 sm:text-4xl">
               {enigma.name}
-            </p>
-            <p className="mt-3 text-sm text-foreground/55">
-              <a
-                href="#enigma-card-symbol-fieldset"
-                className="font-medium text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary"
-              >
-                Símbolo do cartão em /enigmas
-              </a>
-              {' — '}
-              escolhe na secção abaixo (no topo do formulário Informações).
             </p>
           </header>
 
@@ -280,15 +280,6 @@ export default function Route({ loaderData }: Route.ComponentProps) {
 
                 <EnigmaCardSymbolFormField
                   defaultSymbol={parseEnigmaCardSymbol(enigma.cardSymbol)}
-                  helperText={
-                    <>
-                      Ícone deste enigma na página{' '}
-                      <span className="font-mono text-foreground/70">/enigmas</span>.
-                      Escolhe um símbolo e confirma com{' '}
-                      <strong className="text-foreground/80">Salvar alterações</strong> no fim
-                      deste formulário.
-                    </>
-                  }
                 />
 
                 <TextInput
@@ -325,10 +316,8 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                     Fases visíveis ao público
                   </h3>
                   <p className="mb-4 text-sm text-foreground/55">
-                    Com o enigma publicado, só quem não é administrador vê as fases cuja{' '}
-                    <strong className="text-foreground/75">ordem</strong> estiver entre os valores
-                    abaixo (inclusive). Deixe os dois campos vazios para liberar todas as fases. Podes
-                    ir ampliando o intervalo quando quiseres lançar mais conteúdo.
+                    Deixe os campos vazios para publicar o enigma completo. Admins podem acessar
+                    todas as fases existentes sempre.
                   </p>
                   <p className="mb-3 text-xs text-foreground/45">
                     Ordens existentes neste enigma: {orderMin}–{orderMax}
@@ -419,6 +408,41 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                     className="w-full rounded-md border-1 p-2 text-sm"
                     defaultValue={enigma.entrancePasswordPrompt ?? ''}
                     placeholder="Este enigma está protegido por senha. Digite-a para continuar."
+                  />
+                </div>
+
+                <div className="rounded-xl border border-foreground/15 bg-foreground/[0.02] p-4">
+                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/55">
+                    Textos das telas finais
+                  </h3>
+                  <p className="mb-4 text-sm text-foreground/55">
+                    Deixe em branco para manter o texto padrão do site.
+                  </p>
+                  <label
+                    className="mb-1 block text-sm font-medium text-foreground/80"
+                    htmlFor="parabensScreenBody"
+                  >
+                    Tela Parabéns
+                  </label>
+                  <textarea
+                    id="parabensScreenBody"
+                    name="parabensScreenBody"
+                    rows={5}
+                    className="mb-5 w-full rounded-md border-1 p-2 text-sm"
+                    defaultValue={enigma.parabensScreenBody ?? ''}
+                  />
+                  <label
+                    className="mb-1 block text-sm font-medium text-foreground/80"
+                    htmlFor="interludeScreenBody"
+                  >
+                    Tela de fim do bloco público («há mais por vir»)
+                  </label>
+                  <textarea
+                    id="interludeScreenBody"
+                    name="interludeScreenBody"
+                    rows={6}
+                    className="w-full rounded-md border-1 p-2 text-sm"
+                    defaultValue={enigma.interludeScreenBody ?? ''}
                   />
                 </div>
 

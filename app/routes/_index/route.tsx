@@ -40,6 +40,9 @@ export default function Route({ loaderData }: Route.ComponentProps) {
         <div className="mb-4 flex justify-center px-4 sm:mb-6">
           <Title />
         </div>
+        <p className="font-brand text-foreground mx-auto mb-5 max-w-4xl px-4 text-center text-5xl leading-tight tracking-wide text-balance sm:mb-6 sm:text-6xl md:mb-8 md:text-7xl">
+          Seu Labirinto Lúdico
+        </p>
         <div className="px-2 sm:px-4 md:px-6">
           <Board initialSelectedTileId={loaderData.initialSelectedTileId} />
         </div>

@@ -73,6 +73,8 @@ export async function loader({ context }: Route.LoaderArgs) {
 const ENIGMAS_WHATSAPP_GROUP_URL =
   'https://chat.whatsapp.com/Gybjbjr4RvZEqvh7HO78ec'
 
+const ENIGMAS_INTRO_YOUTUBE_EMBED_ID = 'CRXr48uHaz4'
+
 function WhatsAppGlyph({ className }: { className?: string }) {
   return (
     <svg
@@ -382,7 +384,7 @@ export default function Route({ loaderData }: Route.ComponentProps) {
       <div className="relative overflow-x-hidden">
         <EnigmasFlamingoBackdrop />
         <Center className="relative z-[1]">
-        <div className="relative mx-auto max-w-4xl px-6 py-10">
+        <div className="relative mx-auto max-w-4xl px-6 py-10 md:max-w-5xl lg:max-w-6xl">
           {/* Overlay para usuários não logados */}
           {!isLoggedIn && (
             <div
@@ -423,7 +425,24 @@ export default function Route({ loaderData }: Route.ComponentProps) {
             <p className="mt-4 text-xs font-medium uppercase tracking-[0.28em] text-foreground/55 sm:text-sm sm:tracking-[0.22em]">
               Escolha uma porta e seja bem-vindo
             </p>
+            <p className="mx-auto mt-2.5 max-w-xl text-balance px-2 text-[0.5625rem] font-medium uppercase leading-relaxed tracking-[0.2em] text-foreground/45 sm:text-[0.625rem] sm:tracking-[0.17em] md:text-[0.6875rem] md:tracking-[0.15em]">
+              Recomendamos que jogue em um computador para que tenha a melhor experiência
+            </p>
           </header>
+
+          <div className="mx-auto mb-10 w-full max-w-3xl">
+            <div className="aspect-video w-full overflow-hidden rounded-xl border border-foreground/15 bg-foreground/5 shadow-md">
+              <iframe
+                className="h-full w-full"
+                src={`https://www.youtube.com/embed/${ENIGMAS_INTRO_YOUTUBE_EMBED_ID}`}
+                title="Vídeo de apresentação — Enigmazeps"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+                loading="lazy"
+              />
+            </div>
+          </div>
 
           {isAdmin && (
             <div className="mb-8 flex justify-center">
@@ -449,15 +468,29 @@ export default function Route({ loaderData }: Route.ComponentProps) {
               </p>
             </div>
           ) : (
-            <div className="flex flex-col items-center gap-8">
-              {loaderData.enigmas.map((enigma) => (
-                <div key={enigma.id} className="w-full max-w-md">
-                  <EnigmaDoorCard
-                    enigma={enigma}
-                    isAdmin={isAdmin}
-                  />
-                </div>
-              ))}
+            <div className="mx-auto grid w-full max-w-md grid-cols-1 gap-8 md:max-w-none md:grid-cols-2 md:gap-x-6 md:gap-y-8 lg:gap-x-8">
+              {loaderData.enigmas.map((enigma, index) => {
+                const isLastOdd =
+                  index === loaderData.enigmas.length - 1 &&
+                  loaderData.enigmas.length % 2 === 1
+                return (
+                  <div
+                    key={enigma.id}
+                    className={
+                      isLastOdd
+                        ? 'min-w-0 md:col-span-2 md:flex md:justify-center'
+                        : 'min-w-0'
+                    }
+                  >
+                    <div className={isLastOdd ? 'w-full md:max-w-md' : 'w-full'}>
+                      <EnigmaDoorCard
+                        enigma={enigma}
+                        isAdmin={isAdmin}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           )}
 

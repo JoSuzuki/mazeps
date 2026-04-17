@@ -75,6 +75,17 @@ function EventIcon() {
   )
 }
 
+function CertificateIcon() {
+  return (
+    <svg className={ICON_CLASS} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+      <polyline points="14 2 14 8 20 8" />
+      <path d="M12 18v-6" />
+      <path d="M9 15h6" />
+    </svg>
+  )
+}
+
 function PencilIcon() {
   return (
     <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -99,6 +110,25 @@ function ChevronRightIcon() {
       <path d="m9 18 6-6-6-6" />
     </svg>
   )
+}
+
+function DownloadIcon() {
+  return (
+    <svg className="h-4 w-4 shrink-0 text-foreground/50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" x2="12" y1="15" y2="3" />
+    </svg>
+  )
+}
+
+function certificateDownloadFilename(title: string) {
+  const base = title
+    .replace(/[/\\?%*:|"<>]/g, '-')
+    .trim()
+    .slice(0, 120)
+  const withExt = base.toLowerCase().endsWith('.jpg') ? base : `${base || 'certificado'}.jpg`
+  return withExt
 }
 
 function TrophyIcon() {
@@ -528,6 +558,7 @@ export function ProfilePage({
     eventParticipants,
     championTrophies,
     tournamentTrophies,
+    certificates,
     adminPreview,
   } = loaderData
   const showAvatar = currentUser.avatarUrl && !avatarError
@@ -668,7 +699,7 @@ export function ProfilePage({
             )}
           </div>
 
-          {/* Mobile: Informações → Troféus → Participações. lg: col1 L1/L2 = Info + Participações; col2 = troféus row-span-2 */}
+          {/* Mobile: Informações → Troféus → Participações → Certificados. lg: col1 = Info + Participações + Certificados; col2 = troféus row-span-3 */}
           <div className="mb-8 flex flex-col gap-8 lg:mb-10 lg:grid lg:grid-cols-2 lg:items-start lg:gap-10">
             {/* Informações — lg: col1 L1 (Participações fica L2 na mesma coluna; troféus ocupam a direita em 2 linhas) */}
             <section className="min-w-0 rounded-2xl border border-foreground/10 bg-background/60 p-6 shadow-sm lg:col-start-1 lg:row-start-1 lg:self-start">
@@ -730,8 +761,8 @@ export function ProfilePage({
               </div>
             </section>
 
-            {/* Prateleira — lg: col2 com row-span-2 para não esticar só a linha 1 e atrasar Participações */}
-            <section className="min-w-0 rounded-2xl border border-foreground/10 bg-background/60 p-6 shadow-sm lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:min-h-0 lg:self-start">
+            {/* Prateleira — lg: col2 com row-span-3 para cobrir Informações + Participações + Certificados */}
+            <section className="min-w-0 rounded-2xl border border-foreground/10 bg-background/60 p-6 shadow-sm lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:min-h-0 lg:self-start">
               <h2 className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/60">
                 <TrophyIcon />
                 Prateleira de Troféus
@@ -879,6 +910,41 @@ export function ProfilePage({
                           </div>
                           <ChevronRightIcon />
                         </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </section>
+
+            {/* Certificados — enigmas: primeira conclusão de fase com certificado (utilizador autenticado) */}
+            <section className="min-w-0 overflow-hidden rounded-2xl border border-foreground/10 bg-background/60 shadow-sm lg:col-start-1 lg:row-start-3 lg:self-start">
+              <div className="flex items-center gap-2 border-b border-foreground/10 bg-foreground/5 px-6 py-4">
+                <CertificateIcon />
+                <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-foreground/60">
+                  Certificados ({certificates.length})
+                </h2>
+              </div>
+              <div>
+                {certificates.length === 0 ? (
+                  <p className="px-6 py-8 text-center text-sm text-foreground/50">
+                    Nenhum certificado ainda.
+                  </p>
+                ) : (
+                  <ul className="divide-y divide-foreground/10">
+                    {certificates.map((c) => (
+                      <li key={c.id}>
+                        <div className="flex items-center gap-3 px-6 py-4">
+                          <p className="min-w-0 flex-1 font-medium">{c.title}</p>
+                          <a
+                            href={c.imageUrl}
+                            download={certificateDownloadFilename(c.title)}
+                            className="text-foreground/60 hover:text-foreground flex shrink-0 items-center gap-1.5 rounded-lg p-2 transition-colors hover:bg-foreground/5"
+                            aria-label={`Descarregar certificado: ${c.title}`}
+                          >
+                            <DownloadIcon />
+                          </a>
+                        </div>
                       </li>
                     ))}
                   </ul>

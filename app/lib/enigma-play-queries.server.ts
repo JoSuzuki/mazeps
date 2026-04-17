@@ -16,6 +16,8 @@ export async function loadEnigmaLightForPlay(
       publicPhaseOrderTo: true,
       entrancePasswordHash: true,
       entrancePasswordPrompt: true,
+      parabensScreenBody: true,
+      interludeScreenBody: true,
       phases: {
         orderBy: { order: 'asc' },
         select: {
@@ -47,6 +49,9 @@ const phasePlayPayloadSelect = {
   extraHiddenHints: true,
   whiteScreenHints: true,
   answer: true,
+  providesCertificate: true,
+  certificateTitle: true,
+  certificateImageUrl: true,
 } as const
 
 export type EnigmaPhasePlayPayload = NonNullable<

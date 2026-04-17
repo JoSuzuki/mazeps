@@ -16,6 +16,7 @@ import {
 } from '~/lib/enigma-play-public'
 import { enigmaRobotsMeta } from '~/lib/enigma-robots-meta'
 import { resolvePhaseAnswerSubmission } from '~/lib/enigma-phase-answer.server'
+import { grantEnigmaPhaseCertificateIfEligible } from '~/lib/enigma-phase-certificate-award.server'
 import { redirectWithCelebrationCookie } from '~/lib/enigma-celebration-cookie.server'
 import {
   getPlayablePhasesOrdered,
@@ -121,6 +122,12 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   if (resolution.kind === 'wrong') {
     return data({ wrong: true as const })
   }
+
+  await grantEnigmaPhaseCertificateIfEligible(
+    context.prisma,
+    context.currentUser,
+    phaseFull,
+  )
 
   const isLast = phaseFull.order === playable[playable.length - 1]!.order
   if (isLast) {

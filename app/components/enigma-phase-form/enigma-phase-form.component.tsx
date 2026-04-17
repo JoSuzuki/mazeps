@@ -41,6 +41,9 @@ interface EnigmaPhaseFormProps {
     extraTipPhrases?: unknown
     extraHiddenHints?: unknown
     whiteScreenHints?: unknown
+    providesCertificate?: boolean
+    certificateTitle?: string | null
+    certificateImageUrl?: string | null
   }
   submitLabel: string
   /** Na edição: resposta num bloco destacado no fim (acima do envio / zona de perigo). */
@@ -193,6 +196,10 @@ export default function EnigmaPhaseForm({
         popupText: h.popupText,
       }),
     ),
+  )
+
+  const [certificateEnabled, setCertificateEnabled] = useState(
+    Boolean(defaultValues?.providesCertificate),
   )
 
   const supportsUpload = mediaType === 'IMAGE' || mediaType === 'AUDIO'
@@ -722,6 +729,72 @@ export default function EnigmaPhaseForm({
             />
           </div>
         ))}
+      </div>
+
+      <Spacer size="md" />
+      <div className="rounded-2xl border-2 border-primary/45 bg-primary/[0.08] p-6 shadow-md ring-1 ring-primary/15 sm:p-7 dark:border-primary/50 dark:bg-primary/15 dark:ring-primary/25">
+        <h2 className="font-brand mb-2 text-lg tracking-wide text-primary sm:text-xl">
+          Certificado (opcional)
+        </h2>
+        <p className="mb-5 text-sm text-foreground/65">
+          Esta fase fornece certificado? (quando concluída pela primeira vez por um jogador com sessão
+          iniciada, o certificado aparece no perfil dele.)
+        </p>
+        <label className="mb-5 flex cursor-pointer items-start gap-3.5 rounded-xl border border-primary/25 bg-background/50 px-4 py-3.5 sm:gap-4 sm:px-5 sm:py-4 dark:border-primary/35 dark:bg-background/30">
+          <input
+            type="checkbox"
+            name="providesCertificate"
+            value="yes"
+            checked={certificateEnabled}
+            onChange={(e) => setCertificateEnabled(e.target.checked)}
+            className="accent-primary mt-0.5 h-5 w-5 shrink-0 rounded border-primary/40 text-primary"
+          />
+          <span className="text-sm font-medium leading-snug text-foreground sm:text-base">
+            Sim — esta fase fornece certificado na primeira conclusão
+          </span>
+        </label>
+        {certificateEnabled ? (
+          <div className="space-y-4 border-t border-primary/20 pt-5">
+            <TextInput
+              id="certificateTitle"
+              name="certificateTitle"
+              label="Nome do certificado"
+              type="text"
+              required={certificateEnabled}
+              defaultValue={defaultValues?.certificateTitle ?? ''}
+              inputClassName="border-2 border-primary/30 bg-background"
+            />
+            <div>
+              <label
+                htmlFor="certificateImageFile"
+                className="mb-1 block text-sm font-medium text-foreground/85"
+              >
+                Imagem do certificado (JPEG)
+              </label>
+              <input
+                id="certificateImageFile"
+                name="certificateImageFile"
+                type="file"
+                accept="image/jpeg,.jpg,.jpeg"
+                className="block w-full max-w-lg text-sm file:mr-3 file:rounded-md file:border-2 file:border-primary/35 file:bg-primary/[0.12] file:px-3 file:py-2 file:text-sm file:font-medium file:text-foreground hover:file:bg-primary/[0.18] dark:file:bg-primary/20 dark:hover:file:bg-primary/25"
+              />
+              {defaultValues?.certificateImageUrl ? (
+                <p className="mt-2 text-xs text-foreground/55">
+                  Ficheiro atual:{' '}
+                  <a
+                    href={defaultValues.certificateImageUrl}
+                    className="text-primary underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    ver / descarregar
+                  </a>
+                  . Envie outro JPEG para substituir.
+                </p>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
       </div>
 
       {prominentAnswerSection ? (

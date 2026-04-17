@@ -12,7 +12,7 @@ export function EnigmaCardSymbolFormField({
   helperText,
 }: {
   defaultSymbol: EnigmaCardSymbol
-  helperText: ReactNode
+  helperText?: ReactNode
 }) {
   return (
     <fieldset
@@ -22,8 +22,12 @@ export function EnigmaCardSymbolFormField({
       <legend className="px-1 font-brand text-sm font-semibold uppercase tracking-[0.12em] text-foreground/70 sm:text-base">
         Símbolo do cartão
       </legend>
-      <p className="mb-4 mt-2 text-sm text-foreground/55">{helperText}</p>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5">
+      {helperText ? (
+        <p className="mb-4 mt-2 text-sm text-foreground/55">{helperText}</p>
+      ) : null}
+      <div
+        className={`grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5${helperText ? '' : ' mt-2'}`}
+      >
         {ENIGMA_CARD_SYMBOL_OPTIONS.map((opt) => (
           <label
             key={opt.value}

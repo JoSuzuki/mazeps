@@ -42,8 +42,11 @@ function Balloon({ delay, left, color }: { delay: number; left: number; color: s
 
 export default function ParabensCelebration({
   enigmaName,
+  customBody,
 }: {
   enigmaName: string
+  /** Se definido, substitui o parágrafo padrão abaixo do título (várias linhas). */
+  customBody?: string | null
 }) {
   const hasFired = useRef(false)
   const [showAnimations, setShowAnimations] = useState<boolean | null>(null)
@@ -134,14 +137,20 @@ export default function ParabensCelebration({
           </div>
           <Spacer size="lg" />
           <p
-            className="animate-[fade-in_0.6s_ease-out_0.2s_both] text-lg text-foreground/80 sm:text-xl"
+            className="animate-[fade-in_0.6s_ease-out_0.2s_both] whitespace-pre-line text-lg text-foreground/80 sm:text-xl"
             style={{ animationFillMode: 'both' }}
           >
-            Você completou o enigma{' '}
-            <strong className="font-semibold text-foreground/95">
-              {enigmaName}
-            </strong>
-            !
+            {customBody?.trim() ? (
+              customBody.trim()
+            ) : (
+              <>
+                Você completou o enigma{' '}
+                <strong className="font-semibold text-foreground/95">
+                  {enigmaName}
+                </strong>
+                !
+              </>
+            )}
           </p>
           <Spacer size="lg" />
           <Link

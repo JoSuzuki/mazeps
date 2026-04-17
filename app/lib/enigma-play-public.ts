@@ -17,6 +17,9 @@ export function toPublicEnigmaPhase<
     extraTipPhrases?: unknown
     extraHiddenHints?: unknown
     whiteScreenHints?: unknown
+    providesCertificate?: boolean
+    certificateTitle?: string | null
+    certificateImageUrl?: string | null
   },
 >(phase: T) {
   const {
@@ -27,6 +30,9 @@ export function toPublicEnigmaPhase<
     extraTipPhrases,
     extraHiddenHints,
     whiteScreenHints: _whiteScreenHints,
+    providesCertificate: _providesCertificate,
+    certificateTitle: _certificateTitle,
+    certificateImageUrl: _certificateImageUrl,
     ...rest
   } = phase
   const hint = hiddenHint?.trim()
@@ -44,6 +50,16 @@ export function toPublicEnigmaPhase<
 }
 
 /** Só o necessário para a tela de jogar / parabéns (evita vazar `phases[].answer`). */
-export function toPublicEnigmaPlay(enigma: { name: string }) {
-  return { name: enigma.name }
+export function toPublicEnigmaPlay(enigma: {
+  name: string
+  parabensScreenBody?: string | null
+  interludeScreenBody?: string | null
+}) {
+  const parabens = enigma.parabensScreenBody?.trim()
+  const interlude = enigma.interludeScreenBody?.trim()
+  return {
+    name: enigma.name,
+    parabensScreenBody: parabens ? parabens : null,
+    interludeScreenBody: interlude ? interlude : null,
+  }
 }
