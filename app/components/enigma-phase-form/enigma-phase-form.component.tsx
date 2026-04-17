@@ -11,6 +11,7 @@ import RadioGroup, {
 } from '~/components/radio-group/radio-group.component'
 import Spacer from '~/components/spacer/spacer.component'
 import TextInput from '~/components/text-input/text-input.component'
+import ThemedCheckbox from '~/components/themed-checkbox/themed-checkbox.component'
 import type { ExtraMediaBlock } from '~/lib/enigma-phase-extras'
 import {
   parseExtraMediaBlocksJson,
@@ -741,13 +742,13 @@ export default function EnigmaPhaseForm({
           iniciada, o certificado aparece no perfil dele.)
         </p>
         <label className="mb-5 flex cursor-pointer items-start gap-3.5 rounded-xl border border-primary/25 bg-background/50 px-4 py-3.5 sm:gap-4 sm:px-5 sm:py-4 dark:border-primary/35 dark:bg-background/30">
-          <input
-            type="checkbox"
+          <ThemedCheckbox
             name="providesCertificate"
             value="yes"
             checked={certificateEnabled}
             onChange={(e) => setCertificateEnabled(e.target.checked)}
-            className="accent-primary mt-0.5 h-5 w-5 shrink-0 rounded border-primary/40 text-primary"
+            visualSize="md"
+            wrapperClassName="mt-0.5"
           />
           <span className="text-sm font-medium leading-snug text-foreground sm:text-base">
             Sim — esta fase fornece certificado na primeira conclusão

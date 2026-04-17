@@ -1,4 +1,5 @@
 import Flamingo from './flamingo.component'
+import GoldenMascot from './golden-mascot.component'
 import Pegasus from './pegasus.component'
 
 const Tile = () => (
@@ -76,9 +77,20 @@ export const PegasusTile = (
   </ButtonTile>
 )
 
-/** Tile só com o tabuleiro isométrico — sem mascote (ex.: tema golden na home). */
-export const PlainThemeTile = (
+/**
+ * Terceiro tile (golden): alinhado ao hex de 100px do botão (`left-1` + largura 100px),
+ * peão centrado na mesma faixa horizontal do tile; escala com object-contain (sem crop CSS).
+ */
+export const GoldenMascotTile = (
   props: Omit<ButtonTileProps, 'children' | 'data-theme'>,
-) => <ButtonTile {...props}>{() => null}</ButtonTile>
+) => (
+  <ButtonTile {...props}>
+    {(show) => (
+      <div className="relative left-1 flex w-[100px] -translate-x-[15px] flex-col items-center justify-end">
+        <GoldenMascot show={show} />
+      </div>
+    )}
+  </ButtonTile>
+)
 
 export default Tile

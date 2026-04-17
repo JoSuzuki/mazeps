@@ -7,6 +7,7 @@ import Center from '~/components/center/center.component'
 import GoogleLoginButton from '~/components/google-login-button/google-login-button.component'
 import Spacer from '~/components/spacer/spacer.component'
 import TextInput from '~/components/text-input/text-input.component'
+import ThemedCheckbox from '~/components/themed-checkbox/themed-checkbox.component'
 import { PrismaClientKnownRequestError } from '~/generated/prisma/internal/prismaNamespace'
 import { cookieUserFields, setSession } from '~/services/session'
 
@@ -54,6 +55,17 @@ export default function Route({ actionData }: Route.ComponentProps) {
             type="password"
             required={true}
           />
+          <Spacer size="sm" />
+          <label className="flex cursor-pointer items-start gap-3 text-left">
+            <ThemedCheckbox
+              name="newsletterSubscribed"
+              value="on"
+              wrapperClassName="mt-0.5"
+            />
+            <span className="text-foreground/95 text-sm leading-snug font-medium [text-wrap:balance]">
+              Quero receber as novidades sobre eventos e comunicados do Mazeps.
+            </span>
+          </label>
           <Spacer size="md" />
           {actionData?.error ? (
             <>
@@ -79,6 +91,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     const nickname = formData.get('nickname') as string
     const email = formData.get('email') as string
     const password = formData.get('password') as string
+    const newsletterSubscribed = formData.get('newsletterSubscribed') === 'on'
     const hashedPassword = await bcrypt.hash(password, 10)
 
     const user = await context.prisma.user.create({
@@ -87,6 +100,7 @@ export async function action({ request, context }: Route.ActionArgs) {
         nickname,
         email,
         password: hashedPassword,
+        newsletterSubscribed,
       },
       select: cookieUserFields,
     })

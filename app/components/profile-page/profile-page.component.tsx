@@ -9,6 +9,7 @@ import Center from '~/components/center/center.component'
 import Link from '~/components/link/link.component'
 import LinkButton from '~/components/link-button/link-button.component'
 import SupporterNameDisplay from '~/components/supporter-name-display/supporter-name-display.component'
+import ThemedCheckbox from '~/components/themed-checkbox/themed-checkbox.component'
 
 export type ProfilePageLoaderData = ProfilePageData & {
   adminPreview?: { backTo: string }
@@ -651,32 +652,17 @@ export function ProfilePage({
                         <MailIcon />
                       </span>
                       <span className="flex min-w-0 flex-1 items-start gap-3">
-                        <span className="relative mt-1 inline-flex h-4 w-4 shrink-0">
-                          <input
-                            type="checkbox"
-                            name="newsletterSubscribed"
-                            defaultChecked={currentUser.newsletterSubscribed}
-                            key={String(currentUser.newsletterSubscribed)}
-                            disabled={newsEmailsFetcher.state !== 'idle'}
-                            onChange={(e) => {
-                              const form = e.currentTarget.form
-                              if (form) newsEmailsFetcher.submit(form)
-                            }}
-                            className="peer h-4 w-4 cursor-pointer appearance-none rounded border-2 border-primary/55 bg-primary/15 shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] transition-colors checked:border-primary checked:bg-primary hover:border-primary/70 hover:bg-primary/25 checked:hover:bg-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary/50 disabled:cursor-not-allowed disabled:opacity-50 dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.35)]"
-                          />
-                          <svg
-                            className="pointer-events-none absolute left-0.5 top-0.5 h-3 w-3 text-on-primary opacity-0 transition-opacity peer-checked:opacity-100"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="3.2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            aria-hidden
-                          >
-                            <path d="M5 13l4 4L19 7" />
-                          </svg>
-                        </span>
+                        <ThemedCheckbox
+                          name="newsletterSubscribed"
+                          defaultChecked={currentUser.newsletterSubscribed}
+                          key={String(currentUser.newsletterSubscribed)}
+                          disabled={newsEmailsFetcher.state !== 'idle'}
+                          wrapperClassName="mt-1"
+                          onChange={(e) => {
+                            const form = e.currentTarget.form
+                            if (form) newsEmailsFetcher.submit(form)
+                          }}
+                        />
                         <span className="min-w-0 font-medium text-foreground/95 [text-wrap:balance]">
                           Desejo receber e-mails com novidades
                         </span>
