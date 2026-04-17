@@ -70,7 +70,7 @@ export default function MenuNavigation({ children, className }: MenuNavigationPr
               opacity: 0,
               filter: 'blur(8px)',
             }}
-            className="border-on-secondary bg-background text-on-background absolute top-4 right-4 left-auto flex flex-col rounded-md border py-2 z-1"
+            className="border-on-secondary bg-background text-on-background absolute top-4 right-4 left-auto z-[100] flex max-h-[min(70vh,calc(100dvh-5rem))] flex-col overflow-y-auto rounded-md border py-2 shadow-xl"
           >
             <Button
               styleType="invisible"

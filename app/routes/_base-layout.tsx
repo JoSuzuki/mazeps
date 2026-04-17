@@ -25,7 +25,7 @@ export default function Route({ loaderData, matches }: Route.ComponentProps) {
     <>
       <nav
         id="main-nav"
-        className="relative flex items-center justify-end gap-4 p-4"
+        className="relative z-50 flex items-center justify-end gap-4 p-4"
       >
         <BackButtonPortalContainer />
         {!isInHome && (
