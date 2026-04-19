@@ -9,6 +9,7 @@ import TextInput from '~/components/text-input/text-input.component'
 import ThemedCheckbox from '~/components/themed-checkbox/themed-checkbox.component'
 import SupporterNameDisplay from '~/components/supporter-name-display/supporter-name-display.component'
 import { Role } from '~/generated/prisma/enums'
+import { isPrismaMissingDbColumnError } from '~/lib/prisma-missing-column.server'
 
 const CONFIRM_DELETE_TEXT = 'EXCLUIR'
 
@@ -21,9 +22,20 @@ export async function loader({ context, params }: Route.LoaderArgs) {
     return redirect('/')
   }
 
-  const user = await context.prisma.user.findUniqueOrThrow({
-    where: { id: Number(params.userId) },
-  })
+  const userId = Number(params.userId)
+  let user
+  try {
+    user = await context.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+    })
+  } catch (e) {
+    if (!isPrismaMissingDbColumnError(e)) throw e
+    const u = await context.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      omit: { isSupporter: true, isWriter: true },
+    })
+    user = { ...u, isSupporter: false, isWriter: false }
+  }
 
   return { user, currentUser: context.currentUser }
 }
@@ -350,21 +362,39 @@ export async function action({ context, request, params }: Route.ActionArgs) {
   }
 
   const actorIsAdmin = context.currentUser.role === Role.ADMIN
+  const userId = Number(params.userId)
 
-  const user = await context.prisma.user.update({
-    where: { id: Number(params.userId) },
-    data: {
-      name: formData.get('name') as string,
-      email: formData.get('email') as string,
-      nickname: formData.get('nickname') as string,
-      ...(actorIsAdmin && {
+  const shared = {
+    name: formData.get('name') as string,
+    email: formData.get('email') as string,
+    nickname: formData.get('nickname') as string,
+  }
+  const adminExtras = actorIsAdmin
+    ? {
         role: formData.get('role') as Role,
         isWriter: formData.get('isWriter') === 'on',
         isSupporter: formData.get('isSupporter') === 'on',
         newsletterSubscribed: formData.get('newsletterSubscribed') === 'on',
-      }),
-    },
-  })
+      }
+    : null
+
+  let user
+  try {
+    user = await context.prisma.user.update({
+      where: { id: userId },
+      data: adminExtras ? { ...shared, ...adminExtras } : shared,
+    })
+  } catch (e) {
+    if (!adminExtras || !isPrismaMissingDbColumnError(e)) throw e
+    user = await context.prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...shared,
+        role: adminExtras.role,
+        newsletterSubscribed: adminExtras.newsletterSubscribed,
+      },
+    })
+  }
 
   return redirect(`/users/${user.id}`)
 }

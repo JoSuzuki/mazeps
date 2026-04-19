@@ -1,4 +1,5 @@
 import crypto from 'crypto'
+import { execSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 import { createServer } from 'http'
@@ -210,6 +211,20 @@ if (DEVELOPMENT) {
   })
 } else {
   console.log('Starting production server')
+
+  if (process.env.DATABASE_URL) {
+    try {
+      console.log('Applying pending Prisma migrations (migrate deploy)...')
+      execSync('npx prisma migrate deploy', {
+        stdio: 'inherit',
+        env: process.env,
+        cwd: process.cwd(),
+      })
+    } catch (err) {
+      console.error('prisma migrate deploy failed:', err)
+      process.exit(1)
+    }
+  }
 
   app.use((req, res, next) => {
     helmet({
