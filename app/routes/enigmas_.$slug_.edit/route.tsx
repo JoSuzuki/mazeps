@@ -495,7 +495,7 @@ export default function Route({ loaderData }: Route.ComponentProps) {
 
           {/* Fases */}
           <section className="mb-8 overflow-hidden rounded-2xl border border-foreground/10 bg-background/60 shadow-sm">
-            <div className="flex items-center justify-between border-b border-foreground/10 bg-foreground/5 px-6 py-4">
+            <div className="flex flex-col gap-3 border-b border-foreground/10 bg-foreground/5 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6">
               <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/60">
                 <LayersIcon />
                 Fases ({enigma.phases.length})
@@ -504,7 +504,7 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                 styleType="primary"
                 to={`/enigmas/${enigma.slug}/edit/phases/new`}
                 viewTransition
-                className="flex items-center gap-2"
+                className="flex w-full shrink-0 items-center justify-center gap-2 sm:w-auto"
               >
                 <PlusIcon />
                 Adicionar fase
@@ -525,20 +525,22 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                 <ul className="divide-y divide-foreground/10">
                   {enigma.phases.map((phase, index) => (
                     <li key={phase.id}>
-                      <div className="flex items-center justify-between gap-4 px-6 py-4 transition-colors hover:bg-foreground/5">
-                        <div className="min-w-0 flex-1 overflow-hidden pr-2">
-                          <span className="text-xs font-medium text-foreground/50">
+                      <div className="flex flex-col gap-4 px-4 py-4 transition-colors hover:bg-foreground/5 sm:flex-row sm:items-start sm:justify-between sm:gap-4 sm:px-6">
+                        <div className="min-w-0 w-full sm:flex-1 sm:pr-2">
+                          <span className="block text-xs font-medium text-foreground/50">
                             Fase {phase.order}
                             {index === 0 ? ' (entrada)' : ''}
                           </span>
-                          <p className="break-words font-medium">{phase.title}</p>
+                          <p className="mt-1.5 text-pretty break-words text-base font-semibold leading-snug text-foreground sm:text-lg">
+                            {phase.title}
+                          </p>
                         </div>
-                        <div className="relative z-10 flex shrink-0 flex-wrap items-center justify-end gap-2">
+                        <div className="relative z-10 grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:shrink-0 sm:flex-nowrap sm:items-center sm:justify-end">
                           <RouterLink
                             to={enigmaPlayPathForPhaseIndex(enigma.slug, enigma.phases, index)}
                             reloadDocument
                             title="Abre esta fase no modo jogador (como se tivesses acertado as anteriores)."
-                            className="flex items-center gap-1.5 rounded-lg border border-primary/35 bg-primary/10 px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/20 active:pressed"
+                            className="flex min-h-[2.75rem] items-center justify-center gap-1.5 rounded-lg border border-primary/35 bg-primary/10 px-2 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/20 active:pressed sm:min-h-0 sm:px-3 sm:justify-start"
                           >
                             <PlayIcon />
                             Testar Daqui
@@ -546,18 +548,18 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                           <RouterLink
                             to={`/enigmas/${enigma.slug}/edit/phases/${phase.id}`}
                             reloadDocument
-                            className="flex items-center gap-1.5 rounded-lg border border-foreground/20 px-3 py-2 text-sm font-medium transition-colors hover:bg-foreground/5 hover:underline active:pressed"
+                            className="flex min-h-[2.75rem] items-center justify-center gap-1.5 rounded-lg border border-foreground/20 px-2 py-2 text-sm font-medium transition-colors hover:bg-foreground/5 hover:underline active:pressed sm:min-h-0 sm:px-3 sm:justify-start"
                           >
                             <PencilIcon />
                             Editar
                           </RouterLink>
-                          <fetcher.Form method="post">
+                          <fetcher.Form method="post" className="col-span-2 w-full sm:w-auto">
                             <input type="hidden" name="intent" value="delete-phase" />
                             <input type="hidden" name="phaseId" value={phase.id} />
                             <button
                               type="submit"
                               disabled={formBusy}
-                              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                              className="flex min-h-[2.75rem] w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-0 sm:w-auto dark:text-red-400 dark:hover:bg-red-950/30"
                               onClick={(e) => {
                                 if (!confirm('Remover esta fase?')) e.preventDefault()
                               }}

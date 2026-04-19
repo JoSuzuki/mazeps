@@ -131,6 +131,11 @@
     --color-pegasus-wing-shadow: var(--color-black);
     --color-pegasus-feet: var(--color-black);
 
+    /* Peão-fénix (tile 3 / tema golden) — cores da arte vetorial */
+    --color-fenix-dark: #842624;
+    --color-fenix-mid: #eb6e33;
+    --color-fenix-accent: #faba5a;
+
     --color-tile-surface: var(--color-gray);
     --color-tile-step: var(--color-dark-gray);
   }
@@ -166,7 +171,7 @@
     --color-flamingo-eye: var(--color-black);
   }
 
-  /* Tema âmbar / vinho — terceiro botão da home (sem animação no tile) */
+  /* Tema âmbar / vinho — terceiro botão da home */
   [data-theme='golden'] {
     --color-golden-bg: #321014;
     --color-golden-text: #faa94f;

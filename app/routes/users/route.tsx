@@ -8,6 +8,7 @@ import Pagination from '~/components/pagination/pagination.component'
 import { Role } from '~/generated/prisma/enums'
 import { getAvatarUrl } from '~/lib/avatar'
 import SupporterNameDisplay from '~/components/supporter-name-display/supporter-name-display.component'
+import { isPrismaMissingDbColumnError } from '~/lib/prisma-missing-column.server'
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   if (!context.currentUser) return redirect('/login')
@@ -31,12 +32,17 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       }
     : {}
 
-  const [users, totalCount] = await Promise.all([
-    context.prisma.user.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy: { name: 'asc' },
+  const listArgs = {
+    where,
+    skip,
+    take: limit,
+    orderBy: { name: 'asc' as const },
+  }
+
+  let users
+  try {
+    users = await context.prisma.user.findMany({
+      ...listArgs,
       // Só o necessário para a lista: evita vazar password e reduz risco de falha na
       // serialização do loader (ex.: datas inválidas em campos não usados na UI).
       select: {
@@ -48,9 +54,24 @@ export async function loader({ context, request }: Route.LoaderArgs) {
         isSupporter: true,
         avatarUrl: true,
       },
-    }),
-    context.prisma.user.count({ where }),
-  ])
+    })
+  } catch (e) {
+    if (!isPrismaMissingDbColumnError(e)) throw e
+    const rows = await context.prisma.user.findMany({
+      ...listArgs,
+      select: {
+        id: true,
+        name: true,
+        nickname: true,
+        email: true,
+        role: true,
+        avatarUrl: true,
+      },
+    })
+    users = rows.map((u) => ({ ...u, isSupporter: false }))
+  }
+
+  const totalCount = await context.prisma.user.count({ where })
 
   const totalPages = Math.ceil(totalCount / limit)
 
@@ -379,8 +400,23 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
         </pre>
       )}
       <p className="mt-4 text-sm text-gray-600">
-        Se o erro mencionar &quot;column does not exist&quot;, &quot;isWriter&quot; ou &quot;isSupporter&quot;, execute:{' '}
-        <code className="rounded bg-gray-100 px-1">npx prisma migrate dev</code>
+        Se o erro mencionar &quot;column does not exist&quot;, &quot;isWriter&quot; ou &quot;isSupporter&quot;, a base
+        pode estar atrás do schema do código.
+        {import.meta.env.DEV ? (
+          <>
+            {' '}
+            Aqui em desenvolvimento, execute{' '}
+            <code className="rounded bg-gray-100 px-1">npx prisma migrate dev</code>.
+          </>
+        ) : (
+          <>
+            {' '}
+            Em produção as migrations devem aplicar-se no deploy; o arranque do servidor também corre{' '}
+            <code className="rounded bg-gray-100 px-1">npx prisma migrate deploy</code>. Verifique os logs do
+            release/deploy e se o <code className="rounded bg-gray-100 px-1">DATABASE_URL</code> aponta para a
+            base certa.
+          </>
+        )}
       </p>
     </div>
   )

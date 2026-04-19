@@ -9,6 +9,7 @@ import LinkButton from '~/components/link-button/link-button.component'
 import { Role } from '~/generated/prisma/enums'
 import { getAvatarUrl } from '~/lib/avatar'
 import SupporterNameDisplay from '~/components/supporter-name-display/supporter-name-display.component'
+import { isPrismaMissingDbColumnError } from '~/lib/prisma-missing-column.server'
 
 const ICON_CLASS = 'h-5 w-5 shrink-0 text-foreground/50'
 
@@ -93,10 +94,23 @@ export async function loader({ context, params }: Route.LoaderArgs) {
 
   const userId = Number(params.userId)
 
+  const userPromise = (async () => {
+    try {
+      return await context.prisma.user.findUniqueOrThrow({
+        where: { id: userId },
+      })
+    } catch (e) {
+      if (!isPrismaMissingDbColumnError(e)) throw e
+      const u = await context.prisma.user.findUniqueOrThrow({
+        where: { id: userId },
+        omit: { isSupporter: true, isWriter: true },
+      })
+      return { ...u, isSupporter: false, isWriter: false }
+    }
+  })()
+
   const [user, eventParticipants] = await Promise.all([
-    context.prisma.user.findUniqueOrThrow({
-      where: { id: userId },
-    }),
+    userPromise,
     context.prisma.eventParticipant.findMany({
       where: { userId },
       include: {
