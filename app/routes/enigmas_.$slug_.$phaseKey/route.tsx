@@ -65,7 +65,7 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
     )
     if (!ok) return redirect(`/enigmas/${slug}`)
     return {
-      enigma: toPublicEnigmaPlay(enigma),
+      enigma: toPublicEnigmaPlay(enigma, 'parabensOnly'),
       phase: null,
       isFinished: true,
       celebrationKind: 'full' as const,
@@ -91,7 +91,7 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
     )
     if (!ok) return redirect(`/enigmas/${slug}`)
     return {
-      enigma: toPublicEnigmaPlay(enigma),
+      enigma: toPublicEnigmaPlay(enigma, 'interludeOnly'),
       phase: null,
       isFinished: true,
       celebrationKind: 'interlude' as const,
@@ -118,7 +118,7 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
   if (!phaseFull) throw new Response('Not Found', { status: 404 })
 
   return {
-    enigma: toPublicEnigmaPlay(enigma),
+    enigma: toPublicEnigmaPlay(enigma, 'none'),
     phase: toPublicEnigmaPhase(phaseFull),
     isFinished: false,
     isAdmin: context.currentUser?.role === Role.ADMIN,
