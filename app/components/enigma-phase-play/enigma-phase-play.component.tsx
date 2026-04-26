@@ -26,7 +26,7 @@ export type EnigmaPhasePlayLoaderData = {
     extraHiddenHints: string[]
   } | null
   isFinished: boolean
-  /** `interlude` = fim do bloco público, ainda há fases não liberadas. */
+  /** `interlude`: concluiu a última fase jogável mas o enigma tem fases ainda bloqueadas ao visitante. */
   celebrationKind?: 'full' | 'interlude'
   isAdmin: boolean
 }
