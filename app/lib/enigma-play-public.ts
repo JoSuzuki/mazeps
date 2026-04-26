@@ -49,17 +49,34 @@ export function toPublicEnigmaPhase<
   }
 }
 
+/**
+ * Conteúdo de celebração não entra no HTML das fases de jogo (vaza no `loaderData` serializado).
+ * Em `/parabens` e `/mais-por-vir` podes passar o modo correspondente; evita o outro corpo nessa rota.
+ */
+export type PublicEnigmaCelebrationBodies =
+  | 'none'
+  | 'parabensOnly'
+  | 'interludeOnly'
+  | 'both'
+
 /** Só o necessário para a tela de jogar / parabéns (evita vazar `phases[].answer`). */
-export function toPublicEnigmaPlay(enigma: {
-  name: string
-  parabensScreenBody?: string | null
-  interludeScreenBody?: string | null
-}) {
+export function toPublicEnigmaPlay(
+  enigma: {
+    name: string
+    parabensScreenBody?: string | null
+    interludeScreenBody?: string | null
+  },
+  celebrationBodies: PublicEnigmaCelebrationBodies = 'both',
+) {
   const parabens = enigma.parabensScreenBody?.trim()
   const interlude = enigma.interludeScreenBody?.trim()
+  const wantParabens =
+    celebrationBodies === 'both' || celebrationBodies === 'parabensOnly'
+  const wantInterlude =
+    celebrationBodies === 'both' || celebrationBodies === 'interludeOnly'
   return {
     name: enigma.name,
-    parabensScreenBody: parabens ? parabens : null,
-    interludeScreenBody: interlude ? interlude : null,
+    parabensScreenBody: wantParabens && parabens ? parabens : null,
+    interludeScreenBody: wantInterlude && interlude ? interlude : null,
   }
 }
