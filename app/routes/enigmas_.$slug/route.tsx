@@ -58,7 +58,7 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
   if (!phaseFull) throw new Response('Not Found', { status: 404 })
 
   return {
-    enigma: toPublicEnigmaPlay(enigma),
+    enigma: toPublicEnigmaPlay(enigma, 'none'),
     phase: toPublicEnigmaPhase(phaseFull),
     isFinished: false,
     isAdmin: context.currentUser?.role === Role.ADMIN,
