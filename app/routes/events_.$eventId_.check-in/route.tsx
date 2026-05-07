@@ -1,7 +1,9 @@
 import { data, redirect } from 'react-router'
 import type { Route } from './+types/route'
+import { TournamentStatus } from '~/generated/prisma/enums'
 import { sessionStorage } from '~/services/session'
 import { EventStatus } from '~/lib/event-status'
+import { canUserSelfEnrollInTournament } from '~/lib/tournament-enrollment'
 
 export async function action({ params, context, request }: Route.ActionArgs) {
   if (!context.currentUser) return redirect('/login')
@@ -37,12 +39,29 @@ export async function action({ params, context, request }: Route.ActionArgs) {
     select: {
       type: true,
       status: true,
-      tournament: { select: { id: true } },
+      tournament: { select: { id: true, status: true } },
     },
   })
 
   if (event.status !== EventStatus.ABERTO) {
     return data({ error: 'Este evento está encerrado.' }, { status: 403 })
+  }
+
+  const tournamentStatus =
+    event.tournament?.status ?? TournamentStatus.TOURNAMENT_FINISHED
+
+  if (
+    event.type === 'TOURNAMENT' &&
+    !canUserSelfEnrollInTournament({
+      role: context.currentUser.role,
+      tournamentStatus,
+      eventStatus: event.status,
+    })
+  ) {
+    return data(
+      { error: 'As inscrições para este torneio estão encerradas.' },
+      { status: 403 },
+    )
   }
 
   await context.prisma.eventParticipant.upsert({

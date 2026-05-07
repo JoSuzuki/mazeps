@@ -8,7 +8,7 @@ import LinkButton from '~/components/link-button/link-button.component'
 import TextInput from '~/components/text-input/text-input.component'
 import { parseEventDate, toEventDateInputValue } from '~/lib/date'
 import { EventStatus } from '~/lib/event-status'
-import { Role } from '~/generated/prisma/enums'
+import { Role, TournamentStatus } from '~/generated/prisma/enums'
 import { AVAILABLE_BADGES } from '~/lib/badges'
 import { normalizeImgurBadgeUrl } from '~/lib/imgur-badge-url'
 import { resolveEventBadgeFile } from '~/lib/upload'
@@ -372,9 +372,10 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     EventStatus.ENCERRADO,
   ]
   const status = validStatuses.includes(statusRaw) ? statusRaw : event.status
+  const eventId = Number(params.eventId)
 
   await context.prisma.event.update({
-    where: { id: Number(params.eventId) },
+    where: { id: eventId },
     data: {
       name,
       description,
@@ -384,5 +385,12 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     },
   })
 
-  return redirect(`/events/${params.eventId}`)
+  if (status === EventStatus.ENCERRADO && event.tournamentId != null) {
+    await context.prisma.tournament.update({
+      where: { id: event.tournamentId },
+      data: { status: TournamentStatus.TOURNAMENT_FINISHED },
+    })
+  }
+
+  return redirect(`/events/${eventId}`)
 }

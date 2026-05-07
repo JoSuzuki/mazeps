@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Form, redirect, useFetcher } from 'react-router'
 import type { Route } from './+types/route'
 import BackButtonPortal from '~/components/back-button-portal/back-button-portal.component'
@@ -9,6 +9,7 @@ import LinkButton from '~/components/link-button/link-button.component'
 import SupporterNameDisplay from '~/components/supporter-name-display/supporter-name-display.component'
 import type { MatchResult } from '~/generated/prisma/client'
 import { Role, TournamentStatus } from '~/generated/prisma/enums'
+import { canUserSelfEnrollInTournament } from '~/lib/tournament-enrollment'
 import type { Unpacked } from '~/lib/type-helpers'
 
 const STATUS_LABELS: Record<TournamentStatus, string> = {
@@ -205,6 +206,7 @@ export async function loader({ context, params }: Route.LoaderArgs) {
         event: {
           select: {
             id: true,
+            status: true,
             name: true,
             badgeFile: true,
             participants: {
@@ -260,6 +262,7 @@ export async function loader({ context, params }: Route.LoaderArgs) {
     tournament,
     currentTournamentPlayer,
     isAdmin,
+    currentUserRole: context.currentUser.role,
     tournamentMatchResults,
     tournamentMatches,
   }
@@ -297,6 +300,34 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
       )
       .map((p) => [p.userId, p.tournamentPlace!]),
   )
+
+  let headerEnrollmentAction: ReactNode = null
+  if (loaderData.currentTournamentPlayer) {
+    headerEnrollmentAction = (
+      <LinkButton
+        styleType="secondary"
+        to={`/tournaments/${params.tournamentId}/tournament-players/${loaderData.currentTournamentPlayer.id}`}
+        viewTransition
+      >
+        Ver minha inscrição
+      </LinkButton>
+    )
+  } else if (
+    canUserSelfEnrollInTournament({
+      role: loaderData.currentUserRole,
+      tournamentStatus: loaderData.tournament.status,
+      eventStatus: event?.status,
+    })
+  ) {
+    headerEnrollmentAction = (
+      <fetcher.Form
+        method="post"
+        action={`/tournaments/${params.tournamentId}/tournament-players/new`}
+      >
+        <Button type="submit">Inscrever-se</Button>
+      </fetcher.Form>
+    )
+  }
 
   return (
     <>
@@ -343,25 +374,7 @@ export default function Route({ loaderData, params }: Route.ComponentProps) {
                     Ver evento
                   </LinkButton>
                 )}
-                {loaderData.currentTournamentPlayer ? (
-                  <LinkButton
-                    styleType="secondary"
-                    to={`/tournaments/${params.tournamentId}/tournament-players/${loaderData.currentTournamentPlayer.id}`}
-                    viewTransition
-                  >
-                    Ver minha inscrição
-                  </LinkButton>
-                ) : (
-                  loaderData.tournament.status ===
-                    TournamentStatus.REGISTRATION_OPEN && (
-                    <fetcher.Form
-                      method="post"
-                      action={`/tournaments/${params.tournamentId}/tournament-players/new`}
-                    >
-                      <Button type="submit">Inscrever-se</Button>
-                    </fetcher.Form>
-                  )
-                )}
+                {headerEnrollmentAction}
               </div>
             </div>
           </header>

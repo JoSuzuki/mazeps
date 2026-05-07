@@ -7,7 +7,8 @@ import LinkButton from '~/components/link-button/link-button.component'
 import Pagination from '~/components/pagination/pagination.component'
 import Spacer from '~/components/spacer/spacer.component'
 import Table from '~/components/table/table.component'
-import { Role, TournamentStatus } from '~/generated/prisma/enums'
+import { canUserSelfEnrollInTournament } from '~/lib/tournament-enrollment'
+import { Role } from '~/generated/prisma/enums'
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const url = new URL(request.url)
@@ -20,6 +21,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       skip,
       take: limit,
       include: {
+        event: { select: { status: true } },
         players: {
           where: { userId: context.currentUser?.id },
         },
@@ -85,7 +87,15 @@ export default function Route({ loaderData }: Route.ComponentProps) {
                   return <div>Inscrito</div>
                 }
 
-                if (tournament.status !== TournamentStatus.REGISTRATION_OPEN) {
+                const canEnroll = loaderData.currentUser
+                  ? canUserSelfEnrollInTournament({
+                      role: loaderData.currentUser.role,
+                      tournamentStatus: tournament.status,
+                      eventStatus: tournament.event?.status,
+                    })
+                  : false
+
+                if (!canEnroll) {
                   return <div>Inscrições encerradas</div>
                 }
 
