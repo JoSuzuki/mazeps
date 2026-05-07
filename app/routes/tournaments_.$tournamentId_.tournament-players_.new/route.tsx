@@ -1,5 +1,7 @@
 import { data, redirect } from 'react-router'
 import type { Route } from './+types/route'
+import { Role } from '~/generated/prisma/enums'
+import { canUserSelfEnrollInTournament } from '~/lib/tournament-enrollment'
 
 export async function action({ params, context }: Route.ActionArgs) {
   if (!context.currentUser) return redirect('/login')
@@ -9,8 +11,24 @@ export async function action({ params, context }: Route.ActionArgs) {
 
   const tournament = await context.prisma.tournament.findUniqueOrThrow({
     where: { id: tournamentId },
-    select: { event: { select: { id: true } } },
+    select: {
+      status: true,
+      event: { select: { id: true, status: true } },
+    },
   })
+
+  if (
+    !canUserSelfEnrollInTournament({
+      role: context.currentUser.role,
+      tournamentStatus: tournament.status,
+      eventStatus: tournament.event?.status,
+    })
+  ) {
+    return data(
+      { error: 'As inscrições para este torneio estão encerradas.' },
+      { status: 403 },
+    )
+  }
 
   await context.prisma.tournamentPlayer.create({
     data: { userId, tournamentId },

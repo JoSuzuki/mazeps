@@ -9,6 +9,7 @@ const DAYS_PT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 const EVENTS: Record<string, string> = {
   '2026-03-21': 'CMBG TACTICS',
   '2026-04-17': 'Enigmas?',
+  '2026-06-06': 'Mazeps Party',
 }
 
 function pad(n: number) {
