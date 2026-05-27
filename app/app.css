@@ -422,3 +422,30 @@
   }
 }
 
+/* Hall da Fama — campeão "Um Novo Caminho" (moldura metálica rosa flamingo) */
+.hall-da-fama-champion-ring {
+  background: linear-gradient(
+    145deg,
+    #fce8dc 0%,
+    #f8bea2 18%,
+    #f28e7a 42%,
+    #e86b5a 62%,
+    #f6a357 82%,
+    #fce8dc 100%
+  );
+  box-shadow:
+    0 0 16px rgb(242 142 122 / 0.42),
+    inset 0 1px 1px rgb(255 255 255 / 0.45),
+    inset 0 -1px 2px rgb(232 107 90 / 0.35);
+}
+
+.hall-da-fama-champion-crown {
+  color: #f28e7a;
+  filter: drop-shadow(0 0 5px rgb(242 142 122 / 0.55))
+    drop-shadow(0 1px 0 rgb(255 255 255 / 0.35));
+}
+
+.hall-da-fama-flamingo-ring {
+  background: #f28e7a;
+}
+

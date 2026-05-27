@@ -444,6 +444,19 @@ export default function Route({ loaderData }: Route.ComponentProps) {
             </div>
           </div>
 
+          {isLoggedIn && (
+            <div className="mb-8 flex justify-center">
+              <LinkButton
+                styleType="secondary"
+                to="/enigmas/halldafama"
+                viewTransition
+                className="w-full max-w-sm py-4 text-lg font-semibold"
+              >
+                Hall da Fama
+              </LinkButton>
+            </div>
+          )}
+
           {isAdmin && (
             <div className="mb-8 flex justify-center">
               <LinkButton
