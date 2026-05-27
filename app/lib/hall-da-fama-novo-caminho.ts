@@ -30,4 +30,9 @@ export const HALL_DA_FAMA_NOVO_CAMINHO: HallDaFamaNovoCaminhoEntry[] = [
     photo: '/hall-da-fama/novo-caminho/renan-sosa.png',
     frame: 'flamingo',
   },
+  {
+    name: 'Natalia Nunes',
+    photo: '/hall-da-fama/novo-caminho/natalia-nunes.png',
+    frame: 'default',
+  },
 ]
