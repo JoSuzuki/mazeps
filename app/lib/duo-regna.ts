@@ -26,6 +26,10 @@ export type DuoRegnaGameState = {
     summary: string
   } | null
   winnerSeat: 0 | 1 | null
+  /** Após fim da partida: jogador pronto para revanche. */
+  rematchReady: [boolean, boolean]
+  /** Timestamp (ms) da última jogada — inatividade. */
+  lastActivityAt: number
 }
 
 const HAND_TEMPLATE: Record<string, number> = {
@@ -110,6 +114,7 @@ export function resolveRound(
   }
 
   if (a === 0 || b === 0) {
+    if (a === 0 && b === 0) return 'nothing'
     // Bispo (4) já foi resolvido acima; aqui só Rei/Rainha (6) aplica à regra do Bufão.
     if (a === 0 && b === 6) return 'p0'
     if (b === 0 && a === 6) return 'p1'
@@ -131,6 +136,7 @@ function roundSummary(
   if (result === 'nothing') {
     if (a === 'X' || b === 'X') return 'Escudo: nada acontece.'
     if (a === 4 && b === 4) return 'Dois bispos: nada acontece.'
+    if (a === 0 && b === 0) return 'Dois bufões: nada acontece.'
     if (toNum(a) === toNum(b)) return 'Empate: nada acontece.'
     return 'Nada acontece nesta rodada.'
   }
@@ -209,7 +215,16 @@ export function createInitialDuoRegnaState(): DuoRegnaGameState {
     capturedDragons: [0, 0],
     lastRound: null,
     winnerSeat: null,
+    rematchReady: [false, false],
+    lastActivityAt: Date.now(),
   }
+}
+
+/** Garante campos novos em partidas persistidas antes das correções. */
+export function normalizeDuoRegnaState(state: DuoRegnaGameState): DuoRegnaGameState {
+  if (!state.rematchReady) state.rematchReady = [false, false]
+  if (typeof state.lastActivityAt !== 'number') state.lastActivityAt = Date.now()
+  return state
 }
 
 export function parseCardFromClient(raw: unknown): DuoRegnaCardValue | null {
@@ -231,6 +246,8 @@ export function tryPlayCard(
   card: DuoRegnaCardValue,
 ): string | null {
   if (state.winnerSeat !== null) return 'Partida já terminou.'
+
+  state.lastActivityAt = Date.now()
 
   if (state.pending[seat] !== null) return 'Você já escolheu uma carta nesta rodada.'
 
@@ -292,6 +309,7 @@ export type DuoRegnaClientState = {
   opponentHasLocked: boolean
   lastRound: DuoRegnaGameState['lastRound']
   winnerSeat: 0 | 1 | null
+  rematchReady: [boolean, boolean]
   status: 'playing' | 'finished'
 }
 
@@ -313,6 +331,13 @@ export function toClientState(
     opponentHasLocked: state.pending[opp] !== null,
     lastRound: state.lastRound,
     winnerSeat: state.winnerSeat,
+    rematchReady: [...state.rematchReady] as [boolean, boolean],
     status: roomStatus === 'FINISHED' ? 'finished' : 'playing',
   }
+}
+
+/** Partida encerrou (vitória ou baralho de dragões esgotado). */
+export function isDuoRegnaGameOver(state: DuoRegnaGameState): boolean {
+  if (state.winnerSeat !== null) return true
+  return !state.currentDragon && state.dragonDeck.length === 0
 }
