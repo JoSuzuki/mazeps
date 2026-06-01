@@ -60,11 +60,15 @@ export default function Route({ loaderData, actionData, params }: Route.Componen
       await revalidator.revalidate()
     }
     socket.on('duo_regna_lobby_updated', onLobbyUpdated)
+    socket.on('duo_regna_player_left', onLobbyUpdated)
+    socket.on('duo_regna_afk_cancel', onLobbyUpdated)
     return () => {
       socket.off('room_joined', onJoin)
       socket.off('room_left', onLeft)
       socket.off('duo_regna_game_started', onStart)
       socket.off('duo_regna_lobby_updated', onLobbyUpdated)
+      socket.off('duo_regna_player_left', onLobbyUpdated)
+      socket.off('duo_regna_afk_cancel', onLobbyUpdated)
       socket.emit('leave_room', loaderData.room.roomCode)
     }
   }, [socket, loaderData.room.roomCode, navigate, params.roomCode, revalidator])
